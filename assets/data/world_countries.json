@@ -1,0 +1,1367 @@
+[
+    {
+        "id":  "afg",
+        "name":  "افغانستان",
+        "capital":  "Kabul",
+        "latitude":  0.316667,
+        "longitude":  0.680556
+    },
+    {
+        "id":  "ago",
+        "name":  "آنگولا",
+        "capital":  "Luanda",
+        "latitude":  0.569444,
+        "longitude":  0.551389
+    },
+    {
+        "id":  "alb",
+        "name":  "آلبانی",
+        "capital":  "Tirana",
+        "latitude":  0.272222,
+        "longitude":  0.555556
+    },
+    {
+        "id":  "and",
+        "name":  "آندورا",
+        "capital":  "Andorra la Vella",
+        "latitude":  0.263889,
+        "longitude":  0.504167
+    },
+    {
+        "id":  "are",
+        "name":  "امارات",
+        "capital":  "Abu Dhabi",
+        "latitude":  0.366667,
+        "longitude":  0.65
+    },
+    {
+        "id":  "arg",
+        "name":  "آرژانتین",
+        "capital":  "Buenos Aires",
+        "latitude":  0.688889,
+        "longitude":  0.322222
+    },
+    {
+        "id":  "arm",
+        "name":  "ارمنستان",
+        "capital":  "Yerevan",
+        "latitude":  0.277778,
+        "longitude":  0.625
+    },
+    {
+        "id":  "atg",
+        "name":  "آنتیگوا و باربودا",
+        "capital":  "Saint John\u0027s",
+        "latitude":  0.405278,
+        "longitude":  0.328333
+    },
+    {
+        "id":  "aus",
+        "name":  "استرالیا",
+        "capital":  "Canberra",
+        "latitude":  0.65,
+        "longitude":  0.869444
+    },
+    {
+        "id":  "aut",
+        "name":  "اتریش",
+        "capital":  "Vienna",
+        "latitude":  0.237037,
+        "longitude":  0.537037
+    },
+    {
+        "id":  "aze",
+        "name":  "جمهوری آذربایجان",
+        "capital":  "Baku",
+        "latitude":  0.275,
+        "longitude":  0.631944
+    },
+    {
+        "id":  "bdi",
+        "name":  "بوروندی",
+        "capital":  "Gitega",
+        "latitude":  0.519444,
+        "longitude":  0.583333
+    },
+    {
+        "id":  "bel",
+        "name":  "بلژیک",
+        "capital":  "Brussels",
+        "latitude":  0.217593,
+        "longitude":  0.511111
+    },
+    {
+        "id":  "ben",
+        "name":  "بنین",
+        "capital":  "Porto-Novo",
+        "latitude":  0.447222,
+        "longitude":  0.50625
+    },
+    {
+        "id":  "bfa",
+        "name":  "بورکینافاسو",
+        "capital":  "Ouagadougou",
+        "latitude":  0.427778,
+        "longitude":  0.494444
+    },
+    {
+        "id":  "bgd",
+        "name":  "بنگلادش",
+        "capital":  "Dhaka",
+        "latitude":  0.366667,
+        "longitude":  0.75
+    },
+    {
+        "id":  "bgr",
+        "name":  "بلغارستان",
+        "capital":  "Sofia",
+        "latitude":  0.261111,
+        "longitude":  0.569444
+    },
+    {
+        "id":  "bhr",
+        "name":  "بحرین",
+        "capital":  "Manama",
+        "latitude":  0.355556,
+        "longitude":  0.640417
+    },
+    {
+        "id":  "bhs",
+        "name":  "باهاما",
+        "capital":  "Nassau",
+        "latitude":  0.365278,
+        "longitude":  0.288889
+    },
+    {
+        "id":  "bih",
+        "name":  "بوسنی و هرزگوین",
+        "capital":  "Sarajevo",
+        "latitude":  0.255556,
+        "longitude":  0.55
+    },
+    {
+        "id":  "blr",
+        "name":  "بلاروس",
+        "capital":  "Minsk",
+        "latitude":  0.205556,
+        "longitude":  0.577778
+    },
+    {
+        "id":  "blz",
+        "name":  "بلیز",
+        "capital":  "Belmopan",
+        "latitude":  0.404167,
+        "longitude":  0.253472
+    },
+    {
+        "id":  "bol",
+        "name":  "بولیوی",
+        "capital":  "Sucre",
+        "latitude":  0.594444,
+        "longitude":  0.319444
+    },
+    {
+        "id":  "bra",
+        "name":  "برزیل",
+        "capital":  "Brasília",
+        "latitude":  0.555556,
+        "longitude":  0.347222
+    },
+    {
+        "id":  "brb",
+        "name":  "باربادوس",
+        "capital":  "Bridgetown",
+        "latitude":  0.426852,
+        "longitude":  0.33463
+    },
+    {
+        "id":  "brn",
+        "name":  "برونئی",
+        "capital":  "Bandar Seri Begawan",
+        "latitude":  0.475,
+        "longitude":  0.818519
+    },
+    {
+        "id":  "btn",
+        "name":  "بوتان",
+        "capital":  "Thimphu",
+        "latitude":  0.347222,
+        "longitude":  0.751389
+    },
+    {
+        "id":  "bwa",
+        "name":  "بوتسوانا",
+        "capital":  "Gaborone",
+        "latitude":  0.622222,
+        "longitude":  0.566667
+    },
+    {
+        "id":  "caf",
+        "name":  "جمهوری آفریقای مرکزی",
+        "capital":  "Bangui",
+        "latitude":  0.461111,
+        "longitude":  0.558333
+    },
+    {
+        "id":  "can",
+        "name":  "کانادا",
+        "capital":  "Ottawa",
+        "latitude":  0.166667,
+        "longitude":  0.236111
+    },
+    {
+        "id":  "che",
+        "name":  "سوئیس",
+        "capital":  "Bern",
+        "latitude":  0.238889,
+        "longitude":  0.522222
+    },
+    {
+        "id":  "chl",
+        "name":  "شیلی",
+        "capital":  "Santiago",
+        "latitude":  0.666667,
+        "longitude":  0.302778
+    },
+    {
+        "id":  "chn",
+        "name":  "چین",
+        "capital":  "Beijing",
+        "latitude":  0.305556,
+        "longitude":  0.791667
+    },
+    {
+        "id":  "civ",
+        "name":  "ساحل عاج",
+        "capital":  "Yamoussoukro",
+        "latitude":  0.455556,
+        "longitude":  0.486111
+    },
+    {
+        "id":  "cmr",
+        "name":  "کامِرون",
+        "capital":  "Yaoundé",
+        "latitude":  0.466667,
+        "longitude":  0.533333
+    },
+    {
+        "id":  "cod",
+        "name":  "کنگو دموکراتیک",
+        "capital":  "Kinshasa",
+        "latitude":  0.5,
+        "longitude":  0.569444
+    },
+    {
+        "id":  "cog",
+        "name":  "جمهوری کُنگو",
+        "capital":  "Brazzaville",
+        "latitude":  0.505556,
+        "longitude":  0.541667
+    },
+    {
+        "id":  "col",
+        "name":  "کلمبیا",
+        "capital":  "Bogotá",
+        "latitude":  0.477778,
+        "longitude":  0.3
+    },
+    {
+        "id":  "com",
+        "name":  "اتحاد قُمُر",
+        "capital":  "Moroni",
+        "latitude":  0.567593,
+        "longitude":  0.622917
+    },
+    {
+        "id":  "cpv",
+        "name":  "دماغهٔ سبز",
+        "capital":  "Praia",
+        "latitude":  0.411111,
+        "longitude":  0.433333
+    },
+    {
+        "id":  "cri",
+        "name":  "کاستاریکا",
+        "capital":  "San José",
+        "latitude":  0.444444,
+        "longitude":  0.266667
+    },
+    {
+        "id":  "cub",
+        "name":  "کوبا",
+        "capital":  "Havana",
+        "latitude":  0.380556,
+        "longitude":  0.277778
+    },
+    {
+        "id":  "cyp",
+        "name":  "قِبرِس",
+        "capital":  "Nicosia",
+        "latitude":  0.305556,
+        "longitude":  0.591667
+    },
+    {
+        "id":  "cze",
+        "name":  "جمهوری چک",
+        "capital":  "Prague",
+        "latitude":  0.223611,
+        "longitude":  0.543056
+    },
+    {
+        "id":  "deu",
+        "name":  "آلمان",
+        "capital":  "Berlin",
+        "latitude":  0.216667,
+        "longitude":  0.525
+    },
+    {
+        "id":  "dji",
+        "name":  "جیبوتی",
+        "capital":  "Djibouti",
+        "latitude":  0.436111,
+        "longitude":  0.619444
+    },
+    {
+        "id":  "dma",
+        "name":  "دومینیکا",
+        "capital":  "Roseau",
+        "latitude":  0.414352,
+        "longitude":  0.32963
+    },
+    {
+        "id":  "dnk",
+        "name":  "دانمارک",
+        "capital":  "Copenhagen",
+        "latitude":  0.188889,
+        "longitude":  0.527778
+    },
+    {
+        "id":  "dom",
+        "name":  "جمهوری دومینیکن",
+        "capital":  "Santo Domingo",
+        "latitude":  0.394444,
+        "longitude":  0.303704
+    },
+    {
+        "id":  "dza",
+        "name":  "الجزایر",
+        "capital":  "Algiers",
+        "latitude":  0.344444,
+        "longitude":  0.508333
+    },
+    {
+        "id":  "ecu",
+        "name":  "اکوادور",
+        "capital":  "Quito",
+        "latitude":  0.511111,
+        "longitude":  0.284722
+    },
+    {
+        "id":  "egy",
+        "name":  "مصر",
+        "capital":  "Cairo",
+        "latitude":  0.35,
+        "longitude":  0.583333
+    },
+    {
+        "id":  "eri",
+        "name":  "اریتره",
+        "capital":  "Asmara",
+        "latitude":  0.416667,
+        "longitude":  0.608333
+    },
+    {
+        "id":  "esp",
+        "name":  "اسپانیا",
+        "capital":  "Madrid",
+        "latitude":  0.277778,
+        "longitude":  0.488889
+    },
+    {
+        "id":  "est",
+        "name":  "اِستونی",
+        "capital":  "Tallinn",
+        "latitude":  0.172222,
+        "longitude":  0.572222
+    },
+    {
+        "id":  "eth",
+        "name":  "اِتیوپی",
+        "capital":  "Addis Ababa",
+        "latitude":  0.455556,
+        "longitude":  0.605556
+    },
+    {
+        "id":  "fin",
+        "name":  "فنلاند",
+        "capital":  "Helsinki",
+        "latitude":  0.144444,
+        "longitude":  0.572222
+    },
+    {
+        "id":  "fji",
+        "name":  "فیجی",
+        "capital":  "Suva",
+        "latitude":  0.6,
+        "longitude":  0.986111
+    },
+    {
+        "id":  "fra",
+        "name":  "فرانسه",
+        "capital":  "Paris",
+        "latitude":  0.244444,
+        "longitude":  0.505556
+    },
+    {
+        "id":  "fsm",
+        "name":  "میکرونزی",
+        "capital":  "Palikir",
+        "latitude":  0.461574,
+        "longitude":  0.939583
+    },
+    {
+        "id":  "gab",
+        "name":  "گابن",
+        "capital":  "Libreville",
+        "latitude":  0.505556,
+        "longitude":  0.532639
+    },
+    {
+        "id":  "gbr",
+        "name":  "انگلیس",
+        "capital":  "London",
+        "latitude":  0.2,
+        "longitude":  0.494444
+    },
+    {
+        "id":  "geo",
+        "name":  "گرجستان",
+        "capital":  "Tbilisi",
+        "latitude":  0.266667,
+        "longitude":  0.620833
+    },
+    {
+        "id":  "gha",
+        "name":  "غنا",
+        "capital":  "Accra",
+        "latitude":  0.455556,
+        "longitude":  0.494444
+    },
+    {
+        "id":  "gin",
+        "name":  "پاپوآ گینه نو",
+        "capital":  "Conakry",
+        "latitude":  0.438889,
+        "longitude":  0.472222
+    },
+    {
+        "id":  "gmb",
+        "name":  "گامبیا",
+        "capital":  "Banjul",
+        "latitude":  0.425185,
+        "longitude":  0.453981
+    },
+    {
+        "id":  "gnb",
+        "name":  "گینه بیسائو",
+        "capital":  "Bissau",
+        "latitude":  0.433333,
+        "longitude":  0.458333
+    },
+    {
+        "id":  "gnq",
+        "name":  "گینه استوایی",
+        "capital":  "Malabo",
+        "latitude":  0.488889,
+        "longitude":  0.527778
+    },
+    {
+        "id":  "grc",
+        "name":  "یونان",
+        "capital":  "Athens",
+        "latitude":  0.283333,
+        "longitude":  0.561111
+    },
+    {
+        "id":  "grd",
+        "name":  "گرنادا",
+        "capital":  "St. George\u0027s",
+        "latitude":  0.432685,
+        "longitude":  0.328704
+    },
+    {
+        "id":  "gtm",
+        "name":  "گواتِمالا",
+        "capital":  "Guatemala City",
+        "latitude":  0.413889,
+        "longitude":  0.249306
+    },
+    {
+        "id":  "guy",
+        "name":  "گویان",
+        "capital":  "Georgetown",
+        "latitude":  0.472222,
+        "longitude":  0.336111
+    },
+    {
+        "id":  "hnd",
+        "name":  "هُندوراس",
+        "capital":  "Tegucigalpa",
+        "latitude":  0.416667,
+        "longitude":  0.259722
+    },
+    {
+        "id":  "hrv",
+        "name":  "کرُواسی",
+        "capital":  "Zagreb",
+        "latitude":  0.249074,
+        "longitude":  0.543056
+    },
+    {
+        "id":  "hti",
+        "name":  "هائیتی",
+        "capital":  "Port-au-Prince",
+        "latitude":  0.394444,
+        "longitude":  0.298843
+    },
+    {
+        "id":  "hun",
+        "name":  "مجارستان",
+        "capital":  "Budapest",
+        "latitude":  0.238889,
+        "longitude":  0.555556
+    },
+    {
+        "id":  "idn",
+        "name":  "اندونزی",
+        "capital":  "Jakarta",
+        "latitude":  0.527778,
+        "longitude":  0.833333
+    },
+    {
+        "id":  "ind",
+        "name":  "هند",
+        "capital":  "New Delhi",
+        "latitude":  0.388889,
+        "longitude":  0.713889
+    },
+    {
+        "id":  "irl",
+        "name":  "ایرلند",
+        "capital":  "Dublin",
+        "latitude":  0.205556,
+        "longitude":  0.477778
+    },
+    {
+        "id":  "irn",
+        "name":  "ایران",
+        "capital":  "Tehran",
+        "latitude":  0.322222,
+        "longitude":  0.647222
+    },
+    {
+        "id":  "irq",
+        "name":  "عراق",
+        "capital":  "Baghdad",
+        "latitude":  0.316667,
+        "longitude":  0.622222
+    },
+    {
+        "id":  "isl",
+        "name":  "ایسلند",
+        "capital":  "Reykjavik",
+        "latitude":  0.138889,
+        "longitude":  0.45
+    },
+    {
+        "id":  "isr",
+        "name":  "فلسطين اشغالی",
+        "capital":  "Jerusalem",
+        "latitude":  0.325167,
+        "longitude":  0.597583
+    },
+    {
+        "id":  "ita",
+        "name":  "ایتالیا",
+        "capital":  "Rome",
+        "latitude":  0.262037,
+        "longitude":  0.535648
+    },
+    {
+        "id":  "jam",
+        "name":  "جامائیکا",
+        "capital":  "Kingston",
+        "latitude":  0.398611,
+        "longitude":  0.284722
+    },
+    {
+        "id":  "jor",
+        "name":  "اردن",
+        "capital":  "Amman",
+        "latitude":  0.327778,
+        "longitude":  0.6
+    },
+    {
+        "id":  "jpn",
+        "name":  "ژاپن",
+        "capital":  "Tokyo",
+        "latitude":  0.3,
+        "longitude":  0.883333
+    },
+    {
+        "id":  "kaz",
+        "name":  "قزاقستان",
+        "capital":  "Astana",
+        "latitude":  0.233333,
+        "longitude":  0.688889
+    },
+    {
+        "id":  "ken",
+        "name":  "کنیا",
+        "capital":  "Nairobi",
+        "latitude":  0.494444,
+        "longitude":  0.605556
+    },
+    {
+        "id":  "kgz",
+        "name":  "قرقیزستان",
+        "capital":  "Bishkek",
+        "latitude":  0.272222,
+        "longitude":  0.708333
+    },
+    {
+        "id":  "khm",
+        "name":  "کامبوج",
+        "capital":  "Phnom Penh",
+        "latitude":  0.427778,
+        "longitude":  0.791667
+    },
+    {
+        "id":  "kir",
+        "name":  "کیریباتی",
+        "capital":  "South Tarawa",
+        "latitude":  0.49213,
+        "longitude":  0.980556
+    },
+    {
+        "id":  "kna",
+        "name":  "سنت کیتس و نویس",
+        "capital":  "Basseterre",
+        "latitude":  0.403704,
+        "longitude":  0.325694
+    },
+    {
+        "id":  "kor",
+        "name":  "کرهٔ جنوبی",
+        "capital":  "Seoul",
+        "latitude":  0.294444,
+        "longitude":  0.854167
+    },
+    {
+        "id":  "kwt",
+        "name":  "کُویت",
+        "capital":  "Kuwait City",
+        "latitude":  0.336111,
+        "longitude":  0.627083
+    },
+    {
+        "id":  "lao",
+        "name":  "لائوس",
+        "capital":  "Vientiane",
+        "latitude":  0.4,
+        "longitude":  0.791667
+    },
+    {
+        "id":  "lbn",
+        "name":  "لبنان",
+        "capital":  "Beirut",
+        "latitude":  0.312037,
+        "longitude":  0.599537
+    },
+    {
+        "id":  "lbr",
+        "name":  "لیبـِریا",
+        "capital":  "Monrovia",
+        "latitude":  0.463889,
+        "longitude":  0.473611
+    },
+    {
+        "id":  "lby",
+        "name":  "لیبی",
+        "capital":  "Tripoli",
+        "latitude":  0.361111,
+        "longitude":  0.547222
+    },
+    {
+        "id":  "lca",
+        "name":  "سنت لوسیا",
+        "capital":  "Castries",
+        "latitude":  0.42287,
+        "longitude":  0.330648
+    },
+    {
+        "id":  "lie",
+        "name":  "لیختن‌اشتاین",
+        "capital":  "Vaduz",
+        "latitude":  0.237407,
+        "longitude":  0.526481
+    },
+    {
+        "id":  "lka",
+        "name":  "سری‌لانکا",
+        "capital":  "Colombo",
+        "latitude":  0.461111,
+        "longitude":  0.725
+    },
+    {
+        "id":  "lso",
+        "name":  "لسوتو",
+        "capital":  "Maseru",
+        "latitude":  0.663889,
+        "longitude":  0.579167
+    },
+    {
+        "id":  "ltu",
+        "name":  "لیتوانیایی‌ها",
+        "capital":  "Vilnius",
+        "latitude":  0.188889,
+        "longitude":  0.566667
+    },
+    {
+        "id":  "lux",
+        "name":  "لوکزامبورگ",
+        "capital":  "Luxembourg",
+        "latitude":  0.223611,
+        "longitude":  0.51713
+    },
+    {
+        "id":  "lva",
+        "name":  "لتونی",
+        "capital":  "Riga",
+        "latitude":  0.183333,
+        "longitude":  0.569444
+    },
+    {
+        "id":  "mar",
+        "name":  "مراکش",
+        "capital":  "Rabat",
+        "latitude":  0.322222,
+        "longitude":  0.486111
+    },
+    {
+        "id":  "mco",
+        "name":  "موناکو",
+        "capital":  "Monaco",
+        "latitude":  0.257037,
+        "longitude":  0.520556
+    },
+    {
+        "id":  "mda",
+        "name":  "مولداوی",
+        "capital":  "Chișinău",
+        "latitude":  0.238889,
+        "longitude":  0.580556
+    },
+    {
+        "id":  "mdg",
+        "name":  "ماداگاسکار",
+        "capital":  "Antananarivo",
+        "latitude":  0.611111,
+        "longitude":  0.630556
+    },
+    {
+        "id":  "mdv",
+        "name":  "مالدیو",
+        "capital":  "Malé",
+        "latitude":  0.481944,
+        "longitude":  0.702778
+    },
+    {
+        "id":  "mex",
+        "name":  "مکزیک",
+        "capital":  "Mexico City",
+        "latitude":  0.372222,
+        "longitude":  0.216667
+    },
+    {
+        "id":  "mhl",
+        "name":  "جزایر مارشال",
+        "capital":  "Majuro",
+        "latitude":  0.45,
+        "longitude":  0.966667
+    },
+    {
+        "id":  "mkd",
+        "name":  "مقدونیه شمالی",
+        "capital":  "Skopje",
+        "latitude":  0.267593,
+        "longitude":  0.561111
+    },
+    {
+        "id":  "mli",
+        "name":  "مالی",
+        "capital":  "Bamako",
+        "latitude":  0.405556,
+        "longitude":  0.488889
+    },
+    {
+        "id":  "mlt",
+        "name":  "مالت",
+        "capital":  "Valletta",
+        "latitude":  0.300926,
+        "longitude":  0.540509
+    },
+    {
+        "id":  "mmr",
+        "name":  "میانمار",
+        "capital":  "Naypyidaw",
+        "latitude":  0.377778,
+        "longitude":  0.772222
+    },
+    {
+        "id":  "mne",
+        "name":  "مونته‌نگرو",
+        "capital":  "Podgorica",
+        "latitude":  0.263889,
+        "longitude":  0.553611
+    },
+    {
+        "id":  "mng",
+        "name":  "مغولستان",
+        "capital":  "Ulan Bator",
+        "latitude":  0.244444,
+        "longitude":  0.791667
+    },
+    {
+        "id":  "moz",
+        "name":  "موزامبیک",
+        "capital":  "Maputo",
+        "latitude":  0.601389,
+        "longitude":  0.597222
+    },
+    {
+        "id":  "mrt",
+        "name":  "موریتانی",
+        "capital":  "Nouakchott",
+        "latitude":  0.388889,
+        "longitude":  0.466667
+    },
+    {
+        "id":  "mus",
+        "name":  "موریس",
+        "capital":  "Port Louis",
+        "latitude":  0.612685,
+        "longitude":  0.659861
+    },
+    {
+        "id":  "mwi",
+        "name":  "مالاوی",
+        "capital":  "Lilongwe",
+        "latitude":  0.575,
+        "longitude":  0.594444
+    },
+    {
+        "id":  "mys",
+        "name":  "مالزی",
+        "capital":  "Kuala Lumpur",
+        "latitude":  0.486111,
+        "longitude":  0.8125
+    },
+    {
+        "id":  "nam",
+        "name":  "نامیبیا",
+        "capital":  "Windhoek",
+        "latitude":  0.622222,
+        "longitude":  0.547222
+    },
+    {
+        "id":  "ner",
+        "name":  "نیجر",
+        "capital":  "Niamey",
+        "latitude":  0.411111,
+        "longitude":  0.522222
+    },
+    {
+        "id":  "nga",
+        "name":  "نیجریه",
+        "capital":  "Abuja",
+        "latitude":  0.444444,
+        "longitude":  0.522222
+    },
+    {
+        "id":  "nic",
+        "name":  "نیکاراگوئه",
+        "capital":  "Managua",
+        "latitude":  0.427778,
+        "longitude":  0.263889
+    },
+    {
+        "id":  "nld",
+        "name":  "هلند",
+        "capital":  "Amsterdam",
+        "latitude":  0.208333,
+        "longitude":  0.515972
+    },
+    {
+        "id":  "nor",
+        "name":  "نروژ",
+        "capital":  "Oslo",
+        "latitude":  0.155556,
+        "longitude":  0.527778
+    },
+    {
+        "id":  "npl",
+        "name":  "نپال",
+        "capital":  "Kathmandu",
+        "latitude":  0.344444,
+        "longitude":  0.733333
+    },
+    {
+        "id":  "nru",
+        "name":  "نائورو",
+        "capital":  "Yaren",
+        "latitude":  0.502963,
+        "longitude":  0.963657
+    },
+    {
+        "id":  "nzl",
+        "name":  "نیوزیلند",
+        "capital":  "Wellington",
+        "latitude":  0.727778,
+        "longitude":  0.983333
+    },
+    {
+        "id":  "omn",
+        "name":  "عمان",
+        "capital":  "Muscat",
+        "latitude":  0.383333,
+        "longitude":  0.658333
+    },
+    {
+        "id":  "pak",
+        "name":  "پاکستان",
+        "capital":  "Islamabad",
+        "latitude":  0.333333,
+        "longitude":  0.694444
+    },
+    {
+        "id":  "pan",
+        "name":  "پاناما",
+        "capital":  "Panama City",
+        "latitude":  0.45,
+        "longitude":  0.277778
+    },
+    {
+        "id":  "per",
+        "name":  "پرو",
+        "capital":  "Lima",
+        "latitude":  0.555556,
+        "longitude":  0.288889
+    },
+    {
+        "id":  "phl",
+        "name":  "فیلیپین",
+        "capital":  "Manila",
+        "latitude":  0.427778,
+        "longitude":  0.838889
+    },
+    {
+        "id":  "plw",
+        "name":  "پالائو",
+        "capital":  "Ngerulmud",
+        "latitude":  0.458333,
+        "longitude":  0.873611
+    },
+    {
+        "id":  "png",
+        "name":  "پاپوآ گینه نو",
+        "capital":  "Port Moresby",
+        "latitude":  0.533333,
+        "longitude":  0.908333
+    },
+    {
+        "id":  "pol",
+        "name":  "لهستان",
+        "capital":  "Warsaw",
+        "latitude":  0.211111,
+        "longitude":  0.555556
+    },
+    {
+        "id":  "prk",
+        "name":  "کُره شمالی",
+        "capital":  "Pyongyang",
+        "latitude":  0.277778,
+        "longitude":  0.852778
+    },
+    {
+        "id":  "prt",
+        "name":  "پرتغال",
+        "capital":  "Lisbon",
+        "latitude":  0.280556,
+        "longitude":  0.477778
+    },
+    {
+        "id":  "pry",
+        "name":  "پاراگوئه",
+        "capital":  "Asunción",
+        "latitude":  0.627778,
+        "longitude":  0.338889
+    },
+    {
+        "id":  "pse",
+        "name":  "فلسطین",
+        "capital":  "Ramallah",
+        "latitude":  0.322778,
+        "longitude":  0.597778
+    },
+    {
+        "id":  "qat",
+        "name":  "قطر",
+        "capital":  "Doha",
+        "latitude":  0.358333,
+        "longitude":  0.642361
+    },
+    {
+        "id":  "rou",
+        "name":  "رومانی",
+        "capital":  "Bucharest",
+        "latitude":  0.244444,
+        "longitude":  0.569444
+    },
+    {
+        "id":  "rus",
+        "name":  "روسیه",
+        "capital":  "Moscow",
+        "latitude":  0.166667,
+        "longitude":  0.777778
+    },
+    {
+        "id":  "rwa",
+        "name":  "رواندا",
+        "capital":  "Kigali",
+        "latitude":  0.511111,
+        "longitude":  0.583333
+    },
+    {
+        "id":  "sau",
+        "name":  "عربستان سعودی",
+        "capital":  "Riyadh",
+        "latitude":  0.361111,
+        "longitude":  0.625
+    },
+    {
+        "id":  "sdn",
+        "name":  "سودان",
+        "capital":  "Khartoum",
+        "latitude":  0.416667,
+        "longitude":  0.583333
+    },
+    {
+        "id":  "sen",
+        "name":  "سنگال",
+        "capital":  "Dakar",
+        "latitude":  0.422222,
+        "longitude":  0.461111
+    },
+    {
+        "id":  "sgp",
+        "name":  "سنگاپور",
+        "capital":  "Singapore",
+        "latitude":  0.492407,
+        "longitude":  0.788333
+    },
+    {
+        "id":  "slb",
+        "name":  "جزایر سلیمان",
+        "capital":  "Honiara",
+        "latitude":  0.544444,
+        "longitude":  0.941667
+    },
+    {
+        "id":  "sle",
+        "name":  "سیرالئون",
+        "capital":  "Freetown",
+        "latitude":  0.452778,
+        "longitude":  0.468056
+    },
+    {
+        "id":  "slv",
+        "name":  "السالوادور",
+        "capital":  "San Salvador",
+        "latitude":  0.423148,
+        "longitude":  0.253009
+    },
+    {
+        "id":  "smr",
+        "name":  "سان مارینو",
+        "capital":  "City of San Marino",
+        "latitude":  0.256852,
+        "longitude":  0.534491
+    },
+    {
+        "id":  "som",
+        "name":  "سومالی",
+        "capital":  "Mogadishu",
+        "latitude":  0.444444,
+        "longitude":  0.636111
+    },
+    {
+        "id":  "srb",
+        "name":  "صربستان",
+        "capital":  "Belgrade",
+        "latitude":  0.255556,
+        "longitude":  0.558333
+    },
+    {
+        "id":  "ssd",
+        "name":  "سودان جنوبی",
+        "capital":  "Juba",
+        "latitude":  0.461111,
+        "longitude":  0.583333
+    },
+    {
+        "id":  "stp",
+        "name":  "سائوتومه و پرنسیپ",
+        "capital":  "São Tomé",
+        "latitude":  0.494444,
+        "longitude":  0.519444
+    },
+    {
+        "id":  "sur",
+        "name":  "سورینام",
+        "capital":  "Paramaribo",
+        "latitude":  0.477778,
+        "longitude":  0.344444
+    },
+    {
+        "id":  "svk",
+        "name":  "اِسلُواکی",
+        "capital":  "Bratislava",
+        "latitude":  0.22963,
+        "longitude":  0.554167
+    },
+    {
+        "id":  "svn",
+        "name":  "اسلوونی",
+        "capital":  "Ljubljana",
+        "latitude":  0.243796,
+        "longitude":  0.541157
+    },
+    {
+        "id":  "swe",
+        "name":  "سوئد",
+        "capital":  "Stockholm",
+        "latitude":  0.155556,
+        "longitude":  0.541667
+    },
+    {
+        "id":  "swz",
+        "name":  "اسواتینی",
+        "capital":  "Lobamba",
+        "latitude":  0.647222,
+        "longitude":  0.5875
+    },
+    {
+        "id":  "syc",
+        "name":  "سیشل",
+        "capital":  "Victoria",
+        "latitude":  0.525463,
+        "longitude":  0.65463
+    },
+    {
+        "id":  "syr",
+        "name":  "سوریه",
+        "capital":  "Damascus",
+        "latitude":  0.305556,
+        "longitude":  0.605556
+    },
+    {
+        "id":  "tcd",
+        "name":  "چاد",
+        "capital":  "N\u0027Djamena",
+        "latitude":  0.416667,
+        "longitude":  0.552778
+    },
+    {
+        "id":  "tgo",
+        "name":  "توگو",
+        "capital":  "Lomé",
+        "latitude":  0.455556,
+        "longitude":  0.503241
+    },
+    {
+        "id":  "tha",
+        "name":  "تایلند",
+        "capital":  "Bangkok",
+        "latitude":  0.416667,
+        "longitude":  0.777778
+    },
+    {
+        "id":  "tjk",
+        "name":  "تاجیکِستان",
+        "capital":  "Dushanbe",
+        "latitude":  0.283333,
+        "longitude":  0.697222
+    },
+    {
+        "id":  "tkm",
+        "name":  "ترکمنستان",
+        "capital":  "Ashgabat",
+        "latitude":  0.277778,
+        "longitude":  0.666667
+    },
+    {
+        "id":  "tls",
+        "name":  "تیمور شرقی",
+        "capital":  "Dili",
+        "latitude":  0.549074,
+        "longitude":  0.849769
+    },
+    {
+        "id":  "ton",
+        "name":  "تونگا",
+        "capital":  "Nuku\u0027alofa",
+        "latitude":  0.611111,
+        "longitude":  0.013889
+    },
+    {
+        "id":  "tto",
+        "name":  "ترینیداد و توباگو",
+        "capital":  "Port of Spain",
+        "latitude":  0.438889,
+        "longitude":  0.330556
+    },
+    {
+        "id":  "tun",
+        "name":  "تونس",
+        "capital":  "Tunis",
+        "latitude":  0.311111,
+        "longitude":  0.525
+    },
+    {
+        "id":  "tur",
+        "name":  "ترکیه",
+        "capital":  "Ankara",
+        "latitude":  0.283333,
+        "longitude":  0.597222
+    },
+    {
+        "id":  "tuv",
+        "name":  "تووالو",
+        "capital":  "Funafuti",
+        "latitude":  0.544444,
+        "longitude":  0.994444
+    },
+    {
+        "id":  "tza",
+        "name":  "تانزانیا",
+        "capital":  "Dodoma",
+        "latitude":  0.533333,
+        "longitude":  0.597222
+    },
+    {
+        "id":  "uga",
+        "name":  "اوگاندا",
+        "capital":  "Kampala",
+        "latitude":  0.494444,
+        "longitude":  0.588889
+    },
+    {
+        "id":  "ukr",
+        "name":  "اوکراین",
+        "capital":  "Kyiv",
+        "latitude":  0.227778,
+        "longitude":  0.588889
+    },
+    {
+        "id":  "ury",
+        "name":  "اروگوئه",
+        "capital":  "Montevideo",
+        "latitude":  0.683333,
+        "longitude":  0.344444
+    },
+    {
+        "id":  "usa",
+        "name":  "ایالات متحده آمریکا",
+        "capital":  "Washington D.C.",
+        "latitude":  0.288889,
+        "longitude":  0.230556
+    },
+    {
+        "id":  "uzb",
+        "name":  "ازبکستان",
+        "capital":  "Tashkent",
+        "latitude":  0.272222,
+        "longitude":  0.677778
+    },
+    {
+        "id":  "vat",
+        "name":  "واتیکان",
+        "capital":  "Vatican City",
+        "latitude":  0.267222,
+        "longitude":  0.534583
+    },
+    {
+        "id":  "vct",
+        "name":  "سنت وینسنت و گرنادین‌ها",
+        "capital":  "Kingstown",
+        "latitude":  0.426389,
+        "longitude":  0.33
+    },
+    {
+        "id":  "ven",
+        "name":  "ونزوئلا",
+        "capital":  "Caracas",
+        "latitude":  0.455556,
+        "longitude":  0.316667
+    },
+    {
+        "id":  "vnm",
+        "name":  "ویتنام",
+        "capital":  "Hanoi",
+        "latitude":  0.410185,
+        "longitude":  0.799537
+    },
+    {
+        "id":  "vut",
+        "name":  "وانواتو",
+        "capital":  "Port Vila",
+        "latitude":  0.588889,
+        "longitude":  0.963889
+    },
+    {
+        "id":  "wsm",
+        "name":  "ساموآ",
+        "capital":  "Apia",
+        "latitude":  0.575463,
+        "longitude":  0.021296
+    },
+    {
+        "id":  "yem",
+        "name":  "یمن",
+        "capital":  "Sana\u0027a",
+        "latitude":  0.416667,
+        "longitude":  0.633333
+    },
+    {
+        "id":  "zaf",
+        "name":  "آفریقای جنوبی",
+        "capital":  "Pretoria",
+        "latitude":  0.661111,
+        "longitude":  0.566667
+    },
+    {
+        "id":  "zmb",
+        "name":  "زامبیا",
+        "capital":  "Lusaka",
+        "latitude":  0.583333,
+        "longitude":  0.583333
+    },
+    {
+        "id":  "zwe",
+        "name":  "زیمبابوه",
+        "capital":  "Harare",
+        "latitude":  0.611111,
+        "longitude":  0.583333
+    }
+]

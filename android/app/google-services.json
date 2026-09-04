@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "20922140002",
+    "project_id": "trade-in-world",
+    "storage_bucket": "trade-in-world.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:20922140002:android:9d16eba64252474366583b",
+        "android_client_info": {
+          "package_name": "com.tradearoundworld.trade_around_the_world"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpoc_bhTQpLIXr1D2s2B_x6uCJJQchHMQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

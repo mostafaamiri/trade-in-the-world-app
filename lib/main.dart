@@ -1,0 +1,1056 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'game_page.dart';
+import 'models.dart';
+import 'services/game_api.dart';
+import 'services/notification_service.dart';
+import 'ui.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
+  final api = await GameApi.create();
+  runApp(TradeInTheWorldApp(api: api));
+}
+
+class TradeInTheWorldApp extends StatelessWidget {
+  const TradeInTheWorldApp({super.key, required this.api});
+
+  final GameApi api;
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'تجارت در جهان',
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: appGreen),
+      scaffoldBackgroundColor: const Color(0xfff3f6f5),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: appNavy,
+        foregroundColor: Colors.white,
+      ),
+      cardTheme: const CardThemeData(elevation: 2, margin: EdgeInsets.zero),
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+      ),
+    ),
+    locale: const Locale('fa'),
+    supportedLocales: const [Locale('fa'), Locale('en')],
+    localizationsDelegates: const [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    home: Directionality(
+      textDirection: TextDirection.rtl,
+      child: AppRoot(api: api),
+    ),
+  );
+}
+
+class AppRoot extends StatefulWidget {
+  const AppRoot({super.key, required this.api});
+
+  final GameApi api;
+
+  @override
+  State<AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<AppRoot> {
+  PlayerProfile? _profile;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _restore();
+  }
+
+  Future<void> _restore() async {
+    final startedAt = DateTime.now();
+    if (!widget.api.hasSession) {
+      await _finishSplash(startedAt);
+      return;
+    }
+    try {
+      _profile = await widget.api.profile();
+      unawaited(NotificationService.sync(widget.api));
+    } catch (_) {
+      await widget.api.clearSession();
+    }
+    await _finishSplash(startedAt);
+  }
+
+  Future<void> _finishSplash(DateTime startedAt) async {
+    final remaining =
+        const Duration(seconds: 30) - DateTime.now().difference(startedAt);
+    if (!remaining.isNegative) await Future<void>.delayed(remaining);
+    if (mounted) setState(() => _loading = false);
+  }
+
+  void _onProfile(PlayerProfile profile) {
+    setState(() => _profile = profile);
+    unawaited(NotificationService.sync(widget.api));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const SplashPage(loading: true);
+    if (_profile == null)
+      return ProfilePage(api: widget.api, onSaved: _onProfile);
+    return HomePage(
+      api: widget.api,
+      profile: _profile!,
+      onProfileChanged: _onProfile,
+      onAccountDeleted: () => setState(() => _profile = null),
+    );
+  }
+}
+
+class SplashPage extends StatefulWidget {
+  const SplashPage({super.key, this.loading = false});
+
+  final bool loading;
+
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 30),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset('assets/images/splash_merchants.png', fit: BoxFit.cover),
+        const ColoredBox(color: Color(0x33000000)),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Icon(
+                  Icons.monetization_on_rounded,
+                  size: 74,
+                  color: appGold,
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'تجارت در جهان',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 26),
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) => Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: _controller.value,
+                        minHeight: 9,
+                        color: appGold,
+                        backgroundColor: Colors.white54,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${persianDigits((_controller.value * 100).floor())}٪',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({
+    super.key,
+    required this.api,
+    required this.onSaved,
+    this.initial,
+  });
+
+  final GameApi api;
+  final ValueChanged<PlayerProfile> onSaved;
+  final PlayerProfile? initial;
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late final TextEditingController _name;
+  String _avatar = 'merchant_purple';
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.initial?.name ?? '');
+    _avatar = widget.initial?.avatarId ?? _avatar;
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_name.text.trim().length < 3) {
+      await showFailure(context, 'نام و نام خانوادگی را کامل وارد کن.');
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final profile = widget.initial == null
+          ? await widget.api.createGuest(_name.text.trim(), _avatar)
+          : await widget.api.updateProfile(_name.text.trim(), _avatar);
+      widget.onSaved(profile);
+      if (mounted && widget.initial != null) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: widget.initial == null
+        ? null
+        : AppBar(title: const Text('ویرایش حساب کاربری')),
+    body: ScreenBackground(
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 540),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'حساب بازرگان',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'نام و نام خانوادگی و تصویر بازرگان خود را انتخاب کن.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _name,
+                        maxLength: 80,
+                        textInputAction: TextInputAction.done,
+                        decoration: const InputDecoration(
+                          labelText: 'نام و نام خانوادگی',
+                          prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'تصویر بازرگان',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: avatars.keys
+                            .map(
+                              (id) => InkWell(
+                                borderRadius: BorderRadius.circular(40),
+                                onTap: () => setState(() => _avatar = id),
+                                child: AvatarCircle(
+                                  avatarId: id,
+                                  size: 64,
+                                  borderColor: _avatar == id
+                                      ? appRed
+                                      : Colors.transparent,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        onPressed: _submitting ? null : _save,
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: Text(
+                          _submitting
+                              ? 'در حال ذخیره...'
+                              : widget.initial == null
+                              ? 'ورود به بازی'
+                              : 'ذخیره تغییرات',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({
+    super.key,
+    required this.api,
+    required this.profile,
+    required this.onProfileChanged,
+    required this.onAccountDeleted,
+  });
+
+  final GameApi api;
+  final PlayerProfile profile;
+  final ValueChanged<PlayerProfile> onProfileChanged;
+  final VoidCallback onAccountDeleted;
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _hasUpdate = false;
+  String _version = '۰.۴.۰';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUpdate();
+  }
+
+  Future<void> _checkUpdate() async {
+    try {
+      final package = await PackageInfo.fromPlatform();
+      final response = await http.get(
+        Uri.parse('$apiBaseUrl/public/downloads/trade-in-the-world/metadata'),
+      );
+      if (response.statusCode != 200) return;
+      final data = (jsonDecode(response.body) as Map).cast<String, dynamic>();
+      if (mounted)
+        setState(() {
+          _version = persianDigits(package.version);
+          _hasUpdate =
+              jsonInt(data['versionCode']) > int.tryParse(package.buildNumber)!;
+        });
+    } catch (_) {}
+  }
+
+  Future<void> _openMatch(String matchId) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GamePage(api: widget.api, matchId: matchId),
+      ),
+    );
+    if (mounted) _checkUpdate();
+  }
+
+  Future<void> _editProfile() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfilePage(
+          api: widget.api,
+          initial: widget.profile,
+          onSaved: widget.onProfileChanged,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteProfile() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('حذف حساب'),
+        content: const Text(
+          'حساب و خروج از مسابقه‌های فعال حذف می‌شود. ادامه می‌دهی؟',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: appRed),
+            child: const Text('حذف حساب'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await widget.api.deleteProfile();
+      widget.onAccountDeleted();
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: ScreenBackground(
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(18),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 650),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      AvatarCircle(avatarId: widget.profile.avatarId, size: 52),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          widget.profile.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _editProfile,
+                        icon: const Icon(Icons.edit_outlined),
+                        tooltip: 'ویرایش حساب',
+                      ),
+                      IconButton(
+                        onPressed: _deleteProfile,
+                        icon: const Icon(Icons.delete_outline, color: appRed),
+                        tooltip: 'حذف حساب',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'تجارت در جهان',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 31,
+                      color: appNavy,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _HomeAction(
+                    color: Colors.black,
+                    icon: Icons.emoji_events_outlined,
+                    label: 'لیگ امتیاز و رتبه',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LeaguePage(api: widget.api),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final twoColumns = constraints.maxWidth > 450;
+                      final buttons = [
+                        _HomeAction(
+                          color: appGold,
+                          foreground: Colors.black,
+                          icon: Icons.groups_rounded,
+                          label: 'مسابقات',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MatchesPage(
+                                api: widget.api,
+                                onOpen: _openMatch,
+                              ),
+                            ),
+                          ),
+                        ),
+                        _HomeAction(
+                          color: appRed,
+                          icon: Icons.add_business_rounded,
+                          label: 'ساخت اتاق',
+                          onTap: () async {
+                            final id = await Navigator.push<String>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    CreateMatchPage(api: widget.api),
+                              ),
+                            );
+                            if (id != null && mounted) _openMatch(id);
+                          },
+                        ),
+                        _HomeAction(
+                          color: const Color(0xff2674bd),
+                          icon: Icons.pin_outlined,
+                          label: 'وارد کردن کد اتاق',
+                          onTap: () async {
+                            final id = await Navigator.push<String>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => JoinMatchPage(api: widget.api),
+                              ),
+                            );
+                            if (id != null && mounted) _openMatch(id);
+                          },
+                        ),
+                        _HomeAction(
+                          color: appGreen,
+                          icon: Icons.manage_accounts_outlined,
+                          label: 'ویرایش حساب کاربری',
+                          onTap: _editProfile,
+                        ),
+                      ];
+                      if (!twoColumns)
+                        return Column(
+                          children: buttons
+                              .map(
+                                (button) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: button,
+                                ),
+                              )
+                              .toList(),
+                        );
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: buttons
+                            .map(
+                              (button) => SizedBox(
+                                width: (constraints.maxWidth - 12) / 2,
+                                child: button,
+                              ),
+                            )
+                            .toList(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _HomeAction(
+                    color: appNavy,
+                    icon: Icons.new_releases_outlined,
+                    label: 'نام نسخه: $_version',
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('نسخه برنامه'),
+                        content: Text('شما از نسخه $_version استفاده می‌کنید.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('بستن'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Badge(
+                    isLabelVisible: _hasUpdate,
+                    backgroundColor: Colors.red,
+                    child: _HomeAction(
+                      color: appNavy,
+                      icon: Icons.system_update_alt_rounded,
+                      label: 'بروزرسانی',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => UpdatePage(
+                            hasUpdate: _hasUpdate,
+                            onChecked: _checkUpdate,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _HomeAction extends StatelessWidget {
+  const _HomeAction({
+    required this.color,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.foreground = Colors.white,
+  });
+
+  final Color color;
+  final Color foreground;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 62,
+    child: FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: foreground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: onTap,
+      icon: Icon(icon),
+      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+    ),
+  );
+}
+
+class MatchesPage extends StatefulWidget {
+  const MatchesPage({super.key, required this.api, required this.onOpen});
+  final GameApi api;
+  final ValueChanged<String> onOpen;
+  @override
+  State<MatchesPage> createState() => _MatchesPageState();
+}
+
+class _MatchesPageState extends State<MatchesPage> {
+  late Future<List<MatchInfo>> _matches;
+  @override
+  void initState() {
+    super.initState();
+    _matches = widget.api.publicMatches();
+  }
+
+  void _refresh() => setState(() => _matches = widget.api.publicMatches());
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('مسابقات')),
+    body: FutureBuilder<List<MatchInfo>>(
+      future: _matches,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done)
+          return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError)
+          return Center(
+            child: TextButton.icon(
+              onPressed: _refresh,
+              icon: const Icon(Icons.refresh),
+              label: const Text('دریافت مسابقات ناموفق بود'),
+            ),
+          );
+        final matches = snapshot.data!;
+        return RefreshIndicator(
+          onRefresh: () async => _refresh(),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: matches.isEmpty ? 1 : matches.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              if (matches.isEmpty)
+                return const Padding(
+                  padding: EdgeInsets.only(top: 80),
+                  child: Center(
+                    child: Text('مسابقه عمومی در انتظار شروع نیست.'),
+                  ),
+                );
+              final item = matches[index];
+              return Card(
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: appGold,
+                    child: Icon(Icons.public, color: Colors.black),
+                  ),
+                  title: Text(item.name),
+                  subtitle: Text(
+                    '${item.section}  |  کد: ${persianDigits(item.roomCode)}',
+                  ),
+                  trailing: FilledButton(
+                    onPressed: () async {
+                      try {
+                        final info = await PackageInfo.fromPlatform();
+                        final id = await widget.api.joinMatch(
+                          item.roomCode,
+                          info.version,
+                          info.buildNumber,
+                        );
+                        widget.onOpen(id);
+                      } catch (error) {
+                        if (context.mounted) showFailure(context, error);
+                      }
+                    },
+                    child: const Text('پیوستن'),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    ),
+  );
+}
+
+class CreateMatchPage extends StatefulWidget {
+  const CreateMatchPage({super.key, required this.api});
+  final GameApi api;
+  @override
+  State<CreateMatchPage> createState() => _CreateMatchPageState();
+}
+
+class _CreateMatchPageState extends State<CreateMatchPage> {
+  final _name = TextEditingController(text: 'مسابقه تجارت جهانی');
+  String _section = 'تجارت جهانی';
+  bool _private = true;
+  bool _busy = false;
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _create() async {
+    setState(() => _busy = true);
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final id = await widget.api.createMatch(
+        name: _name.text.trim(),
+        section: _section,
+        isPrivate: _private,
+        appVersion: info.version,
+        appBuild: info.buildNumber,
+      );
+      if (mounted) Navigator.pop(context, id);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('ساخت اتاق')),
+    body: SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
+              style: TextStyle(height: 1.8),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: _name,
+              maxLength: 80,
+              decoration: const InputDecoration(labelText: 'نام مسابقه'),
+            ),
+            const SizedBox(height: 14),
+            DropdownButtonFormField<String>(
+              value: _section,
+              decoration: const InputDecoration(labelText: 'بخش مسابقه'),
+              items: const ['تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای']
+                  .map(
+                    (item) => DropdownMenuItem(value: item, child: Text(item)),
+                  )
+                  .toList(),
+              onChanged: (value) => setState(() => _section = value!),
+            ),
+            SwitchListTile(
+              value: _private,
+              onChanged: (value) => setState(() => _private = value),
+              title: const Text('اتاق خصوصی'),
+              subtitle: Text(
+                _private
+                    ? 'ورود فقط با کد هشت رقمی'
+                    : 'در فهرست مسابقات هم دیده می‌شود',
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: appRed),
+              onPressed: _busy ? null : _create,
+              icon: const Icon(Icons.add_business),
+              label: Text(_busy ? 'در حال ساخت...' : 'ساخت اتاق'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class JoinMatchPage extends StatefulWidget {
+  const JoinMatchPage({super.key, required this.api});
+  final GameApi api;
+  @override
+  State<JoinMatchPage> createState() => _JoinMatchPageState();
+}
+
+class _JoinMatchPageState extends State<JoinMatchPage> {
+  final _code = TextEditingController();
+  bool _busy = false;
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _join() async {
+    if (!RegExp(r'^\d{8}$').hasMatch(_code.text.trim())) {
+      await showFailure(context, 'کد اتاق باید دقیقاً ۸ رقم باشد.');
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final id = await widget.api.joinMatch(
+        _code.text.trim(),
+        info.version,
+        info.buildNumber,
+      );
+      if (mounted) Navigator.pop(context, id);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('وارد کردن کد اتاق')),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Icon(
+                Icons.pin_outlined,
+                size: 58,
+                color: Color(0xff2674bd),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'کد هشت رقمی اتاق را وارد کن.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              TextField(
+                controller: _code,
+                maxLength: 8,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 26, letterSpacing: 3),
+                decoration: const InputDecoration(
+                  counterText: '',
+                  hintText: '۱۲۳۴۵۶۷۸',
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xff2674bd),
+                ),
+                onPressed: _busy ? null : _join,
+                icon: const Icon(Icons.login),
+                label: Text(_busy ? 'در حال ورود...' : 'پیوستن'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class LeaguePage extends StatelessWidget {
+  const LeaguePage({super.key, required this.api});
+  final GameApi api;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('لیگ امتیاز و رتبه')),
+    body: FutureBuilder<List<Json>>(
+      future: api.league(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done)
+          return const Center(child: CircularProgressIndicator());
+        if (snapshot.hasError)
+          return const Center(child: Text('دریافت جدول لیگ ناموفق بود.'));
+        final items = snapshot.data!;
+        if (items.isEmpty)
+          return const Center(
+            child: Text('هنوز نتیجه‌ای در لیگ ثبت نشده است.'),
+          );
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const Divider(),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: index < 3 ? appGold : appNavy,
+                child: Text(
+                  persianDigits(index + 1),
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              title: Text(jsonString(item['name'], 'بازرگان')),
+              subtitle: Text('برد: ${persianDigits(jsonInt(item['wins']))}'),
+              trailing: Text(
+                '${money(jsonInt(item['score'] ?? item['points']))} امتیاز',
+              ),
+            );
+          },
+        );
+      },
+    ),
+  );
+}
+
+class UpdatePage extends StatefulWidget {
+  const UpdatePage({
+    super.key,
+    required this.hasUpdate,
+    required this.onChecked,
+  });
+  final bool hasUpdate;
+  final Future<void> Function() onChecked;
+  @override
+  State<UpdatePage> createState() => _UpdatePageState();
+}
+
+class _UpdatePageState extends State<UpdatePage> {
+  bool _checking = false;
+  Future<void> _download() async {
+    final metadata = Uri.parse(
+      '$apiBaseUrl/public/downloads/trade-in-the-world/metadata',
+    );
+    try {
+      final response = await http.get(metadata);
+      final data = (jsonDecode(response.body) as Map).cast<String, dynamic>();
+      final uri = Uri.parse(jsonString(data['apkUrl']));
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication))
+        throw Exception('باز کردن لینک دانلود ممکن نشد.');
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('بروزرسانی')),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    widget.hasUpdate
+                        ? Icons.system_update_alt_rounded
+                        : Icons.verified_outlined,
+                    size: 58,
+                    color: widget.hasUpdate ? appGold : appGreen,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    widget.hasUpdate
+                        ? 'نسخه جدید آماده نصب است.'
+                        : 'نسخه نصب‌شده به‌روز است.',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 19,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(backgroundColor: appNavy),
+                    onPressed: _download,
+                    icon: const Icon(Icons.download_rounded),
+                    label: const Text('دانلود و نصب نسخه جدید'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: _checking
+                        ? null
+                        : () async {
+                            setState(() => _checking = true);
+                            await widget.onChecked();
+                            if (mounted) setState(() => _checking = false);
+                          },
+                    icon: const Icon(Icons.refresh),
+                    label: Text(_checking ? 'در حال بررسی...' : 'بررسی دوباره'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
