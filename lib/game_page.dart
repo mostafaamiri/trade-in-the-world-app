@@ -217,6 +217,31 @@ class _GamePageState extends State<GamePage> {
         .take(6)
         .toList();
 
+    if (cellType != 'blackMarket') {
+      if (legalCards.isEmpty) return;
+      final card = legalCards.first;
+      final shouldBuy = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(card.title),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('انصراف'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('خرید'),
+            ),
+          ],
+        ),
+      );
+      if (shouldBuy == true) {
+        await _invoke(() => widget.api.buyLegal(widget.matchId, card.cardId));
+      }
+      return;
+    }
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -239,69 +264,30 @@ class _GamePageState extends State<GamePage> {
                 const SizedBox(height: 12),
                 Expanded(
                   child: ListView(
-                    children: cellType == 'blackMarket'
-                        ? [
-                            const Text(
-                              'بازار سیاه',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: appRed,
-                              ),
-                            ),
-                            if (me.hasSheriffShield)
-                              const Padding(
-                                padding: EdgeInsets.only(top: 8),
-                                child: Text(
-                                  'با سپر داروغه، خرید کالای قاچاق ممکن نیست.',
-                                ),
-                              ),
-                            ...contrabandCards.map(
-                              (card) => _CardRow(
-                                card: card,
-                                actionLabel: 'خرید',
-                                onAction: me.hasSheriffShield
-                                    ? null
-                                    : () async {
-                                        try {
-                                          await widget.api.buyContraband(
-                                            widget.matchId,
-                                            card.cardId,
-                                          );
-                                          if (sheetContext.mounted) {
-                                            Navigator.pop(sheetContext);
-                                          }
-                                          await _refresh(silent: true);
-                                        } catch (error) {
-                                          if (sheetContext.mounted) {
-                                            await showFailure(
-                                              sheetContext,
-                                              error,
-                                            );
-                                          }
-                                        }
-                                      },
-                              ),
-                            ),
-                          ]
-                        : [
-                            const Text(
-                              'کارت‌های این شهر',
-                              style: TextStyle(fontWeight: FontWeight.w800),
-                            ),
-                            if (legalCards.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.only(top: 10),
-                                child: Text(
-                                  'کارت آزادی برای این خانه باقی نمانده است.',
-                                ),
-                              ),
-                            ...legalCards.map(
-                              (card) => _CardRow(
-                                card: card,
-                                actionLabel: 'خرید',
-                                onAction: () async {
+                    children: [
+                      const Text(
+                        'بازار سیاه',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: appRed,
+                        ),
+                      ),
+                      if (me.hasSheriffShield)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'با سپر داروغه، خرید کالای قاچاق ممکن نیست.',
+                          ),
+                        ),
+                      ...contrabandCards.map(
+                        (card) => _CardRow(
+                          card: card,
+                          actionLabel: 'خرید',
+                          onAction: me.hasSheriffShield
+                              ? null
+                              : () async {
                                   try {
-                                    await widget.api.buyLegal(
+                                    await widget.api.buyContraband(
                                       widget.matchId,
                                       card.cardId,
                                     );
@@ -315,9 +301,9 @@ class _GamePageState extends State<GamePage> {
                                     }
                                   }
                                 },
-                              ),
-                            ),
-                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
