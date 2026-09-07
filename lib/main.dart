@@ -741,67 +741,69 @@ class _MatchesPageState extends State<MatchesPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('مسابقات')),
-    body: FutureBuilder<List<MatchInfo>>(
-      future: _matches,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done)
-          return const Center(child: CircularProgressIndicator());
-        if (snapshot.hasError)
-          return Center(
-            child: TextButton.icon(
-              onPressed: _refresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('دریافت مسابقات ناموفق بود'),
-            ),
-          );
-        final matches = snapshot.data!;
-        return RefreshIndicator(
-          onRefresh: () async => _refresh(),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: matches.isEmpty ? 1 : matches.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              if (matches.isEmpty)
-                return const Padding(
-                  padding: EdgeInsets.only(top: 80),
-                  child: Center(
-                    child: Text('مسابقه عمومی در انتظار شروع نیست.'),
+    body: ScreenBackground(
+      child: FutureBuilder<List<MatchInfo>>(
+        future: _matches,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done)
+            return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError)
+            return Center(
+              child: TextButton.icon(
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('دریافت مسابقات ناموفق بود'),
+              ),
+            );
+          final matches = snapshot.data!;
+          return RefreshIndicator(
+            onRefresh: () async => _refresh(),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: matches.isEmpty ? 1 : matches.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                if (matches.isEmpty)
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: Text('مسابقه عمومی در انتظار شروع نیست.'),
+                    ),
+                  );
+                final item = matches[index];
+                return Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: appGold,
+                      child: Icon(Icons.public, color: Colors.black),
+                    ),
+                    title: Text(item.name),
+                    subtitle: Text(
+                      '${item.section}  |  کد: ${persianDigits(item.roomCode)}',
+                    ),
+                    trailing: FilledButton(
+                      onPressed: () async {
+                        try {
+                          final info = await PackageInfo.fromPlatform();
+                          final id = await widget.api.joinMatch(
+                            item.roomCode,
+                            info.version,
+                            info.buildNumber,
+                          );
+                          widget.onOpen(id);
+                        } catch (error) {
+                          if (context.mounted) showFailure(context, error);
+                        }
+                      },
+                      child: const Text('پیوستن'),
+                    ),
                   ),
                 );
-              final item = matches[index];
-              return Card(
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: appGold,
-                    child: Icon(Icons.public, color: Colors.black),
-                  ),
-                  title: Text(item.name),
-                  subtitle: Text(
-                    '${item.section}  |  کد: ${persianDigits(item.roomCode)}',
-                  ),
-                  trailing: FilledButton(
-                    onPressed: () async {
-                      try {
-                        final info = await PackageInfo.fromPlatform();
-                        final id = await widget.api.joinMatch(
-                          item.roomCode,
-                          info.version,
-                          info.buildNumber,
-                        );
-                        widget.onOpen(id);
-                      } catch (error) {
-                        if (context.mounted) showFailure(context, error);
-                      }
-                    },
-                    child: const Text('پیوستن'),
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
+              },
+            ),
+          );
+        },
+      ),
     ),
   );
 }
@@ -846,51 +848,54 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('ساخت اتاق')),
-    body: SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
-              style: TextStyle(height: 1.8),
-            ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: _name,
-              maxLength: 80,
-              decoration: const InputDecoration(labelText: 'نام مسابقه'),
-            ),
-            const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              value: _section,
-              decoration: const InputDecoration(labelText: 'بخش مسابقه'),
-              items: const ['تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای']
-                  .map(
-                    (item) => DropdownMenuItem(value: item, child: Text(item)),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _section = value!),
-            ),
-            SwitchListTile(
-              value: _private,
-              onChanged: (value) => setState(() => _private = value),
-              title: const Text('اتاق خصوصی'),
-              subtitle: Text(
-                _private
-                    ? 'ورود فقط با کد هشت رقمی'
-                    : 'در فهرست مسابقات هم دیده می‌شود',
+    body: ScreenBackground(
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
+                style: TextStyle(height: 1.8),
               ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: appRed),
-              onPressed: _busy ? null : _create,
-              icon: const Icon(Icons.add_business),
-              label: Text(_busy ? 'در حال ساخت...' : 'ساخت اتاق'),
-            ),
-          ],
+              const SizedBox(height: 18),
+              TextField(
+                controller: _name,
+                maxLength: 80,
+                decoration: const InputDecoration(labelText: 'نام مسابقه'),
+              ),
+              const SizedBox(height: 14),
+              DropdownButtonFormField<String>(
+                value: _section,
+                decoration: const InputDecoration(labelText: 'بخش مسابقه'),
+                items: const ['تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای']
+                    .map(
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item)),
+                    )
+                    .toList(),
+                onChanged: (value) => setState(() => _section = value!),
+              ),
+              SwitchListTile(
+                value: _private,
+                onChanged: (value) => setState(() => _private = value),
+                title: const Text('اتاق خصوصی'),
+                subtitle: Text(
+                  _private
+                      ? 'ورود فقط با کد هشت رقمی'
+                      : 'در فهرست مسابقات هم دیده می‌شود',
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(backgroundColor: appRed),
+                onPressed: _busy ? null : _create,
+                icon: const Icon(Icons.add_business),
+                label: Text(_busy ? 'در حال ساخت...' : 'ساخت اتاق'),
+              ),
+            ],
+          ),
         ),
       ),
     ),
@@ -937,47 +942,49 @@ class _JoinMatchPageState extends State<JoinMatchPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('وارد کردن کد اتاق')),
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(
-                Icons.pin_outlined,
-                size: 58,
-                color: Color(0xff2674bd),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'کد هشت رقمی اتاق را وارد کن.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 18),
-              TextField(
-                controller: _code,
-                maxLength: 8,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 26, letterSpacing: 3),
-                decoration: const InputDecoration(
-                  counterText: '',
-                  hintText: '۱۲۳۴۵۶۷۸',
+    body: ScreenBackground(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.pin_outlined,
+                  size: 58,
+                  color: Color(0xff2674bd),
                 ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xff2674bd),
+                const SizedBox(height: 16),
+                const Text(
+                  'کد هشت رقمی اتاق را وارد کن.',
+                  textAlign: TextAlign.center,
                 ),
-                onPressed: _busy ? null : _join,
-                icon: const Icon(Icons.login),
-                label: Text(_busy ? 'در حال ورود...' : 'پیوستن'),
-              ),
-            ],
+                const SizedBox(height: 18),
+                TextField(
+                  controller: _code,
+                  maxLength: 8,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 26, letterSpacing: 3),
+                  decoration: const InputDecoration(
+                    counterText: '',
+                    hintText: '۱۲۳۴۵۶۷۸',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xff2674bd),
+                  ),
+                  onPressed: _busy ? null : _join,
+                  icon: const Icon(Icons.login),
+                  label: Text(_busy ? 'در حال ورود...' : 'پیوستن'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -991,41 +998,48 @@ class LeaguePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('لیگ امتیاز و رتبه')),
-    body: FutureBuilder<List<Json>>(
-      future: api.league(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done)
-          return const Center(child: CircularProgressIndicator());
-        if (snapshot.hasError)
-          return const Center(child: Text('دریافت جدول لیگ ناموفق بود.'));
-        final items = snapshot.data!;
-        if (items.isEmpty)
-          return const Center(
-            child: Text('هنوز نتیجه‌ای در لیگ ثبت نشده است.'),
-          );
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: items.length,
-          separatorBuilder: (_, _) => const Divider(),
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: index < 3 ? appGold : appNavy,
-                child: Text(
-                  persianDigits(index + 1),
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              title: Text(jsonString(item['name'], 'بازرگان')),
-              subtitle: Text('برد: ${persianDigits(jsonInt(item['wins']))}'),
-              trailing: Text(
-                '${money(jsonInt(item['score'] ?? item['points']))} امتیاز',
-              ),
+    body: ScreenBackground(
+      child: FutureBuilder<List<Json>>(
+        future: api.league(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done)
+            return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError)
+            return const Center(child: Text('دریافت جدول لیگ ناموفق بود.'));
+          final items = snapshot.data!;
+          if (items.isEmpty)
+            return const Center(
+              child: Text('هنوز نتیجه‌ای در لیگ ثبت نشده است.'),
             );
-          },
-        );
-      },
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const Divider(),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final name = jsonString(item['displayName']).trim();
+              final points =
+                  item['totalPoints'] ?? item['score'] ?? item['points'];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: index < 3 ? appGold : appNavy,
+                  child: Text(
+                    persianDigits(jsonInt(item['rank'], index + 1)),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                title: Text(
+                  name.isEmpty || name == 'بازرگان'
+                      ? 'نام و نام خانوادگی ثبت نشده'
+                      : name,
+                ),
+                subtitle: Text('برد: ${persianDigits(jsonInt(item['wins']))}'),
+                trailing: Text('${money(jsonInt(points))} امتیاز'),
+              );
+            },
+          );
+        },
+      ),
     ),
   );
 }
@@ -1062,55 +1076,59 @@ class _UpdatePageState extends State<UpdatePage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('بروزرسانی')),
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    widget.hasUpdate
-                        ? Icons.system_update_alt_rounded
-                        : Icons.verified_outlined,
-                    size: 58,
-                    color: widget.hasUpdate ? appGold : appGreen,
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    widget.hasUpdate
-                        ? 'نسخه جدید آماده نصب است.'
-                        : 'نسخه نصب‌شده به‌روز است.',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 19,
+    body: ScreenBackground(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      widget.hasUpdate
+                          ? Icons.system_update_alt_rounded
+                          : Icons.verified_outlined,
+                      size: 58,
+                      color: widget.hasUpdate ? appGold : appGreen,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 18),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: appNavy),
-                    onPressed: _download,
-                    icon: const Icon(Icons.download_rounded),
-                    label: const Text('دانلود و نصب نسخه جدید'),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: _checking
-                        ? null
-                        : () async {
-                            setState(() => _checking = true);
-                            await widget.onChecked();
-                            if (mounted) setState(() => _checking = false);
-                          },
-                    icon: const Icon(Icons.refresh),
-                    label: Text(_checking ? 'در حال بررسی...' : 'بررسی دوباره'),
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    Text(
+                      widget.hasUpdate
+                          ? 'نسخه جدید آماده نصب است.'
+                          : 'نسخه نصب‌شده به‌روز است.',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 19,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 18),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(backgroundColor: appNavy),
+                      onPressed: _download,
+                      icon: const Icon(Icons.download_rounded),
+                      label: const Text('دانلود و نصب نسخه جدید'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: _checking
+                          ? null
+                          : () async {
+                              setState(() => _checking = true);
+                              await widget.onChecked();
+                              if (mounted) setState(() => _checking = false);
+                            },
+                      icon: const Icon(Icons.refresh),
+                      label: Text(
+                        _checking ? 'در حال بررسی...' : 'بررسی دوباره',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
