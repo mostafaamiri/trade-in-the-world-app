@@ -70,7 +70,7 @@ class ScreenBackground extends StatelessWidget {
   const ScreenBackground({
     super.key,
     required this.child,
-    this.image = 'assets/images/merchants-row-background.png',
+    this.image = 'assets/images/business-game-background.png',
   });
 
   final Widget child;
@@ -81,7 +81,7 @@ class ScreenBackground extends StatelessWidget {
     fit: StackFit.expand,
     children: [
       Image.asset(image, fit: BoxFit.cover),
-      const ColoredBox(color: Color(0xA6FFFFFF)),
+      const ColoredBox(color: Color(0x33FFFFFF)),
       child,
     ],
   );

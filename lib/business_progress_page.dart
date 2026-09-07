@@ -146,224 +146,230 @@ class _BusinessProgressPageState extends State<BusinessProgressPage> {
           );
     return Scaffold(
       appBar: AppBar(title: const Text('پیشرفت کسب‌وکار')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(14),
-          children: [
-            Card(
-              color: appNavy,
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: appGold,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            _stageIcon(_business.stageIcon),
-                            color: Colors.black,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _business.businessName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 19,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                '${_business.stageName} | سطح ${persianDigits(_business.businessStage)}',
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    _ProgressLine(
-                      label: _business.isFinalStage
-                          ? 'بالاترین مرحله کسب‌وکار'
-                          : 'آمادگی برای ${_business.nextStageName}',
-                      value: nextProgress,
-                      color: appGold,
-                    ),
-                    const SizedBox(height: 11),
-                    _ProgressLine(
-                      label:
-                          'کوین: ${persianDigits(_business.coins)} | هر برد: ${persianDigits(_business.coinRewardPerWin)} کوین',
-                      value: _business.isFinalStage
-                          ? 1
-                          : (_business.coins / _business.nextStageCost).clamp(
-                              0.0,
-                              1.0,
+      body: ScreenBackground(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(14),
+            children: [
+              Card(
+                color: appNavy,
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: appGold,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                      color: appGold,
-                    ),
-                    const SizedBox(height: 11),
-                    _ProgressLine(
-                      label:
-                          'XP: ${money(_business.experience)} / ${money(_business.experienceForNextLevel)}',
-                      value: experienceProgress,
-                      color: appGreen,
-                    ),
-                  ],
+                            child: Icon(
+                              _stageIcon(_business.stageIcon),
+                              color: Colors.black,
+                              size: 30,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _business.businessName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 19,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${_business.stageName} | سطح ${persianDigits(_business.businessStage)}',
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      _ProgressLine(
+                        label: _business.isFinalStage
+                            ? 'بالاترین مرحله کسب‌وکار'
+                            : 'آمادگی برای ${_business.nextStageName}',
+                        value: nextProgress,
+                        color: appGold,
+                      ),
+                      const SizedBox(height: 11),
+                      _ProgressLine(
+                        label:
+                            'کوین: ${persianDigits(_business.coins)} | هر برد: ${persianDigits(_business.coinRewardPerWin)} کوین',
+                        value: _business.isFinalStage
+                            ? 1
+                            : (_business.coins / _business.nextStageCost).clamp(
+                                0.0,
+                                1.0,
+                              ),
+                        color: appGold,
+                      ),
+                      const SizedBox(height: 11),
+                      _ProgressLine(
+                        label:
+                            'XP: ${money(_business.experience)} / ${money(_business.experienceForNextLevel)}',
+                        value: experienceProgress,
+                        color: appGreen,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            _DashboardGrid(business: _business),
-            const SizedBox(height: 14),
-            _UpgradePanel(
-              business: _business,
-              working: _working,
-              onUpgrade: () => _run(
-                () => widget.matchId == null
-                    ? widget.api.upgradeBusinessProfile()
-                    : widget.api.upgradeBusiness(widget.matchId!),
-                celebrate: true,
-              ),
-            ),
-            if (!widget.compact) ...[
+              const SizedBox(height: 12),
+              _DashboardGrid(business: _business),
               const SizedBox(height: 14),
-              _SectionTitle(
-                icon: Icons.verified_outlined,
-                title: 'قابلیت‌های بازشده',
+              _UpgradePanel(
+                business: _business,
+                working: _working,
+                onUpgrade: () => _run(
+                  () => widget.matchId == null
+                      ? widget.api.upgradeBusinessProfile()
+                      : widget.api.upgradeBusiness(widget.matchId!),
+                  celebrate: true,
+                ),
               ),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _business.features
-                    .map(
-                      (item) => Chip(
-                        avatar: const Icon(
-                          Icons.check_circle_outline,
-                          size: 17,
+              if (!widget.compact) ...[
+                const SizedBox(height: 14),
+                _SectionTitle(
+                  icon: Icons.verified_outlined,
+                  title: 'قابلیت‌های بازشده',
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _business.features
+                      .map(
+                        (item) => Chip(
+                          avatar: const Icon(
+                            Icons.check_circle_outline,
+                            size: 17,
+                          ),
+                          label: Text(item.label),
                         ),
-                        label: Text(item.label),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 16),
-              _SectionTitle(icon: Icons.task_alt, title: 'ماموریت‌ها'),
-              const SizedBox(height: 6),
-              ..._business.missions.map(
-                (mission) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _MissionTile(
-                    mission: mission,
-                    working: _working,
-                    onClaim: () => _run(
-                      () => widget.api.claimBusinessMission(
-                        widget.matchId!,
-                        mission.id,
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 16),
+                _SectionTitle(icon: Icons.task_alt, title: 'ماموریت‌ها'),
+                const SizedBox(height: 6),
+                ..._business.missions.map(
+                  (mission) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _MissionTile(
+                      mission: mission,
+                      working: _working,
+                      onClaim: () => _run(
+                        () => widget.api.claimBusinessMission(
+                          widget.matchId!,
+                          mission.id,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              _SectionTitle(
-                icon: Icons.domain_add_outlined,
-                title: 'دارایی‌ها',
-              ),
-              const SizedBox(height: 6),
-              ..._business.buildingOptions
-                  .where((item) => item.unlocked)
-                  .map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _BuildingTile(
-                        building: item,
-                        working: _working,
-                        onBuild: () => _run(
-                          () => widget.api.buildBusinessAsset(
-                            widget.matchId!,
-                            item.type,
+                const SizedBox(height: 8),
+                _SectionTitle(
+                  icon: Icons.domain_add_outlined,
+                  title: 'دارایی‌ها',
+                ),
+                const SizedBox(height: 6),
+                ..._business.buildingOptions
+                    .where((item) => item.unlocked)
+                    .map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _BuildingTile(
+                          building: item,
+                          working: _working,
+                          onBuild: () => _run(
+                            () => widget.api.buildBusinessAsset(
+                              widget.matchId!,
+                              item.type,
+                            ),
                           ),
                         ),
                       ),
                     ),
+                if (_business.productionAvailable) ...[
+                  const SizedBox(height: 8),
+                  _SectionTitle(
+                    icon: Icons.factory_outlined,
+                    title: 'خط تولید',
                   ),
-              if (_business.productionAvailable) ...[
-                const SizedBox(height: 8),
-                _SectionTitle(icon: Icons.factory_outlined, title: 'خط تولید'),
-                const SizedBox(height: 6),
-                _ProductionPanel(
-                  business: _business,
-                  working: _working,
-                  onMaterials: () => _run(
-                    () => widget.api.buyBusinessMaterials(widget.matchId!),
-                  ),
-                  onProduce: () => _run(
-                    () => widget.api.produceBusinessGoods(widget.matchId!),
-                  ),
-                  onSell: () =>
-                      _run(() => widget.api.sellBusinessGoods(widget.matchId!)),
-                ),
-              ],
-              if (_business.businessStage >= 7) ...[
-                const SizedBox(height: 16),
-                _SectionTitle(
-                  icon: Icons.language_outlined,
-                  title: 'بازار خارجی',
-                ),
-                const SizedBox(height: 6),
-                _InternationalPanel(
-                  business: _business,
-                  working: _working,
-                  onStart: _chooseMarket,
-                  onComplete: (contract) => _run(
-                    () => widget.api.completeInternationalContract(
-                      widget.matchId!,
-                      contract.id,
+                  const SizedBox(height: 6),
+                  _ProductionPanel(
+                    business: _business,
+                    working: _working,
+                    onMaterials: () => _run(
+                      () => widget.api.buyBusinessMaterials(widget.matchId!),
+                    ),
+                    onProduce: () => _run(
+                      () => widget.api.produceBusinessGoods(widget.matchId!),
+                    ),
+                    onSell: () => _run(
+                      () => widget.api.sellBusinessGoods(widget.matchId!),
                     ),
                   ),
-                ),
-              ],
-              if (_business.businessStage >= 8) ...[
-                const SizedBox(height: 16),
-                _SectionTitle(
-                  icon: Icons.account_balance_outlined,
-                  title: 'سرمایه‌گذاری هلدینگ',
-                ),
-                const SizedBox(height: 6),
-                _InvestmentPanel(
-                  business: _business,
-                  working: _working,
-                  onStart: () => _run(
-                    () => widget.api.startBusinessInvestment(widget.matchId!),
+                ],
+                if (_business.businessStage >= 7) ...[
+                  const SizedBox(height: 16),
+                  _SectionTitle(
+                    icon: Icons.language_outlined,
+                    title: 'بازار خارجی',
                   ),
-                  onClaim: (investment) => _run(
-                    () => widget.api.claimBusinessInvestment(
-                      widget.matchId!,
-                      investment.id,
+                  const SizedBox(height: 6),
+                  _InternationalPanel(
+                    business: _business,
+                    working: _working,
+                    onStart: _chooseMarket,
+                    onComplete: (contract) => _run(
+                      () => widget.api.completeInternationalContract(
+                        widget.matchId!,
+                        contract.id,
+                      ),
                     ),
                   ),
-                ),
+                ],
+                if (_business.businessStage >= 8) ...[
+                  const SizedBox(height: 16),
+                  _SectionTitle(
+                    icon: Icons.account_balance_outlined,
+                    title: 'سرمایه‌گذاری هلدینگ',
+                  ),
+                  const SizedBox(height: 6),
+                  _InvestmentPanel(
+                    business: _business,
+                    working: _working,
+                    onStart: () => _run(
+                      () => widget.api.startBusinessInvestment(widget.matchId!),
+                    ),
+                    onClaim: (investment) => _run(
+                      () => widget.api.claimBusinessInvestment(
+                        widget.matchId!,
+                        investment.id,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ],
-          ],
+          ),
         ),
       ),
     );

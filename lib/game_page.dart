@@ -417,60 +417,63 @@ class _GamePageState extends State<GamePage> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center),
-              ),
-            )
-          : snapshot == null
-          ? const SizedBox()
-          : switch (snapshot.match.status) {
-              'waiting' => _WaitingRoom(
-                snapshot: snapshot,
-                me: _me,
-                onReady: (value) =>
-                    _invoke(() => widget.api.ready(widget.matchId, value)),
-                onStart: () => _invoke(() => widget.api.start(widget.matchId)),
-                onDelete: () async {
-                  await _invoke(() => widget.api.deleteMatch(widget.matchId));
-                  if (mounted) Navigator.pop(context);
-                },
-              ),
-              'finished' => _FinishedGame(snapshot: snapshot),
-              _ => _ActiveGame(
-                snapshot: snapshot,
-                me: _me,
-                cities: _cities,
-                busy: _working,
-                cityForPosition: _cityForPosition,
-                onRoll: _roll,
-                onCity: _showCityActions,
-                onInventory: _inventory,
-                onBusiness: () {
-                  Navigator.of(context)
-                      .push<void>(
-                        MaterialPageRoute(
-                          builder: (_) => BusinessProgressPage(
-                            api: widget.api,
-                            matchId: widget.matchId,
-                            initialBusiness: snapshot.business,
+      body: ScreenBackground(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(_error!, textAlign: TextAlign.center),
+                ),
+              )
+            : snapshot == null
+            ? const SizedBox()
+            : switch (snapshot.match.status) {
+                'waiting' => _WaitingRoom(
+                  snapshot: snapshot,
+                  me: _me,
+                  onReady: (value) =>
+                      _invoke(() => widget.api.ready(widget.matchId, value)),
+                  onStart: () =>
+                      _invoke(() => widget.api.start(widget.matchId)),
+                  onDelete: () async {
+                    await _invoke(() => widget.api.deleteMatch(widget.matchId));
+                    if (mounted) Navigator.pop(context);
+                  },
+                ),
+                'finished' => _FinishedGame(snapshot: snapshot),
+                _ => _ActiveGame(
+                  snapshot: snapshot,
+                  me: _me,
+                  cities: _cities,
+                  busy: _working,
+                  cityForPosition: _cityForPosition,
+                  onRoll: _roll,
+                  onCity: _showCityActions,
+                  onInventory: _inventory,
+                  onBusiness: () {
+                    Navigator.of(context)
+                        .push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => BusinessProgressPage(
+                              api: widget.api,
+                              matchId: widget.matchId,
+                              initialBusiness: snapshot.business,
+                            ),
                           ),
-                        ),
-                      )
-                      .then((_) {
-                        if (mounted) _refresh(silent: true);
-                      });
-                },
-                onUploadProduct: _uploadProduct,
-                onSouvenir: () => _wheel(false),
-                onZoo: () => _wheel(true),
-                onBandit: _showBandit,
-              ),
-            },
+                        )
+                        .then((_) {
+                          if (mounted) _refresh(silent: true);
+                        });
+                  },
+                  onUploadProduct: _uploadProduct,
+                  onSouvenir: () => _wheel(false),
+                  onZoo: () => _wheel(true),
+                  onBandit: _showBandit,
+                ),
+              },
+      ),
     );
   }
 }
