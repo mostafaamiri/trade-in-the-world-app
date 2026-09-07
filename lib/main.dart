@@ -477,6 +477,145 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showCategories() => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheetContext) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(sheetContext).height * .82,
+        ),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
+          children: [
+            const ListTile(
+              title: Text(
+                'دسته‌بندی',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.emoji_events_outlined),
+              title: const Text('لیگ امتیاز و رتبه'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => LeaguePage(api: widget.api),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.military_tech_outlined),
+              title: const Text('سطح'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openLevel();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.groups_rounded),
+              title: const Text('مسابقات'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MatchesPage(api: widget.api, onOpen: _openMatch),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_business_rounded),
+              title: const Text('ساخت اتاق'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                final id = await Navigator.of(context).push<String>(
+                  MaterialPageRoute(
+                    builder: (_) => CreateMatchPage(api: widget.api),
+                  ),
+                );
+                if (id != null && mounted) _openMatch(id);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.pin_outlined),
+              title: const Text('وارد کردن کد اتاق'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                final id = await Navigator.of(context).push<String>(
+                  MaterialPageRoute(
+                    builder: (_) => JoinMatchPage(api: widget.api),
+                  ),
+                );
+                if (id != null && mounted) _openMatch(id);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.manage_accounts_outlined),
+              title: const Text('ویرایش حساب کاربری'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _editProfile();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.new_releases_outlined),
+              title: Text('نسخه: $_version'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                showDialog<void>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('نسخه برنامه'),
+                    content: Text('شما از نسخه $_version استفاده می‌کنید.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('بستن'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Badge(
+                isLabelVisible: _hasUpdate,
+                child: const Icon(Icons.system_update_alt_rounded),
+              ),
+              title: const Text('بروزرسانی'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => UpdatePage(
+                      hasUpdate: _hasUpdate,
+                      onChecked: _checkUpdate,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: appRed),
+              title: const Text('حذف حساب', style: TextStyle(color: appRed)),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _deleteProfile();
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     body: ScreenBackground(
@@ -500,16 +639,6 @@ class _HomePageState extends State<HomePage> {
                             fontSize: 18,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: _editProfile,
-                        icon: const Icon(Icons.edit_outlined),
-                        tooltip: 'ویرایش حساب',
-                      ),
-                      IconButton(
-                        onPressed: _deleteProfile,
-                        icon: const Icon(Icons.delete_outline, color: appRed),
-                        tooltip: 'حذف حساب',
                       ),
                     ],
                   ),
@@ -548,140 +677,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 18),
                   _HomeAction(
-                    color: Colors.black,
-                    icon: Icons.emoji_events_outlined,
-                    label: 'لیگ امتیاز و رتبه',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => LeaguePage(api: widget.api),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final twoColumns = constraints.maxWidth > 450;
-                      final buttons = [
-                        _HomeAction(
-                          color: appBurgundy,
-                          icon: Icons.military_tech_outlined,
-                          label: 'سطح',
-                          onTap: _openLevel,
-                        ),
-                        _HomeAction(
-                          color: appGold,
-                          foreground: Colors.black,
-                          icon: Icons.groups_rounded,
-                          label: 'مسابقات',
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MatchesPage(
-                                api: widget.api,
-                                onOpen: _openMatch,
-                              ),
-                            ),
-                          ),
-                        ),
-                        _HomeAction(
-                          color: appRed,
-                          icon: Icons.add_business_rounded,
-                          label: 'ساخت اتاق',
-                          onTap: () async {
-                            final id = await Navigator.push<String>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    CreateMatchPage(api: widget.api),
-                              ),
-                            );
-                            if (id != null && mounted) _openMatch(id);
-                          },
-                        ),
-                        _HomeAction(
-                          color: const Color(0xff2674bd),
-                          icon: Icons.pin_outlined,
-                          label: 'وارد کردن کد اتاق',
-                          onTap: () async {
-                            final id = await Navigator.push<String>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => JoinMatchPage(api: widget.api),
-                              ),
-                            );
-                            if (id != null && mounted) _openMatch(id);
-                          },
-                        ),
-                        _HomeAction(
-                          color: appGreen,
-                          icon: Icons.manage_accounts_outlined,
-                          label: 'ویرایش حساب کاربری',
-                          onTap: _editProfile,
-                        ),
-                      ];
-                      if (!twoColumns)
-                        return Column(
-                          children: buttons
-                              .map(
-                                (button) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: button,
-                                ),
-                              )
-                              .toList(),
-                        );
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: buttons
-                            .map(
-                              (button) => SizedBox(
-                                width: (constraints.maxWidth - 12) / 2,
-                                child: button,
-                              ),
-                            )
-                            .toList(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _HomeAction(
                     color: appNavy,
-                    icon: Icons.new_releases_outlined,
-                    label: 'نام نسخه: $_version',
-                    onTap: () => showDialog<void>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('نسخه برنامه'),
-                        content: Text('شما از نسخه $_version استفاده می‌کنید.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('بستن'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Badge(
-                    isLabelVisible: _hasUpdate,
-                    backgroundColor: Colors.red,
-                    child: _HomeAction(
-                      color: appNavy,
-                      icon: Icons.system_update_alt_rounded,
-                      label: 'بروزرسانی',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => UpdatePage(
-                            hasUpdate: _hasUpdate,
-                            onChecked: _checkUpdate,
-                          ),
-                        ),
-                      ),
-                    ),
+                    icon: Icons.category_outlined,
+                    label: 'دسته‌بندی',
+                    onTap: _showCategories,
                   ),
                 ],
               ),
@@ -699,11 +698,9 @@ class _HomeAction extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.foreground = Colors.white,
   });
 
   final Color color;
-  final Color foreground;
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -714,7 +711,6 @@ class _HomeAction extends StatelessWidget {
     child: FilledButton.icon(
       style: FilledButton.styleFrom(
         backgroundColor: color,
-        foregroundColor: foreground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       onPressed: onTap,

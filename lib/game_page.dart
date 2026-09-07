@@ -24,7 +24,6 @@ class _GamePageState extends State<GamePage> {
   GameSnapshot? _snapshot;
   List<Json> _cities = const [];
   Timer? _pollTimer;
-  Timer? _clockTimer;
   bool _loading = true;
   bool _working = false;
   String? _error;
@@ -38,15 +37,11 @@ class _GamePageState extends State<GamePage> {
       const Duration(seconds: 3),
       (_) => _refresh(silent: true),
     );
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _clockTimer?.cancel();
     super.dispose();
   }
 
@@ -627,43 +622,14 @@ class _ActiveGame extends StatelessWidget {
     }
     final city = cityForPosition(me!.position);
     final myTurn = snapshot.match.currentTurnPlayerId == me!.uid;
-    final endsAt = snapshot.match.endsAt;
-    final remaining = endsAt == null
-        ? Duration.zero
-        : endsAt.difference(DateTime.now());
-    final hours = remaining.isNegative ? 0 : remaining.inHours;
-    final minutes = remaining.isNegative
-        ? 0
-        : remaining.inMinutes.remainder(60);
-    final seconds = remaining.isNegative
-        ? 0
-        : remaining.inSeconds.remainder(60);
-
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _StatTile(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'پول جهانی',
-                  value: '${money(me!.cashBalance)} تومان',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _StatTile(
-                  icon: Icons.timer_outlined,
-                  label: 'زمان باقی‌مانده',
-                  value:
-                      '${persianDigits(hours.toString().padLeft(2, '0'))}:'
-                      '${persianDigits(minutes.toString().padLeft(2, '0'))}:'
-                      '${persianDigits(seconds.toString().padLeft(2, '0'))}',
-                ),
-              ),
-            ],
+          _StatTile(
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'پول جهانی',
+            value: '${money(me!.cashBalance)} تومان',
           ),
           const SizedBox(height: 12),
           WorldBoard(
