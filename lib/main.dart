@@ -150,7 +150,10 @@ class _SplashPageState extends State<SplashPage>
     body: Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/images/splash_merchants.png', fit: BoxFit.cover),
+        Image.asset(
+          'assets/images/business-game-background.png',
+          fit: BoxFit.cover,
+        ),
         const ColoredBox(color: Color(0x33000000)),
         SafeArea(
           child: Padding(
