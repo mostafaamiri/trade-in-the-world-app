@@ -170,6 +170,7 @@ class GameApi {
       _request('GET', '/game/matches/$matchId/cards'),
       _request('GET', '/game/matches/$matchId/events'),
       _request('GET', '/game/matches/$matchId/trades'),
+      _request('GET', '/game/matches/$matchId/business'),
     ]);
     return GameSnapshot(
       match: MatchInfo.fromJson(
@@ -183,8 +184,73 @@ class GameApi {
       trades: jsonMaps(responses[4]['items'])
           .map(PendingTrade.fromJson)
           .toList(),
+      business: BusinessProgress.fromJson(
+        (responses[5]['business'] as Map).cast<String, dynamic>(),
+      ),
     );
   }
+
+  Future<BusinessActionResult> _businessAction(
+    String path, [
+    Json? body,
+  ]) async {
+    final data = await _request('POST', path, body);
+    return BusinessActionResult(
+      BusinessProgress.fromJson(
+        (data['business'] as Map).cast<String, dynamic>(),
+      ),
+      jsonString(data['message']),
+    );
+  }
+
+  Future<BusinessActionResult> upgradeBusiness(String matchId) =>
+      _businessAction('/game/matches/$matchId/business/upgrade');
+
+  Future<BusinessActionResult> claimBusinessMission(
+    String matchId,
+    String missionId,
+  ) => _businessAction(
+    '/game/matches/$matchId/business/missions/$missionId/claim',
+  );
+
+  Future<BusinessActionResult> buildBusinessAsset(
+    String matchId,
+    String type,
+  ) => _businessAction('/game/matches/$matchId/business/buildings/$type');
+
+  Future<BusinessActionResult> buyBusinessMaterials(String matchId) =>
+      _businessAction('/game/matches/$matchId/business/production/materials');
+
+  Future<BusinessActionResult> produceBusinessGoods(String matchId) =>
+      _businessAction('/game/matches/$matchId/business/production/run');
+
+  Future<BusinessActionResult> sellBusinessGoods(String matchId) =>
+      _businessAction('/game/matches/$matchId/business/production/sell');
+
+  Future<BusinessActionResult> startInternationalContract(
+    String matchId,
+    String countryId,
+  ) => _businessAction(
+    '/game/matches/$matchId/business/international-contracts',
+    {'countryId': countryId},
+  );
+
+  Future<BusinessActionResult> completeInternationalContract(
+    String matchId,
+    String contractId,
+  ) => _businessAction(
+    '/game/matches/$matchId/business/international-contracts/$contractId/complete',
+  );
+
+  Future<BusinessActionResult> startBusinessInvestment(String matchId) =>
+      _businessAction('/game/matches/$matchId/business/investments');
+
+  Future<BusinessActionResult> claimBusinessInvestment(
+    String matchId,
+    String investmentId,
+  ) => _businessAction(
+    '/game/matches/$matchId/business/investments/$investmentId/claim',
+  );
 
   Future<void> ready(String matchId, bool isReady) =>
       _request('POST', '/game/matches/$matchId/ready', {'isReady': isReady});

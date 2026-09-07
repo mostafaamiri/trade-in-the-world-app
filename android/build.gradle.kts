@@ -19,6 +19,15 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.force(
+            "com.android.tools:desugar_jdk_libs:2.1.5",
+            "com.android.tools:desugar_jdk_libs_configuration:2.1.5",
+        )
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'models.dart';
+import 'business_progress_page.dart';
 import 'services/game_api.dart';
 import 'ui.dart';
 
@@ -449,6 +450,21 @@ class _GamePageState extends State<GamePage> {
                 onRoll: _roll,
                 onCity: _showCityActions,
                 onInventory: _inventory,
+                onBusiness: () {
+                  Navigator.of(context)
+                      .push<void>(
+                        MaterialPageRoute(
+                          builder: (_) => BusinessProgressPage(
+                            api: widget.api,
+                            matchId: widget.matchId,
+                            initialBusiness: snapshot.business,
+                          ),
+                        ),
+                      )
+                      .then((_) {
+                        if (mounted) _refresh(silent: true);
+                      });
+                },
                 onUploadProduct: _uploadProduct,
                 onSouvenir: () => _wheel(false),
                 onZoo: () => _wheel(true),
@@ -580,6 +596,7 @@ class _ActiveGame extends StatelessWidget {
     required this.onRoll,
     required this.onCity,
     required this.onInventory,
+    required this.onBusiness,
     required this.onUploadProduct,
     required this.onSouvenir,
     required this.onZoo,
@@ -594,6 +611,7 @@ class _ActiveGame extends StatelessWidget {
   final VoidCallback onRoll;
   final VoidCallback onCity;
   final VoidCallback onInventory;
+  final VoidCallback onBusiness;
   final VoidCallback onUploadProduct;
   final VoidCallback onSouvenir;
   final VoidCallback onZoo;
@@ -710,6 +728,11 @@ class _ActiveGame extends StatelessWidget {
                 onPressed: onInventory,
                 icon: const Icon(Icons.style_outlined),
                 label: const Text('کارت‌های من'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onBusiness,
+                icon: const Icon(Icons.business_center_outlined),
+                label: const Text('کسب‌وکار'),
               ),
               OutlinedButton.icon(
                 onPressed: onUploadProduct,
