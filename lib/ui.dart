@@ -4,6 +4,7 @@ const appGold = Color(0xfff4b500);
 const appNavy = Color(0xff172b4d);
 const appGreen = Color(0xff16815d);
 const appRed = Color(0xffc84242);
+const appBurgundy = Color(0xff851d3a);
 
 const avatars = <String, String>{
   'merchant_purple': 'assets/avatars/avatar_merchant_purple.png',

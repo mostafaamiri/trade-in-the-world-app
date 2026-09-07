@@ -190,6 +190,13 @@ class GameApi {
     );
   }
 
+  Future<BusinessProgress> business() async {
+    final data = await _request('GET', '/game/business');
+    return BusinessProgress.fromJson(
+      (data['business'] as Map).cast<String, dynamic>(),
+    );
+  }
+
   Future<BusinessActionResult> _businessAction(
     String path, [
     Json? body,
@@ -205,6 +212,9 @@ class GameApi {
 
   Future<BusinessActionResult> upgradeBusiness(String matchId) =>
       _businessAction('/game/matches/$matchId/business/upgrade');
+
+  Future<BusinessActionResult> upgradeBusinessProfile() =>
+      _businessAction('/game/business/upgrade');
 
   Future<BusinessActionResult> claimBusinessMission(
     String matchId,

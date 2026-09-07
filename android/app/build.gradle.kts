@@ -37,6 +37,12 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // The Flutter mirror does not publish all transitive lint-only artifacts.
+    // App analysis is run separately; do not block release packaging on them.
+    lint {
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {

@@ -382,6 +382,8 @@ class BusinessProgress {
     required this.businessName,
     required this.businessStage,
     required this.businessLevel,
+    required this.coins,
+    required this.coinRewardPerWin,
     required this.capital,
     required this.reputation,
     required this.experience,
@@ -416,6 +418,8 @@ class BusinessProgress {
   final String businessName;
   final int businessStage;
   final int businessLevel;
+  final int coins;
+  final int coinRewardPerWin;
   final int capital;
   final int reputation;
   final int experience;
@@ -458,6 +462,8 @@ class BusinessProgress {
       businessName: jsonString(json['businessName'], 'کسب‌وکار من'),
       businessStage: jsonInt(json['businessStage'], 1),
       businessLevel: jsonInt(json['businessLevel'], 1),
+      coins: jsonInt(json['coins']),
+      coinRewardPerWin: jsonInt(json['coinRewardPerWin'], 100),
       capital: jsonInt(json['capital']),
       reputation: jsonInt(json['reputation']),
       experience: jsonInt(json['experience']),

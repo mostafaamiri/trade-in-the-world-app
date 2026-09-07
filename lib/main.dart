@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'business_progress_page.dart';
 import 'game_page.dart';
 import 'models.dart';
 import 'services/game_api.dart';
@@ -364,11 +365,42 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _hasUpdate = false;
   String _version = '۰.۴.۰';
+  BusinessProgress? _business;
 
   @override
   void initState() {
     super.initState();
     _checkUpdate();
+    _loadBusiness();
+  }
+
+  Future<void> _loadBusiness() async {
+    try {
+      final business = await widget.api.business();
+      if (mounted) setState(() => _business = business);
+    } catch (_) {}
+  }
+
+  Future<void> _openLevel() async {
+    if (_business == null) await _loadBusiness();
+    if (!mounted) return;
+    final business = _business;
+    if (business == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('دریافت سطح و کوین ناموفق بود.')),
+      );
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => BusinessProgressPage(
+          api: widget.api,
+          initialBusiness: business,
+          compact: true,
+        ),
+      ),
+    );
+    if (mounted) _loadBusiness();
   }
 
   Future<void> _checkUpdate() async {
@@ -394,7 +426,10 @@ class _HomePageState extends State<HomePage> {
         builder: (_) => GamePage(api: widget.api, matchId: matchId),
       ),
     );
-    if (mounted) _checkUpdate();
+    if (mounted) {
+      _checkUpdate();
+      _loadBusiness();
+    }
   }
 
   Future<void> _editProfile() async {
@@ -475,6 +510,30 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: appGold,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.monetization_on_outlined),
+                        const SizedBox(width: 6),
+                        Text(
+                          _business == null
+                              ? 'کوین: ...'
+                              : 'کوین: ${persianDigits(_business!.coins)}',
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 22),
                   const Text(
                     'تجارت در جهان',
@@ -501,6 +560,12 @@ class _HomePageState extends State<HomePage> {
                     builder: (context, constraints) {
                       final twoColumns = constraints.maxWidth > 450;
                       final buttons = [
+                        _HomeAction(
+                          color: appBurgundy,
+                          icon: Icons.military_tech_outlined,
+                          label: 'سطح',
+                          onTap: _openLevel,
+                        ),
                         _HomeAction(
                           color: appGold,
                           foreground: Colors.black,
