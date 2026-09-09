@@ -38,6 +38,24 @@ class PlayerProfile {
   );
 }
 
+class GameMember {
+  const GameMember({
+    required this.id,
+    required this.name,
+    required this.avatarId,
+  });
+
+  final String id;
+  final String name;
+  final String avatarId;
+
+  factory GameMember.fromJson(Json json) => GameMember(
+    id: jsonString(json['id']),
+    name: jsonString(json['name'], 'بازرگان'),
+    avatarId: jsonString(json['avatarId'], 'merchant_purple'),
+  );
+}
+
 class MatchInfo {
   const MatchInfo({
     required this.matchId,

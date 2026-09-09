@@ -130,6 +130,11 @@ class GameApi {
     return jsonMaps(data['items']);
   }
 
+  Future<List<GameMember>> members() async {
+    final data = await _request('GET', '/game/members');
+    return jsonMaps(data['items']).map(GameMember.fromJson).toList();
+  }
+
   Future<String> createMatch({
     required String name,
     required String section,

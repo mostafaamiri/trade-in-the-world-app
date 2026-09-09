@@ -11,6 +11,7 @@ import 'business_progress_page.dart';
 import 'game_page.dart';
 import 'models.dart';
 import 'services/game_api.dart';
+import 'services/jalali_date.dart';
 import 'services/notification_service.dart';
 import 'ui.dart';
 
@@ -497,6 +498,28 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
+              leading: const Icon(Icons.people_outline_rounded),
+              title: const Text('نمایش اعضا'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MembersPage(api: widget.api),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month_outlined),
+              title: const Text('تقویم'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const CalendarPage()));
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.emoji_events_outlined),
               title: const Text('لیگ امتیاز و رتبه'),
               onTap: () {
@@ -688,6 +711,389 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+    ),
+  );
+}
+
+class MembersPage extends StatefulWidget {
+  const MembersPage({super.key, required this.api});
+
+  final GameApi api;
+
+  @override
+  State<MembersPage> createState() => _MembersPageState();
+}
+
+class _MembersPageState extends State<MembersPage> {
+  late Future<List<GameMember>> _members;
+
+  @override
+  void initState() {
+    super.initState();
+    _members = widget.api.members();
+  }
+
+  Future<void> _reload() async {
+    setState(() => _members = widget.api.members());
+    await _members;
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('اعضا')),
+    body: ScreenBackground(
+      child: FutureBuilder<List<GameMember>>(
+        future: _members,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: FilledButton.icon(
+                  onPressed: _reload,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('تلاش دوباره'),
+                ),
+              ),
+            );
+          }
+          final members = snapshot.data ?? const <GameMember>[];
+          if (members.isEmpty) {
+            return const Center(child: Text('هنوز عضوی ثبت‌نام نکرده است.'));
+          }
+          return RefreshIndicator(
+            onRefresh: _reload,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+              itemCount: members.length + 1,
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Text(
+                    '${persianDigits(members.length)} عضو',
+                    style: const TextStyle(
+                      color: appNavy,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  );
+                }
+                final member = members[index - 1];
+                return Card(
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    leading: AvatarCircle(avatarId: member.avatarId),
+                    title: Text(
+                      member.name,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
+
+class CalendarPage extends StatefulWidget {
+  const CalendarPage({super.key});
+
+  @override
+  State<CalendarPage> createState() => _CalendarPageState();
+}
+
+class _CalendarPageState extends State<CalendarPage> {
+  static const _weekdays = [
+    '',
+    'دوشنبه',
+    'سه‌شنبه',
+    'چهارشنبه',
+    'پنج‌شنبه',
+    'جمعه',
+    'شنبه',
+    'یک‌شنبه',
+  ];
+  static const _months = [
+    'فروردین',
+    'اردیبهشت',
+    'خرداد',
+    'تیر',
+    'مرداد',
+    'شهریور',
+    'مهر',
+    'آبان',
+    'آذر',
+    'دی',
+    'بهمن',
+    'اسفند',
+  ];
+  static const _dayWords = [
+    'یکم',
+    'دوم',
+    'سوم',
+    'چهارم',
+    'پنجم',
+    'ششم',
+    'هفتم',
+    'هشتم',
+    'نهم',
+    'دهم',
+    'یازدهم',
+    'دوازدهم',
+    'سیزدهم',
+    'چهاردهم',
+    'پانزدهم',
+    'شانزدهم',
+    'هفدهم',
+    'هجدهم',
+    'نوزدهم',
+    'بیستم',
+    'بیست‌ویکم',
+    'بیست‌ودوم',
+    'بیست‌وسوم',
+    'بیست‌وچهارم',
+    'بیست‌وپنجم',
+    'بیست‌وششم',
+    'بیست‌وهفتم',
+    'بیست‌وهشتم',
+    'بیست‌ونهم',
+    'سی‌ام',
+    'سی‌ویکم',
+  ];
+
+  late final DateTime _openedAt;
+  late final Timer _timer;
+  DateTime _now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _openedAt = _now;
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  String _twoDigits(int value) => value.toString().padLeft(2, '0');
+
+  String _time(DateTime value, {bool milliseconds = false}) {
+    final base =
+        '${_twoDigits(value.hour)}:${_twoDigits(value.minute)}:${_twoDigits(value.second)}';
+    return milliseconds
+        ? '$base.${value.millisecond.toString().padLeft(3, '0')}'
+        : base;
+  }
+
+  _CalendarInfo _calendarInfo(DateTime value) {
+    final jalali = jalaliDateFor(value);
+    final day = _dayWords[jalali.day - 1];
+    final weekday = _weekdays[value.weekday];
+    final month = _months[jalali.month - 1];
+    return _CalendarInfo(
+      day: day,
+      weekday: weekday,
+      month: month,
+      year: jalali.year,
+      century: jalali.year ~/ 100 + 1,
+      full: '$weekday، $day $month سال ${jalali.year}',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = _calendarInfo(_now);
+    final openedInfo = _calendarInfo(_openedAt);
+    return Scaffold(
+      appBar: AppBar(title: const Text('تقویم')),
+      body: Container(
+        width: double.infinity,
+        color: const Color(0xfff3f6f5),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: appNavy,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xffd8e3e0)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x26000000),
+                      blurRadius: 18,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _time(_now, milliseconds: true),
+                        textDirection: TextDirection.ltr,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      info.full,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xffe2e8f0),
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final twoColumns = constraints.maxWidth >= 360;
+                        return GridView.count(
+                          shrinkWrap: true,
+                          crossAxisCount: twoColumns ? 2 : 1,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: twoColumns ? 2.2 : 4.2,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            _CalendarDetail(label: 'روز ماه', value: info.day),
+                            _CalendarDetail(
+                              label: 'روز هفته',
+                              value: info.weekday,
+                            ),
+                            _CalendarDetail(
+                              label: 'ماه سال',
+                              value: info.month,
+                            ),
+                            _CalendarDetail(
+                              label: 'سال خورشیدی',
+                              value: persianDigits(info.year),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    _CalendarDetail(
+                      label: 'قرن',
+                      value: 'قرن ${persianDigits(info.century)}',
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Divider(color: Color(0x55FFFFFF)),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.push_pin_outlined,
+                          color: Color(0xff38bdf8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'تاریخ و ساعت باز شدن تقویم',
+                          style: TextStyle(
+                            color: Color(0xffcbd5e1),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${openedInfo.full} - ساعت ${_time(_openedAt)}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xff7dd3fc)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalendarInfo {
+  const _CalendarInfo({
+    required this.day,
+    required this.weekday,
+    required this.month,
+    required this.year,
+    required this.century,
+    required this.full,
+  });
+
+  final String day;
+  final String weekday;
+  final String month;
+  final int year;
+  final int century;
+  final String full;
+}
+
+class _CalendarDetail extends StatelessWidget {
+  const _CalendarDetail({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    decoration: BoxDecoration(
+      color: const Color(0x14FFFFFF),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: const Color(0x22FFFFFF)),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(color: Color(0xffcbd5e1), fontSize: 13),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }
