@@ -517,6 +517,33 @@ class _HomePageState extends State<HomePage> {
     if (mounted) _loadBusiness();
   }
 
+  Future<void> _openMissions() async {
+    if (_business == null) await _loadBusiness();
+    if (!mounted) {
+      return;
+    }
+    final business = _business;
+    if (business == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('دریافت ماموریت‌ها ناموفق بود.')),
+      );
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => BusinessProgressPage(
+          api: widget.api,
+          initialBusiness: business,
+          compact: true,
+          missionFocus: true,
+        ),
+      ),
+    );
+    if (mounted) {
+      _loadBusiness();
+    }
+  }
+
   Future<void> _checkUpdate() async {
     try {
       final package = await PackageInfo.fromPlatform();
@@ -647,6 +674,14 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.pop(sheetContext);
                 _openLevel();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.task_alt_outlined),
+              title: const Text('ماموریت‌های روزانه و مرحله‌ای'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openMissions();
               },
             ),
             ListTile(

@@ -21,6 +21,10 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
+  static const _musicChannel = MethodChannel(
+    'trade_around_the_world/game_music',
+  );
+
   GameSnapshot? _snapshot;
   List<Json> _cities = const [];
   Timer? _pollTimer;
@@ -31,6 +35,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
+    unawaited(_startGameMusic());
     _loadCities();
     _refresh();
     _pollTimer = Timer.periodic(
@@ -42,7 +47,16 @@ class _GamePageState extends State<GamePage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    unawaited(_musicChannel.invokeMethod<void>('stop'));
     super.dispose();
+  }
+
+  Future<void> _startGameMusic() async {
+    try {
+      await _musicChannel.invokeMethod<void>('start');
+    } catch (_) {
+      // Audio playback must never block access to the game.
+    }
   }
 
   Future<void> _loadCities() async {

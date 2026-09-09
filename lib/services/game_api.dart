@@ -228,6 +228,12 @@ class GameApi {
     '/game/matches/$matchId/business/missions/$missionId/claim',
   );
 
+  Future<BusinessActionResult> claimBusinessMissionProfile(String missionId) =>
+      _businessAction('/game/business/missions/$missionId/claim');
+
+  Future<BusinessActionResult> claimDailyBusinessMission(String missionId) =>
+      _businessAction('/game/business/daily-missions/$missionId/claim');
+
   Future<BusinessActionResult> buildBusinessAsset(
     String matchId,
     String type,

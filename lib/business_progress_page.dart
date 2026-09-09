@@ -13,12 +13,14 @@ class BusinessProgressPage extends StatefulWidget {
     required this.initialBusiness,
     this.matchId,
     this.compact = false,
+    this.missionFocus = false,
   });
 
   final GameApi api;
   final BusinessProgress initialBusiness;
   final String? matchId;
   final bool compact;
+  final bool missionFocus;
 
   @override
   State<BusinessProgressPage> createState() => _BusinessProgressPageState();
@@ -145,7 +147,13 @@ class _BusinessProgressPageState extends State<BusinessProgressPage> {
             1.0,
           );
     return Scaffold(
-      appBar: AppBar(title: const Text('پیشرفت کسب‌وکار')),
+      appBar: AppBar(
+        title: Text(
+          widget.missionFocus
+              ? 'ماموریت‌های روزانه و مرحله‌ای'
+              : 'پیشرفت کسب‌وکار',
+        ),
+      ),
       body: ScreenBackground(
         child: SafeArea(
           child: ListView(
@@ -243,6 +251,49 @@ class _BusinessProgressPageState extends State<BusinessProgressPage> {
                   celebrate: true,
                 ),
               ),
+              if (!widget.compact || widget.missionFocus) ...[
+                const SizedBox(height: 16),
+                _SectionTitle(
+                  icon: Icons.today_outlined,
+                  title: 'ماموریت‌های روزانه',
+                ),
+                const SizedBox(height: 6),
+                ..._business.dailyMissions.map(
+                  (mission) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _DailyMissionTile(
+                      mission: mission,
+                      working: _working,
+                      onClaim: () => _run(
+                        () => widget.api.claimDailyBusinessMission(mission.id),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _SectionTitle(
+                  icon: Icons.flag_outlined,
+                  title: 'ماموریت‌های مرحله‌ای',
+                ),
+                const SizedBox(height: 6),
+                ..._business.missions.map(
+                  (mission) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _MissionTile(
+                      mission: mission,
+                      working: _working,
+                      onClaim: () => _run(
+                        () => widget.matchId == null
+                            ? widget.api.claimBusinessMissionProfile(mission.id)
+                            : widget.api.claimBusinessMission(
+                                widget.matchId!,
+                                mission.id,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               if (!widget.compact) ...[
                 const SizedBox(height: 14),
                 _SectionTitle(
@@ -264,24 +315,6 @@ class _BusinessProgressPageState extends State<BusinessProgressPage> {
                         ),
                       )
                       .toList(),
-                ),
-                const SizedBox(height: 16),
-                _SectionTitle(icon: Icons.task_alt, title: 'ماموریت‌ها'),
-                const SizedBox(height: 6),
-                ..._business.missions.map(
-                  (mission) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _MissionTile(
-                      mission: mission,
-                      working: _working,
-                      onClaim: () => _run(
-                        () => widget.api.claimBusinessMission(
-                          widget.matchId!,
-                          mission.id,
-                        ),
-                      ),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 8),
                 _SectionTitle(
@@ -664,6 +697,83 @@ class _MissionTile extends StatelessWidget {
   );
 }
 
+class _DailyMissionTile extends StatelessWidget {
+  const _DailyMissionTile({
+    required this.mission,
+    required this.working,
+    required this.onClaim,
+  });
+
+  final DailyBusinessMission mission;
+  final bool working;
+  final VoidCallback onClaim;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                mission.claimed
+                    ? Icons.verified
+                    : mission.complete
+                    ? Icons.redeem_outlined
+                    : Icons.today_outlined,
+                color: mission.claimed || mission.complete ? appGreen : appNavy,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  mission.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Text(persianDigits(mission.issuedOn)),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(mission.description),
+          const SizedBox(height: 7),
+          Text(
+            'پاداش: ${persianDigits(mission.coinReward)} کوین | ${money(mission.capitalReward)} سرمایه | ${persianDigits(mission.experienceReward)} XP',
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          const SizedBox(height: 9),
+          LinearProgressIndicator(
+            value: (mission.current / mission.target).clamp(0.0, 1.0),
+            minHeight: 7,
+            borderRadius: BorderRadius.circular(4),
+            color: mission.complete ? appGreen : appGold,
+          ),
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${persianDigits(mission.current)} / ${persianDigits(mission.target)}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (!mission.claimed)
+                FilledButton.icon(
+                  onPressed: mission.complete && !working ? onClaim : null,
+                  icon: const Icon(Icons.card_giftcard_outlined, size: 18),
+                  label: const Text('دریافت'),
+                )
+              else
+                const Text('دریافت شد', style: TextStyle(color: appGreen)),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _BuildingTile extends StatelessWidget {
   const _BuildingTile({
     required this.building,
@@ -716,6 +826,11 @@ class _ProductionPanel extends StatelessWidget {
         children: [
           Text(
             'مواد اولیه: ${persianDigits(business.rawMaterials)} | محصول آماده: ${persianDigits(business.producedGoods)}',
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'قیمت خرید فعلی: ${money(business.materialUnitPrice)} هر واحد | ${money(business.materialBatchCost)} هر نوبت',
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
           ),
           const SizedBox(height: 10),
           Wrap(

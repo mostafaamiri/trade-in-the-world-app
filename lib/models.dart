@@ -287,6 +287,57 @@ class BusinessMission {
   }
 }
 
+class DailyBusinessMission {
+  const DailyBusinessMission({
+    required this.id,
+    required this.issuedOn,
+    required this.title,
+    required this.description,
+    required this.stage,
+    required this.current,
+    required this.target,
+    required this.complete,
+    required this.claimed,
+    required this.coinReward,
+    required this.capitalReward,
+    required this.reputationReward,
+    required this.experienceReward,
+  });
+
+  final String id;
+  final String issuedOn;
+  final String title;
+  final String description;
+  final int stage;
+  final int current;
+  final int target;
+  final bool complete;
+  final bool claimed;
+  final int coinReward;
+  final int capitalReward;
+  final int reputationReward;
+  final int experienceReward;
+
+  factory DailyBusinessMission.fromJson(Json json) {
+    final reward = (json['reward'] as Map? ?? const {}).cast<String, dynamic>();
+    return DailyBusinessMission(
+      id: jsonString(json['id']),
+      issuedOn: jsonString(json['issuedOn']),
+      title: jsonString(json['title']),
+      description: jsonString(json['description']),
+      stage: jsonInt(json['stage'], 1),
+      current: jsonInt(json['current']),
+      target: jsonInt(json['target'], 1),
+      complete: jsonBool(json['complete']),
+      claimed: jsonBool(json['claimed']),
+      coinReward: jsonInt(reward['coins']),
+      capitalReward: jsonInt(reward['capital']),
+      reputationReward: jsonInt(reward['reputation']),
+      experienceReward: jsonInt(reward['experience']),
+    );
+  }
+}
+
 class BusinessBuildingOption {
   const BusinessBuildingOption({
     required this.type,
@@ -423,10 +474,13 @@ class BusinessProgress {
     required this.netWorth,
     required this.dashboard,
     required this.missions,
+    required this.dailyMissions,
     required this.buildingOptions,
     required this.rawMaterials,
     required this.producedGoods,
     required this.productionBatch,
+    required this.materialUnitPrice,
+    required this.materialBatchCost,
     required this.productionAvailable,
     required this.markets,
     required this.contracts,
@@ -459,10 +513,13 @@ class BusinessProgress {
   final int netWorth;
   final Json dashboard;
   final List<BusinessMission> missions;
+  final List<DailyBusinessMission> dailyMissions;
   final List<BusinessBuildingOption> buildingOptions;
   final int rawMaterials;
   final int producedGoods;
   final int productionBatch;
+  final int materialUnitPrice;
+  final int materialBatchCost;
   final bool productionAvailable;
   final List<BusinessMarket> markets;
   final List<BusinessContract> contracts;
@@ -511,12 +568,17 @@ class BusinessProgress {
       missions: jsonMaps(json['missions'])
           .map(BusinessMission.fromJson)
           .toList(),
+      dailyMissions: jsonMaps(json['dailyMissions'])
+          .map(DailyBusinessMission.fromJson)
+          .toList(),
       buildingOptions: jsonMaps(json['buildingOptions'])
           .map(BusinessBuildingOption.fromJson)
           .toList(),
       rawMaterials: jsonInt(production['rawMaterials']),
       producedGoods: jsonInt(production['producedGoods']),
       productionBatch: jsonInt(production['batchSize']),
+      materialUnitPrice: jsonInt(production['materialUnitPrice']),
+      materialBatchCost: jsonInt(production['materialBatchCost']),
       productionAvailable: jsonBool(production['available']),
       markets: jsonMaps(json['markets']).map(BusinessMarket.fromJson).toList(),
       contracts: jsonMaps(json['contracts'])
