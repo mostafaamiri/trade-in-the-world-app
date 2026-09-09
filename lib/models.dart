@@ -463,7 +463,7 @@ class BusinessProgress {
       businessStage: jsonInt(json['businessStage'], 1),
       businessLevel: jsonInt(json['businessLevel'], 1),
       coins: jsonInt(json['coins']),
-      coinRewardPerWin: jsonInt(json['coinRewardPerWin'], 300),
+      coinRewardPerWin: jsonInt(json['coinRewardPerWin'], 100),
       capital: jsonInt(json['capital']),
       reputation: jsonInt(json['reputation']),
       experience: jsonInt(json['experience']),
