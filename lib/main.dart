@@ -179,24 +179,134 @@ class _SplashPageState extends State<SplashPage>
                 const SizedBox(height: 26),
                 AnimatedBuilder(
                   animation: _controller,
-                  builder: (context, _) => Column(
-                    children: [
-                      LinearProgressIndicator(
-                        value: _controller.value,
-                        minHeight: 9,
-                        color: appGold,
-                        backgroundColor: Colors.white54,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${persianDigits((_controller.value * 100).floor())}٪',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
+                  builder: (context, _) =>
+                      _SplashProgressPanel(progress: _controller.value),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _SplashProgressPanel extends StatelessWidget {
+  const _SplashProgressPanel({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: SizedBox(
+      height: 196,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _SplashHandshakeArtwork(),
+          const DecoratedBox(
+            decoration: BoxDecoration(color: Color(0x24071226)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 20, 18, 16),
+            child: Column(
+              children: [
+                const Spacer(),
+                LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 10,
+                  color: appGold,
+                  backgroundColor: const Color(0xb2FFFFFF),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                const SizedBox(height: 9),
+                Text(
+                  '${persianDigits((progress * 100).floor())}٪',
+                  style: const TextStyle(
+                    color: appGold,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
                   ),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SplashHandshakeArtwork extends StatelessWidget {
+  const _SplashHandshakeArtwork();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xff16839a), Color(0xff07556a), Color(0xff122550)],
+      ),
+    ),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned(
+          top: -58,
+          right: -20,
+          child: Transform.rotate(
+            angle: -.28,
+            child: Container(
+              width: 148,
+              height: 132,
+              decoration: BoxDecoration(
+                color: const Color(0xfff0d77f).withValues(alpha: .72),
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 5,
+          left: -24,
+          child: Transform.rotate(
+            angle: -.38,
+            child: Container(
+              width: 116,
+              height: 104,
+              decoration: BoxDecoration(
+                color: const Color(0xff1b6582),
+                border: Border.all(color: const Color(0x99FFFFFF), width: 2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 6,
+          right: -22,
+          child: Transform.rotate(
+            angle: .42,
+            child: Container(
+              width: 116,
+              height: 104,
+              decoration: BoxDecoration(
+                color: const Color(0xff1b6582),
+                border: Border.all(color: const Color(0x99FFFFFF), width: 2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+        ),
+        const Center(
+          child: Icon(
+            Icons.handshake_rounded,
+            color: Color(0xffffdf87),
+            size: 112,
+            shadows: [Shadow(color: Color(0xa8001028), blurRadius: 12)],
           ),
         ),
       ],
