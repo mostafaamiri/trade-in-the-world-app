@@ -10,6 +10,8 @@ class MainActivity : FlutterActivity() {
     private val soundtrackResources = intArrayOf(
         R.raw.game_track_1,
         R.raw.game_track_2,
+        R.raw.game_track_3,
+        R.raw.game_track_4,
     )
 
     private var gameMusicPlayer: MediaPlayer? = null
