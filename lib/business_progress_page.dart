@@ -228,6 +228,14 @@ class _BusinessProgressPageState extends State<BusinessProgressPage> {
                         color: appGold,
                       ),
                       const SizedBox(height: 11),
+                      Text(
+                        'سکه: ${persianDigits(_business.tokens)} | هر برد: ${persianDigits(_business.tokenRewardPerWin)} سکه',
+                        style: const TextStyle(
+                          color: Color(0xffd6f2ec),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 11),
                       _ProgressLine(
                         label:
                             'XP: ${money(_business.experience)} / ${money(_business.experienceForNextLevel)}',
@@ -422,6 +430,11 @@ class _DashboardGrid extends StatelessWidget {
         Icons.monetization_on_outlined,
         'کوین',
         persianDigits(business.coins),
+      ),
+      _DashboardItem(
+        Icons.toll_outlined,
+        'سکه',
+        persianDigits(business.tokens),
       ),
       _DashboardItem(
         Icons.account_balance_wallet_outlined,

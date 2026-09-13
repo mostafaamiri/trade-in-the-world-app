@@ -453,6 +453,11 @@ class BusinessProgress {
     required this.businessLevel,
     required this.coins,
     required this.coinRewardPerWin,
+    required this.tokens,
+    required this.tokenRewardPerWin,
+    required this.luckyWheelCost,
+    required this.freeLuckySpins,
+    required this.canSpinLuckyWheel,
     required this.capital,
     required this.reputation,
     required this.experience,
@@ -492,6 +497,11 @@ class BusinessProgress {
   final int businessLevel;
   final int coins;
   final int coinRewardPerWin;
+  final int tokens;
+  final int tokenRewardPerWin;
+  final int luckyWheelCost;
+  final int freeLuckySpins;
+  final bool canSpinLuckyWheel;
   final int capital;
   final int reputation;
   final int experience;
@@ -533,12 +543,19 @@ class BusinessProgress {
         .cast<String, dynamic>();
     final production = (json['production'] as Map? ?? const {})
         .cast<String, dynamic>();
+    final luckyWheel = (json['luckyWheel'] as Map? ?? const {})
+        .cast<String, dynamic>();
     return BusinessProgress(
       businessName: jsonString(json['businessName'], 'کسب‌وکار من'),
       businessStage: jsonInt(json['businessStage'], 1),
       businessLevel: jsonInt(json['businessLevel'], 1),
       coins: jsonInt(json['coins']),
       coinRewardPerWin: jsonInt(json['coinRewardPerWin'], 100),
+      tokens: jsonInt(json['tokens']),
+      tokenRewardPerWin: jsonInt(json['tokenRewardPerWin'], 500),
+      luckyWheelCost: jsonInt(luckyWheel['cost'], 200),
+      freeLuckySpins: jsonInt(luckyWheel['freeSpins']),
+      canSpinLuckyWheel: jsonBool(luckyWheel['canSpin']),
       capital: jsonInt(json['capital']),
       reputation: jsonInt(json['reputation']),
       experience: jsonInt(json['experience']),
@@ -595,6 +612,48 @@ class BusinessActionResult {
   const BusinessActionResult(this.business, this.message);
 
   final BusinessProgress business;
+  final String message;
+}
+
+class LuckyWheelOutcome {
+  const LuckyWheelOutcome({
+    required this.id,
+    required this.index,
+    required this.title,
+    required this.description,
+    required this.paidTokens,
+    required this.usedFreeSpin,
+    required this.missionTitle,
+  });
+
+  final String id;
+  final int index;
+  final String title;
+  final String description;
+  final int paidTokens;
+  final bool usedFreeSpin;
+  final String missionTitle;
+
+  factory LuckyWheelOutcome.fromJson(Json json) => LuckyWheelOutcome(
+    id: jsonString(json['outcomeId']),
+    index: jsonInt(json['outcomeIndex']),
+    title: jsonString(json['title']),
+    description: jsonString(json['description']),
+    paidTokens: jsonInt(json['paidTokens']),
+    usedFreeSpin: jsonBool(json['usedFreeSpin']),
+    missionTitle: jsonString(json['missionTitle']),
+  );
+}
+
+class LuckyWheelSpinResult {
+  const LuckyWheelSpinResult({
+    required this.business,
+    required this.outcome,
+    required this.message,
+  });
+
+  final BusinessProgress business;
+  final LuckyWheelOutcome outcome;
   final String message;
 }
 

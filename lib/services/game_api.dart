@@ -234,6 +234,19 @@ class GameApi {
   Future<BusinessActionResult> claimDailyBusinessMission(String missionId) =>
       _businessAction('/game/business/daily-missions/$missionId/claim');
 
+  Future<LuckyWheelSpinResult> spinLuckyWheel() async {
+    final data = await _request('POST', '/game/lucky-wheel/spin');
+    return LuckyWheelSpinResult(
+      business: BusinessProgress.fromJson(
+        (data['business'] as Map).cast<String, dynamic>(),
+      ),
+      outcome: LuckyWheelOutcome.fromJson(
+        (data['spin'] as Map).cast<String, dynamic>(),
+      ),
+      message: jsonString(data['message']),
+    );
+  }
+
   Future<BusinessActionResult> buildBusinessAsset(
     String matchId,
     String type,

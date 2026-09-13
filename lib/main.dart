@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'business_progress_page.dart';
 import 'game_page.dart';
+import 'lucky_wheel_page.dart';
 import 'models.dart';
 import 'services/game_api.dart';
 import 'services/jalali_date.dart';
@@ -544,6 +545,25 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _openLuckyWheel() async {
+    if (_business == null) await _loadBusiness();
+    if (!mounted) return;
+    final business = _business;
+    if (business == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('دریافت موجودی گردونه ناموفق بود.')),
+      );
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) =>
+            LuckyWheelPage(api: widget.api, initialBusiness: business),
+      ),
+    );
+    if (mounted) _loadBusiness();
+  }
+
   Future<void> _checkUpdate() async {
     try {
       final package = await PackageInfo.fromPlatform();
@@ -685,6 +705,14 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.casino_outlined),
+              title: const Text('گردونه شانس'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openLuckyWheel();
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.groups_rounded),
               title: const Text('مسابقات'),
               onTap: () {
@@ -811,28 +839,26 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: appGold,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.monetization_on_outlined),
-                        const SizedBox(width: 6),
-                        Text(
-                          _business == null
-                              ? 'کوین: ...'
-                              : 'کوین: ${persianDigits(_business!.coins)}',
-                          style: const TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                      ],
-                    ),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _CurrencyBalance(
+                        icon: Icons.monetization_on_outlined,
+                        label: _business == null
+                            ? 'کوین: ...'
+                            : 'کوین: ${persianDigits(_business!.coins)}',
+                        color: appGold,
+                      ),
+                      _CurrencyBalance(
+                        icon: Icons.toll_outlined,
+                        label: _business == null
+                            ? 'سکه: ...'
+                            : 'سکه: ${persianDigits(_business!.tokens)}',
+                        color: const Color(0xffa9d9ce),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 22),
                   const Text(
@@ -1267,6 +1293,35 @@ class _HomeAction extends StatelessWidget {
       onPressed: onTap,
       icon: Icon(icon),
       label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+    ),
+  );
+}
+
+class _CurrencyBalance extends StatelessWidget {
+  const _CurrencyBalance({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+      ],
     ),
   );
 }
