@@ -1,15 +1,19 @@
 package com.tradearoundworld.trade_around_the_world
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 
 class MainActivity : FlutterActivity() {
     private val musicChannel = "trade_around_the_world/game_music"
+    private val updateChannel = "trade_around_the_world/app_update"
     private var gameMusicPlayer: MediaPlayer? = null
     private var musicRequested = false
 
@@ -47,6 +51,29 @@ class MainActivity : FlutterActivity() {
                     "stop" -> {
                         stopGameMusic()
                         result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, updateChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "installApk" -> {
+                        val path = call.argument<String>("path")
+                        if (path.isNullOrBlank()) {
+                            result.error("invalid_path", "مسیر فایل بروزرسانی نامعتبر است.", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            openPackageInstaller(File(path))
+                            result.success(null)
+                        } catch (error: Exception) {
+                            result.error(
+                                "installer_unavailable",
+                                error.message ?: "باز کردن نصب کننده اندروید ممکن نشد.",
+                                null,
+                            )
+                        }
                     }
                     else -> result.notImplemented()
                 }
@@ -129,5 +156,22 @@ class MainActivity : FlutterActivity() {
             player.release()
         }
         gameMusicPlayer = null
+    }
+
+    private fun openPackageInstaller(apkFile: File) {
+        if (!apkFile.isFile || apkFile.length() == 0L) {
+            throw IllegalArgumentException("فایل بروزرسانی پیدا نشد.")
+        }
+        val apkUri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileprovider",
+            apkFile,
+        )
+        val installIntent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(apkUri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(installIntent)
     }
 }

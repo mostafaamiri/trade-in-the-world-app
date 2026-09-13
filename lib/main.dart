@@ -14,6 +14,7 @@ import 'models.dart';
 import 'services/game_api.dart';
 import 'services/jalali_date.dart';
 import 'services/notification_service.dart';
+import 'services/app_update_service.dart';
 import 'ui.dart';
 
 Future<void> main() async {
@@ -1685,19 +1686,48 @@ class UpdatePage extends StatefulWidget {
 
 class _UpdatePageState extends State<UpdatePage> {
   bool _checking = false;
+  bool _downloading = false;
+  int _receivedBytes = 0;
+  int? _totalBytes;
+
   Future<void> _download() async {
-    final metadata = Uri.parse(
-      '$apiBaseUrl/public/downloads/trade-in-the-world/metadata',
-    );
+    if (_downloading) return;
+    setState(() {
+      _downloading = true;
+      _receivedBytes = 0;
+      _totalBytes = null;
+    });
     try {
-      final response = await http.get(metadata);
-      final data = (jsonDecode(response.body) as Map).cast<String, dynamic>();
-      final uri = Uri.parse(jsonString(data['apkUrl']));
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication))
-        throw Exception('باز کردن لینک دانلود ممکن نشد.');
+      final service = AppUpdateService();
+      try {
+        await service.downloadAndInstall(
+          metadataUrl: Uri.parse(
+            '$apiBaseUrl/public/downloads/trade-in-the-world/metadata',
+          ),
+          onProgress: (receivedBytes, totalBytes) {
+            if (!mounted) return;
+            setState(() {
+              _receivedBytes = receivedBytes;
+              _totalBytes = totalBytes;
+            });
+          },
+        );
+      } finally {
+        service.dispose();
+      }
     } catch (error) {
       if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _downloading = false);
     }
+  }
+
+  String get _downloadLabel {
+    final totalBytes = _totalBytes;
+    if (!_downloading) return 'دانلود و نصب نسخه جدید';
+    if (totalBytes == null || totalBytes <= 0) return 'در حال دانلود...';
+    final percent = ((_receivedBytes / totalBytes) * 100).clamp(0, 100).round();
+    return 'در حال دانلود ${persianDigits(percent)}%';
   }
 
   @override
@@ -1736,13 +1766,25 @@ class _UpdatePageState extends State<UpdatePage> {
                     const SizedBox(height: 18),
                     FilledButton.icon(
                       style: FilledButton.styleFrom(backgroundColor: appNavy),
-                      onPressed: _download,
-                      icon: const Icon(Icons.download_rounded),
-                      label: const Text('دانلود و نصب نسخه جدید'),
+                      onPressed: _downloading ? null : _download,
+                      icon: Icon(
+                        _downloading
+                            ? Icons.downloading_rounded
+                            : Icons.download_rounded,
+                      ),
+                      label: Text(_downloadLabel),
                     ),
+                    if (_downloading) ...[
+                      const SizedBox(height: 12),
+                      LinearProgressIndicator(
+                        value: _totalBytes == null || _totalBytes! <= 0
+                            ? null
+                            : (_receivedBytes / _totalBytes!).clamp(0, 1),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     TextButton.icon(
-                      onPressed: _checking
+                      onPressed: _checking || _downloading
                           ? null
                           : () async {
                               setState(() => _checking = true);
