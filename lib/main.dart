@@ -565,19 +565,9 @@ class _HomePageState extends State<HomePage> {
     if (mounted) _loadBusiness();
   }
 
-  Future<void> _openGamePdf() async {
-    try {
-      final uri = Uri.tryParse(await widget.api.gamePdfUrl());
-      if (uri == null || !uri.hasScheme) {
-        throw Exception('نشانی فایل PDF معتبر نیست.');
-      }
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        throw Exception('باز کردن PDF در مرورگر ممکن نشد.');
-      }
-    } catch (error) {
-      if (mounted) await showFailure(context, error);
-    }
-  }
+  Future<void> _openGamePdfs() => Navigator.of(context).push<void>(
+    MaterialPageRoute(builder: (_) => GamePdfLibraryPage(api: widget.api)),
+  );
 
   Future<void> _checkUpdate() async {
     try {
@@ -732,7 +722,7 @@ class _HomePageState extends State<HomePage> {
               title: const Text('مشاهده PDF'),
               onTap: () {
                 Navigator.pop(sheetContext);
-                _openGamePdf();
+                _openGamePdfs();
               },
             ),
             ListTile(
@@ -1615,6 +1605,117 @@ class _JoinMatchPageState extends State<JoinMatchPage> {
             ),
           ),
         ),
+      ),
+    ),
+  );
+}
+
+class GamePdfLibraryPage extends StatefulWidget {
+  const GamePdfLibraryPage({super.key, required this.api});
+
+  final GameApi api;
+
+  @override
+  State<GamePdfLibraryPage> createState() => _GamePdfLibraryPageState();
+}
+
+class _GamePdfLibraryPageState extends State<GamePdfLibraryPage> {
+  late Future<List<GamePdfDocument>> _documents;
+
+  @override
+  void initState() {
+    super.initState();
+    _documents = widget.api.gamePdfs();
+  }
+
+  void _refresh() {
+    setState(() => _documents = widget.api.gamePdfs());
+  }
+
+  Future<void> _openDocument(GamePdfDocument document) async {
+    try {
+      final uri = Uri.tryParse(document.url);
+      if (uri == null || !uri.hasScheme) {
+        throw Exception('نشانی فایل PDF معتبر نیست.');
+      }
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw Exception('باز کردن PDF ممکن نشد.');
+      }
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    }
+  }
+
+  String _subtitle(GamePdfDocument document) {
+    if (document.size <= 0) return 'PDF';
+    final megabytes = document.size / (1024 * 1024);
+    return 'PDF | ${persianDigits(megabytes.toStringAsFixed(1))} مگابایت';
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('PDFهای بازی'),
+      actions: [
+        IconButton(
+          tooltip: 'بروزرسانی فهرست',
+          onPressed: _refresh,
+          icon: const Icon(Icons.refresh),
+        ),
+      ],
+    ),
+    body: ScreenBackground(
+      child: FutureBuilder<List<GamePdfDocument>>(
+        future: _documents,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: FilledButton.icon(
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('تلاش دوباره'),
+              ),
+            );
+          }
+          final documents = snapshot.data ?? const <GamePdfDocument>[];
+          if (documents.isEmpty) {
+            return const Center(child: Text('فایل PDF در دسترس نیست.'));
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: documents.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              final document = documents[index];
+              return Card(
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: const Icon(
+                    Icons.picture_as_pdf_outlined,
+                    color: appRed,
+                  ),
+                  title: Text(
+                    document.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(_subtitle(document)),
+                  trailing: OutlinedButton.icon(
+                    onPressed: () => _openDocument(document),
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    label: const Text('باز کردن'),
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     ),
   );

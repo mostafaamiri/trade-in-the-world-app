@@ -17,6 +17,27 @@ List<Json> jsonMaps(Object? value) => value is List
           .toList()
     : const [];
 
+class GamePdfDocument {
+  const GamePdfDocument({
+    required this.id,
+    required this.title,
+    required this.url,
+    required this.size,
+  });
+
+  final String id;
+  final String title;
+  final String url;
+  final int size;
+
+  factory GamePdfDocument.fromJson(Json json) => GamePdfDocument(
+    id: jsonString(json['id'], jsonString(json['fileName'])),
+    title: jsonString(json['title'], jsonString(json['fileName'], 'PDF بازی')),
+    url: jsonString(json['url']),
+    size: jsonInt(json['size']),
+  );
+}
+
 class PlayerProfile {
   const PlayerProfile({
     required this.id,

@@ -202,13 +202,19 @@ class GameApi {
     );
   }
 
-  Future<String> gamePdfUrl() async {
+  Future<List<GamePdfDocument>> gamePdfs() async {
     final data = await _request('GET', '/public/game-pdf');
-    final url = jsonString(data['url']);
-    if (url.isEmpty) {
-      throw const GameApiException('فایل PDF بازی هنوز در دسترس نیست.');
+    final items = jsonMaps(data['items'])
+        .map(GamePdfDocument.fromJson)
+        .where((item) => item.url.isNotEmpty)
+        .toList();
+    if (items.isNotEmpty) return items;
+
+    final legacyDocument = GamePdfDocument.fromJson(data);
+    if (legacyDocument.url.isNotEmpty) {
+      return [legacyDocument];
     }
-    return url;
+    throw const GameApiException('فایل PDF بازی هنوز در دسترس نیست.');
   }
 
   Future<BusinessActionResult> _businessAction(
