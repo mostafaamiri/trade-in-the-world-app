@@ -564,6 +564,20 @@ class _HomePageState extends State<HomePage> {
     if (mounted) _loadBusiness();
   }
 
+  Future<void> _openGamePdf() async {
+    try {
+      final uri = Uri.tryParse(await widget.api.gamePdfUrl());
+      if (uri == null || !uri.hasScheme) {
+        throw Exception('نشانی فایل PDF معتبر نیست.');
+      }
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw Exception('باز کردن PDF در مرورگر ممکن نشد.');
+      }
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    }
+  }
+
   Future<void> _checkUpdate() async {
     try {
       final package = await PackageInfo.fromPlatform();
@@ -710,6 +724,14 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.pop(sheetContext);
                 _openLuckyWheel();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: const Text('مشاهده PDF'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openGamePdf();
               },
             ),
             ListTile(

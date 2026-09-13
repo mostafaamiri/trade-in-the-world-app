@@ -202,6 +202,15 @@ class GameApi {
     );
   }
 
+  Future<String> gamePdfUrl() async {
+    final data = await _request('GET', '/public/game-pdf');
+    final url = jsonString(data['url']);
+    if (url.isEmpty) {
+      throw const GameApiException('فایل PDF بازی هنوز در دسترس نیست.');
+    }
+    return url;
+  }
+
   Future<BusinessActionResult> _businessAction(
     String path, [
     Json? body,
