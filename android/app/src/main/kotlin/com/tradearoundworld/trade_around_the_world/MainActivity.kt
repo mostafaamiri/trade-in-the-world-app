@@ -15,6 +15,7 @@ class MainActivity : FlutterActivity() {
     private val musicChannel = "trade_around_the_world/game_music"
     private val updateChannel = "trade_around_the_world/app_update"
     private var gameMusicPlayer: MediaPlayer? = null
+    private var winnerMusicPlayer: MediaPlayer? = null
     private var musicRequested = false
 
     private val audioManager by lazy {
@@ -30,9 +31,21 @@ class MainActivity : FlutterActivity() {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
                 gameMusicPlayer?.setVolume(1f, 1f)
-                if (musicRequested && gameMusicPlayer?.isPlaying == false) startPlayer()
+                winnerMusicPlayer?.setVolume(1f, 1f)
+                if (winnerMusicPlayer != null) {
+                    try {
+                        if (winnerMusicPlayer?.isPlaying == false) winnerMusicPlayer?.start()
+                    } catch (_: IllegalStateException) {
+                        releaseWinnerPlayer()
+                    }
+                } else if (musicRequested && gameMusicPlayer?.isPlaying == false) {
+                    startPlayer()
+                }
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> gameMusicPlayer?.pause()
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                gameMusicPlayer?.pause()
+                winnerMusicPlayer?.pause()
+            }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK ->
                 gameMusicPlayer?.setVolume(0.2f, 0.2f)
             AudioManager.AUDIOFOCUS_LOSS -> stopGameMusic()
@@ -46,6 +59,10 @@ class MainActivity : FlutterActivity() {
                 when (call.method) {
                     "start" -> {
                         startGameMusic()
+                        result.success(null)
+                    }
+                    "winner" -> {
+                        playWinnerMusic()
                         result.success(null)
                     }
                     "stop" -> {
@@ -132,6 +149,7 @@ class MainActivity : FlutterActivity() {
     private fun stopGameMusic() {
         musicRequested = false
         releasePlayer()
+        releaseWinnerPlayer()
         @Suppress("DEPRECATION")
         audioManager.abandonAudioFocus(audioFocusListener)
     }
@@ -156,6 +174,75 @@ class MainActivity : FlutterActivity() {
             player.release()
         }
         gameMusicPlayer = null
+    }
+
+    private fun playWinnerMusic() {
+        if (winnerMusicPlayer != null) return
+        releasePlayer()
+        requestMusicAudioFocus()
+        val player = try {
+            MediaPlayer.create(
+                applicationContext,
+                R.raw.winner_celebration,
+                musicAttributes,
+                AudioManager.AUDIO_SESSION_ID_GENERATE,
+            )
+        } catch (_: RuntimeException) {
+            null
+        }
+        if (player == null) {
+            if (musicRequested) {
+                createPlayer()
+                startPlayer()
+            }
+            return
+        }
+        winnerMusicPlayer = player.apply {
+            isLooping = false
+            setVolume(1f, 1f)
+            setOnCompletionListener { completedPlayer ->
+                if (winnerMusicPlayer === completedPlayer) {
+                    releaseWinnerPlayer()
+                    if (musicRequested) {
+                        createPlayer()
+                        startPlayer()
+                    }
+                }
+            }
+            setOnErrorListener { failedPlayer, _, _ ->
+                if (winnerMusicPlayer === failedPlayer) {
+                    releaseWinnerPlayer()
+                    if (musicRequested) {
+                        createPlayer()
+                        startPlayer()
+                    }
+                }
+                true
+            }
+        }
+        try {
+            player.start()
+        } catch (_: IllegalStateException) {
+            releaseWinnerPlayer()
+            if (musicRequested) {
+                createPlayer()
+                startPlayer()
+            }
+        }
+    }
+
+    private fun releaseWinnerPlayer() {
+        winnerMusicPlayer?.let { player ->
+            player.setOnCompletionListener(null)
+            player.setOnErrorListener(null)
+            try {
+                if (player.isPlaying) player.stop()
+            } catch (_: IllegalStateException) {
+                // The player may already be in an error state.
+            }
+            player.release()
+        }
+        winnerMusicPlayer = null
     }
 
     private fun openPackageInstaller(apkFile: File) {

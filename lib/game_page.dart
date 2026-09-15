@@ -71,6 +71,7 @@ class _GamePageState extends State<GamePage> {
           _loading = false;
           _error = null;
         });
+        _maybePlayWinnerSound(snapshot);
       }
     } catch (error) {
       if (mounted && !silent) {
@@ -80,6 +81,14 @@ class _GamePageState extends State<GamePage> {
         });
       }
     }
+  }
+
+  void _maybePlayWinnerSound(GameSnapshot snapshot) {
+    if (snapshot.match.status != 'finished' ||
+        snapshot.match.winnerId != widget.api.userId) {
+      return;
+    }
+    unawaited(GameMusicService.playWinner(widget.matchId));
   }
 
   MatchPlayer? get _me => _snapshot?.player(widget.api.userId ?? '');

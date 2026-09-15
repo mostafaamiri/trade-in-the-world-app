@@ -7,6 +7,7 @@ class GameMusicService {
 
   static const _channel = MethodChannel('trade_around_the_world/game_music');
   static int _owners = 0;
+  static final Set<String> _winnerMatchesPlayed = <String>{};
 
   static Future<void> acquire() async {
     _owners++;
@@ -25,6 +26,15 @@ class GameMusicService {
       await _channel.invokeMethod<void>('stop');
     } catch (_) {
       // Stopping audio is best effort during route transitions.
+    }
+  }
+
+  static Future<void> playWinner(String matchId) async {
+    if (!_winnerMatchesPlayed.add(matchId)) return;
+    try {
+      await _channel.invokeMethod<void>('winner');
+    } catch (_) {
+      _winnerMatchesPlayed.remove(matchId);
     }
   }
 }
