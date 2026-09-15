@@ -9,6 +9,7 @@ import 'game_api.dart';
 
 final _localNotifications = FlutterLocalNotificationsPlugin();
 StreamSubscription<RemoteMessage>? _foregroundMessages;
+StreamSubscription<String>? _tokenRefreshes;
 
 @pragma('vm:entry-point')
 Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
@@ -19,6 +20,7 @@ class NotificationService {
   NotificationService._();
 
   static bool _ready = false;
+  static GameApi? _api;
 
   static Future<void> initialize() async {
     try {
@@ -40,6 +42,14 @@ class NotificationService {
           >()
           ?.createNotificationChannel(channel);
       _foregroundMessages ??= FirebaseMessaging.onMessage.listen(_showMessage);
+      _tokenRefreshes ??= FirebaseMessaging.instance.onTokenRefresh.listen((
+        token,
+      ) {
+        final api = _api;
+        if (api != null && api.hasSession) {
+          unawaited(_registerToken(api, token));
+        }
+      });
       _ready = true;
     } catch (_) {
       // The game remains usable on devices without Firebase or Google Play services.
@@ -49,19 +59,36 @@ class NotificationService {
 
   static Future<void> sync(GameApi api) async {
     if (!_ready || !api.hasSession) return;
+    _api = api;
     try {
       final permission = await FirebaseMessaging.instance.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
-      if (permission.authorizationStatus == AuthorizationStatus.denied) return;
+      final authorized =
+          permission.authorizationStatus == AuthorizationStatus.authorized ||
+          permission.authorizationStatus == AuthorizationStatus.provisional;
+      if (!authorized) return;
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null || token.isEmpty) return;
+      await _registerToken(api, token);
+    } catch (_) {
+      // Registration retries at the next app start and when FCM refreshes it.
+    }
+  }
+
+  static Future<void> _registerToken(GameApi api, String token) async {
+    try {
       final info = await PackageInfo.fromPlatform();
       await api.registerPushToken(token, info.version, info.buildNumber);
     } catch (_) {
-      // Push registration is non-blocking and retries at the next app start.
+      // A token refresh must never interrupt the active game session.
     }
   }
 
