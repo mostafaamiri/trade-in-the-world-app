@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'models.dart';
 import 'business_progress_page.dart';
 import 'services/game_api.dart';
+import 'services/game_music_service.dart';
 import 'ui.dart';
 
 class GamePage extends StatefulWidget {
@@ -21,10 +22,6 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  static const _musicChannel = MethodChannel(
-    'trade_around_the_world/game_music',
-  );
-
   GameSnapshot? _snapshot;
   List<Json> _cities = const [];
   Timer? _pollTimer;
@@ -35,7 +32,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    unawaited(_startGameMusic());
+    unawaited(GameMusicService.acquire());
     _loadCities();
     _refresh();
     _pollTimer = Timer.periodic(
@@ -47,16 +44,8 @@ class _GamePageState extends State<GamePage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
-    unawaited(_musicChannel.invokeMethod<void>('stop'));
+    unawaited(GameMusicService.release());
     super.dispose();
-  }
-
-  Future<void> _startGameMusic() async {
-    try {
-      await _musicChannel.invokeMethod<void>('start');
-    } catch (_) {
-      // Audio playback must never block access to the game.
-    }
   }
 
   Future<void> _loadCities() async {

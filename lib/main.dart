@@ -12,6 +12,7 @@ import 'game_page.dart';
 import 'lucky_wheel_page.dart';
 import 'models.dart';
 import 'services/game_api.dart';
+import 'services/game_music_service.dart';
 import 'services/jalali_date.dart';
 import 'services/notification_service.dart';
 import 'services/app_update_service.dart';
@@ -486,8 +487,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    unawaited(GameMusicService.acquire());
     _checkUpdate();
     _loadBusiness();
+  }
+
+  @override
+  void dispose() {
+    unawaited(GameMusicService.release());
+    super.dispose();
   }
 
   Future<void> _loadBusiness() async {
