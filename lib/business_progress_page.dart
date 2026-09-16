@@ -583,7 +583,7 @@ class _UpgradePanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   business.isFinalStage
-                      ? 'هلدینگ تو در بالاترین مرحله است'
+                      ? '${business.stageName} تو در بالاترین مرحله است'
                       : 'ارتقا به ${business.nextStageName}',
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
@@ -1079,6 +1079,10 @@ IconData _stageIcon(String key) => switch (key) {
   'precision_manufacturing' => Icons.precision_manufacturing,
   'public' => Icons.public,
   'account_balance' => Icons.account_balance,
+  'location_city' => Icons.location_city,
+  'account_tree' => Icons.account_tree,
+  'apartment' => Icons.apartment,
+  'map' => Icons.map,
   _ => Icons.storefront,
 };
 
@@ -1091,5 +1095,9 @@ IconData _buildingIcon(String key) => switch (key) {
   'internationalOffice' => Icons.public_outlined,
   'logistics' => Icons.local_shipping_outlined,
   'holding' => Icons.account_balance_outlined,
+  'industrialPark' => Icons.location_city_outlined,
+  'countyHub' => Icons.account_tree_outlined,
+  'cityMarket' => Icons.apartment_outlined,
+  'provincialHeadquarters' => Icons.map_outlined,
   _ => Icons.domain_outlined,
 };
