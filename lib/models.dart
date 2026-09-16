@@ -155,6 +155,8 @@ class MatchPlayer {
     required this.guardId,
     required this.guardProtectionUsed,
     required this.weaponUsed,
+    required this.weaponUseCount,
+    required this.lives,
     required this.isEliminated,
     required this.isReady,
     required this.turnOrder,
@@ -172,6 +174,8 @@ class MatchPlayer {
   final String? guardId;
   final bool guardProtectionUsed;
   final bool weaponUsed;
+  final int weaponUseCount;
+  final int lives;
   final bool isEliminated;
   final bool isReady;
   final int turnOrder;
@@ -191,6 +195,11 @@ class MatchPlayer {
         : jsonString(json['guardId']),
     guardProtectionUsed: jsonBool(json['guardProtectionUsed']),
     weaponUsed: jsonBool(json['weaponUsed']),
+    weaponUseCount: jsonInt(
+      json['weaponUseCount'],
+      jsonBool(json['weaponUsed']) ? 1 : 0,
+    ),
+    lives: jsonInt(json['lives'], 3).clamp(0, 3).toInt(),
     isEliminated: jsonBool(json['isEliminated']),
     isReady: jsonBool(json['isReady']),
     turnOrder: jsonInt(json['turnOrder']),

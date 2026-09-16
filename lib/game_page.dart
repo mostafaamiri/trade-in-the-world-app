@@ -405,11 +405,18 @@ class _GamePageState extends State<GamePage> {
     );
     if (targetId == null) return;
     await _invoke(() async {
-      await widget.api.useWeapon(widget.matchId, targetId);
+      final result = await widget.api.useWeapon(widget.matchId, targetId);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('سلاح محافظ استفاده شد.')));
+        final target = MatchPlayer.fromJson(
+          (result['target'] as Map).cast<String, dynamic>(),
+        );
+        final message = jsonBool(result['sheriffShieldRemoved'])
+            ? 'سپر داروغه ${target.displayName} از بین رفت.'
+            : target.isEliminated
+            ? '${target.displayName} از مسابقه حذف شد.'
+            : 'یک جان از ${target.displayName} کم شد.';
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     });
   }
@@ -671,18 +678,32 @@ class _ActiveGame extends StatelessWidget {
     );
     final canUseWeapon =
         me!.guardId != null &&
-        !me!.weaponUsed &&
         !me!.isEliminated &&
         hasActiveCompetitor &&
+        (me!.weaponUseCount == 0 || me!.cashBalance >= 200) &&
         !busy;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          _StatTile(
-            icon: Icons.account_balance_wallet_outlined,
-            label: 'پول جهانی',
-            value: '${money(me!.cashBalance)} تومان',
+          Row(
+            children: [
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: 'پول جهانی',
+                  value: '${money(me!.cashBalance)} تومان',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatTile(
+                  icon: Icons.favorite_outline,
+                  label: 'جان',
+                  value: persianDigits(me!.lives),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           WorldBoard(
@@ -744,7 +765,7 @@ class _ActiveGame extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${guardTitleForId(me!.guardId)}${me!.guardProtectionUsed ? ' | سپر استفاده شده' : ' | سپر راهزن آماده'}${me!.weaponUsed ? ' | سلاح استفاده شده' : ' | سلاح آماده'}',
+                        '${guardTitleForId(me!.guardId)} | ${persianDigits(me!.lives)} جان${me!.guardProtectionUsed ? ' | سپر استفاده شده' : ' | سپر راهزن آماده'}${me!.weaponUseCount == 0 ? ' | سلاح اول رایگان' : ' | استفاده بعدی: ۲۰۰ تومان'}',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -769,6 +790,39 @@ class _ActiveGame extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
+          if (!me!.isEliminated && me!.guardId != null) ...[
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/characters/bandit.png',
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.cover,
+                    semanticLabel: 'جاسوس',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: appRed,
+                      minimumSize: const Size.fromHeight(58),
+                    ),
+                    onPressed: canUseWeapon ? onWeapon : null,
+                    icon: const Icon(Icons.person_search_outlined),
+                    label: Text(
+                      me!.weaponUseCount == 0
+                          ? 'انتخاب کشتن یک بازیکن'
+                          : 'انتخاب کشتن بازیکن | ۲۰۰ تومان',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
           if (!me!.isEliminated)
             Wrap(
               spacing: 8,
@@ -795,14 +849,6 @@ class _ActiveGame extends StatelessWidget {
                   icon: const Icon(Icons.add_photo_alternate_outlined),
                   label: const Text('افزودن کالا'),
                 ),
-                if (me!.guardId != null)
-                  OutlinedButton.icon(
-                    onPressed: canUseWeapon ? onWeapon : null,
-                    icon: const Icon(Icons.gps_fixed_rounded),
-                    label: Text(
-                      me!.weaponUsed ? 'سلاح استفاده شد' : 'استفاده از سلاح',
-                    ),
-                  ),
                 OutlinedButton.icon(
                   onPressed: onSouvenir,
                   icon: const Icon(Icons.card_giftcard_outlined),
@@ -1281,7 +1327,11 @@ class _WeaponTargetDialogState extends State<_WeaponTargetDialog> {
                 onTap: () => setState(() => _targetId = player.uid),
                 leading: AvatarCircle(avatarId: player.avatarId, size: 32),
                 title: Text(player.displayName),
-                subtitle: Text('${money(player.cashBalance)} تومان'),
+                subtitle: Text(
+                  player.hasSheriffShield
+                      ? 'دارای سپر داروغه | ${persianDigits(player.lives)} جان'
+                      : '${persianDigits(player.lives)} جان | ${money(player.cashBalance)} تومان',
+                ),
                 trailing: Icon(
                   _targetId == player.uid
                       ? Icons.radio_button_checked
