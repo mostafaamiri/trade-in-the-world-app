@@ -110,8 +110,13 @@ class _AppRootState extends State<AppRoot> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const SplashPage(loading: true);
-    if (_profile == null)
-      return ProfilePage(api: widget.api, onSaved: _onProfile);
+    if (_profile == null || !_profile!.profileComplete) {
+      return ProfilePage(
+        api: widget.api,
+        onSaved: _onProfile,
+        initial: _profile,
+      );
+    }
     return HomePage(
       api: widget.api,
       profile: _profile!,
@@ -323,11 +328,13 @@ class ProfilePage extends StatefulWidget {
     required this.api,
     required this.onSaved,
     this.initial,
+    this.closeOnSave = false,
   });
 
   final GameApi api;
   final ValueChanged<PlayerProfile> onSaved;
   final PlayerProfile? initial;
+  final bool closeOnSave;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -335,6 +342,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   late final TextEditingController _name;
+  late final TextEditingController _phone;
   String _avatar = 'merchant_purple';
   bool _submitting = false;
 
@@ -342,12 +350,14 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _name = TextEditingController(text: widget.initial?.name ?? '');
+    _phone = TextEditingController(text: widget.initial?.phone ?? '');
     _avatar = widget.initial?.avatarId ?? _avatar;
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _phone.dispose();
     super.dispose();
   }
 
@@ -356,13 +366,19 @@ class _ProfilePageState extends State<ProfilePage> {
       await showFailure(context, 'نام و نام خانوادگی را کامل وارد کن.');
       return;
     }
+    final phone = _phone.text.trim();
+    final phoneDigits = phone.replaceAll(RegExp(r'[^0-9۰-۹٠-٩]'), '');
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      await showFailure(context, 'شماره موبایل معتبر وارد کن.');
+      return;
+    }
     setState(() => _submitting = true);
     try {
       final profile = widget.initial == null
-          ? await widget.api.createGuest(_name.text.trim(), _avatar)
-          : await widget.api.updateProfile(_name.text.trim(), _avatar);
+          ? await widget.api.createGuest(_name.text.trim(), phone, _avatar)
+          : await widget.api.updateProfile(_name.text.trim(), phone, _avatar);
       widget.onSaved(profile);
-      if (mounted && widget.initial != null) Navigator.pop(context);
+      if (mounted && widget.closeOnSave) Navigator.pop(context);
     } catch (error) {
       if (mounted) await showFailure(context, error);
     } finally {
@@ -398,17 +414,31 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'نام و نام خانوادگی و تصویر بازرگان خود را انتخاب کن.',
+                        'نام، شماره موبایل و تصویر بازرگان خود را انتخاب کن.',
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
                       TextField(
                         controller: _name,
                         maxLength: 80,
-                        textInputAction: TextInputAction.done,
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'نام و نام خانوادگی',
                           prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _phone,
+                        maxLength: 20,
+                        keyboardType: TextInputType.phone,
+                        textDirection: TextDirection.ltr,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.telephoneNumber],
+                        decoration: const InputDecoration(
+                          labelText: 'شماره موبایل',
+                          hintText: '09xxxxxxxxx',
+                          prefixIcon: Icon(Icons.phone_outlined),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -613,6 +643,7 @@ class _HomePageState extends State<HomePage> {
           api: widget.api,
           initial: widget.profile,
           onSaved: widget.onProfileChanged,
+          closeOnSave: true,
         ),
       ),
     );

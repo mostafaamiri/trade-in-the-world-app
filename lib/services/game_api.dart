@@ -83,9 +83,14 @@ class GameApi {
     return data;
   }
 
-  Future<PlayerProfile> createGuest(String name, String avatarId) async {
+  Future<PlayerProfile> createGuest(
+    String name,
+    String phone,
+    String avatarId,
+  ) async {
     final data = await _request('POST', '/auth/guest', {
       'name': name,
+      'phone': phone,
       'avatarId': avatarId,
     });
     final token = jsonString(data['token']);
@@ -105,9 +110,14 @@ class GameApi {
     );
   }
 
-  Future<PlayerProfile> updateProfile(String name, String avatarId) async {
+  Future<PlayerProfile> updateProfile(
+    String name,
+    String phone,
+    String avatarId,
+  ) async {
     final data = await _request('PUT', '/game/profile', {
       'name': name,
+      'phone': phone,
       'avatarId': avatarId,
     });
     return PlayerProfile.fromJson(

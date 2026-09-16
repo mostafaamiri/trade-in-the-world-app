@@ -44,18 +44,24 @@ class PlayerProfile {
     required this.name,
     required this.avatarId,
     this.email = '',
+    this.phone = '',
+    this.profileComplete = true,
   });
 
   final String id;
   final String name;
   final String avatarId;
   final String email;
+  final String phone;
+  final bool profileComplete;
 
   factory PlayerProfile.fromJson(Json json) => PlayerProfile(
     id: jsonString(json['id']),
     name: jsonString(json['name']),
     avatarId: jsonString(json['avatarId'], 'merchant_purple'),
     email: jsonString(json['email']),
+    phone: jsonString(json['phone']),
+    profileComplete: jsonBool(json['profileComplete'], true),
   );
 }
 
