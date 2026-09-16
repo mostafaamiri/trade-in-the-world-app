@@ -17,6 +17,21 @@ List<Json> jsonMaps(Object? value) => value is List
           .toList()
     : const [];
 
+const Map<String, String> guardTitles = {
+  'missile_guard': 'محافظ موشکی',
+  'iron_guard': 'محافظ آهنین',
+  'desert_guard': 'محافظ کویر',
+  'royal_guard': 'محافظ سلطنتی',
+  'shadow_guard': 'محافظ سایه',
+  'eagle_guard': 'محافظ عقاب',
+  'titan_guard': 'محافظ تایتان',
+  'storm_guard': 'محافظ طوفان',
+  'guardian_guard': 'محافظ نگهبان',
+  'legend_guard': 'محافظ افسانه‌ای',
+};
+
+String guardTitleForId(String? guardId) => guardTitles[guardId] ?? 'محافظ';
+
 class GamePdfDocument {
   const GamePdfDocument({
     required this.id,
@@ -137,6 +152,10 @@ class MatchPlayer {
     required this.cashBalance,
     required this.cardIds,
     required this.hasSheriffShield,
+    required this.guardId,
+    required this.guardProtectionUsed,
+    required this.weaponUsed,
+    required this.isEliminated,
     required this.isReady,
     required this.turnOrder,
     required this.totalWealth,
@@ -150,6 +169,10 @@ class MatchPlayer {
   final int cashBalance;
   final List<String> cardIds;
   final bool hasSheriffShield;
+  final String? guardId;
+  final bool guardProtectionUsed;
+  final bool weaponUsed;
+  final bool isEliminated;
   final bool isReady;
   final int turnOrder;
   final int totalWealth;
@@ -163,11 +186,64 @@ class MatchPlayer {
     cashBalance: jsonInt(json['cashBalance']),
     cardIds: (json['cardIds'] as List? ?? const []).map(jsonString).toList(),
     hasSheriffShield: jsonBool(json['hasSheriffShield']),
+    guardId: jsonString(json['guardId']).isEmpty
+        ? null
+        : jsonString(json['guardId']),
+    guardProtectionUsed: jsonBool(json['guardProtectionUsed']),
+    weaponUsed: jsonBool(json['weaponUsed']),
+    isEliminated: jsonBool(json['isEliminated']),
     isReady: jsonBool(json['isReady']),
     turnOrder: jsonInt(json['turnOrder']),
     totalWealth: jsonInt(json['totalWealth']),
     appVersion: jsonString(json['appVersion'], 'نامشخص'),
   );
+}
+
+class GameGuard {
+  const GameGuard({
+    required this.id,
+    required this.title,
+    required this.price,
+    required this.imageAsset,
+  });
+
+  final String id;
+  final String title;
+  final int price;
+  final String imageAsset;
+
+  factory GameGuard.fromJson(Json json) => GameGuard(
+    id: jsonString(json['id']),
+    title: jsonString(json['title'], 'محافظ'),
+    price: jsonInt(json['price']),
+    imageAsset: jsonString(json['imageAsset']),
+  );
+}
+
+class GuardCollection {
+  const GuardCollection({
+    required this.coins,
+    required this.guards,
+    required this.ownedGuardIds,
+    required this.equippedGuardId,
+  });
+
+  final int coins;
+  final List<GameGuard> guards;
+  final List<String> ownedGuardIds;
+  final String? equippedGuardId;
+
+  factory GuardCollection.fromJson(Json json) {
+    final equipped = jsonString(json['equippedGuardId']);
+    return GuardCollection(
+      coins: jsonInt(json['coins']),
+      guards: jsonMaps(json['guards']).map(GameGuard.fromJson).toList(),
+      ownedGuardIds: (json['ownedGuardIds'] as List? ?? const [])
+          .map(jsonString)
+          .toList(),
+      equippedGuardId: equipped.isEmpty ? null : equipped,
+    );
+  }
 }
 
 class TradeCard {

@@ -190,9 +190,12 @@ class _GamePageState extends State<GamePage> {
         }
       }
       if (mounted) {
-        final protected = jsonBool(result['protectedBySheriff']);
-        final message = protected
+        final protectedBySheriff = jsonBool(result['protectedBySheriff']);
+        final protectedByGuard = jsonBool(result['protectedByGuard']);
+        final message = protectedBySheriff
             ? 'سپر داروغه جلوی حمله راهزن را گرفت.'
+            : protectedByGuard
+            ? 'محافظ جلوی حمله راهزن را گرفت.'
             : 'راهزن ${money(jsonInt(result['cashStolen']))} تومان برداشت.';
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(message)));
@@ -337,7 +340,7 @@ class _GamePageState extends State<GamePage> {
                 .where((card) => card.ownerId == me.uid)
                 .toList(),
             players: snapshot.players
-                .where((player) => player.uid != me.uid)
+                .where((player) => player.uid != me.uid && !player.isEliminated)
                 .toList(),
             pending: snapshot.trades,
             myId: me.uid,
@@ -347,7 +350,10 @@ class _GamePageState extends State<GamePage> {
                 builder: (_) => _OfferTradeDialog(
                   card: card,
                   buyers: snapshot.players
-                      .where((player) => player.uid != me.uid)
+                      .where(
+                        (player) =>
+                            player.uid != me.uid && !player.isEliminated,
+                      )
                       .toList(),
                 ),
               );
@@ -381,6 +387,29 @@ class _GamePageState extends State<GamePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('محصول به کارت‌های من اضافه شد.')),
         );
+      }
+    });
+  }
+
+  Future<void> _useWeapon() async {
+    final snapshot = _snapshot;
+    final me = _me;
+    if (snapshot == null || me == null || me.isEliminated) return;
+    final competitors = snapshot.players
+        .where((player) => player.uid != me.uid && !player.isEliminated)
+        .toList();
+    if (competitors.isEmpty) return;
+    final targetId = await showDialog<String>(
+      context: context,
+      builder: (_) => _WeaponTargetDialog(players: competitors),
+    );
+    if (targetId == null) return;
+    await _invoke(() async {
+      await widget.api.useWeapon(widget.matchId, targetId);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('سلاح محافظ استفاده شد.')));
       }
     });
   }
@@ -475,6 +504,7 @@ class _GamePageState extends State<GamePage> {
                         });
                   },
                   onUploadProduct: _uploadProduct,
+                  onWeapon: _useWeapon,
                   onSouvenir: () => _wheel(false),
                   onZoo: () => _wheel(true),
                   onBandit: _showBandit,
@@ -608,6 +638,7 @@ class _ActiveGame extends StatelessWidget {
     required this.onInventory,
     required this.onBusiness,
     required this.onUploadProduct,
+    required this.onWeapon,
     required this.onSouvenir,
     required this.onZoo,
     required this.onBandit,
@@ -623,6 +654,7 @@ class _ActiveGame extends StatelessWidget {
   final VoidCallback onInventory;
   final VoidCallback onBusiness;
   final VoidCallback onUploadProduct;
+  final VoidCallback onWeapon;
   final VoidCallback onSouvenir;
   final VoidCallback onZoo;
   final VoidCallback onBandit;
@@ -634,6 +666,15 @@ class _ActiveGame extends StatelessWidget {
     }
     final city = cityForPosition(me!.position);
     final myTurn = snapshot.match.currentTurnPlayerId == me!.uid;
+    final hasActiveCompetitor = snapshot.players.any(
+      (player) => player.uid != me!.uid && !player.isEliminated,
+    );
+    final canUseWeapon =
+        me!.guardId != null &&
+        !me!.weaponUsed &&
+        !me!.isEliminated &&
+        hasActiveCompetitor &&
+        !busy;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(12),
@@ -680,13 +721,46 @@ class _ActiveGame extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
+          if (me!.isEliminated)
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_off_outlined, color: appRed),
+                    SizedBox(width: 8),
+                    Expanded(child: Text('شما از این مسابقه حذف شده‌اید.')),
+                  ],
+                ),
+              ),
+            ),
+          if (me!.guardId != null) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.shield_outlined, color: appGreen),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${guardTitleForId(me!.guardId)}${me!.guardProtectionUsed ? ' | سپر استفاده شده' : ' | سپر راهزن آماده'}${me!.weaponUsed ? ' | سلاح استفاده شده' : ' | سلاح آماده'}',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           FilledButton.icon(
             style: FilledButton.styleFrom(
               backgroundColor: myTurn ? appGold : Colors.grey,
               foregroundColor: myTurn ? Colors.black : Colors.white,
               minimumSize: const Size.fromHeight(55),
             ),
-            onPressed: myTurn && !busy ? onRoll : null,
+            onPressed: myTurn && !busy && !me!.isEliminated ? onRoll : null,
             icon: const Icon(Icons.casino_outlined),
             label: Text(
               myTurn
@@ -695,49 +769,58 @@ class _ActiveGame extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              OutlinedButton.icon(
-                onPressed: onCity,
-                icon: const Icon(Icons.storefront_outlined),
-                label: const Text('شهر'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onInventory,
-                icon: const Icon(Icons.style_outlined),
-                label: const Text('کارت‌های من'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onBusiness,
-                icon: const Icon(Icons.business_center_outlined),
-                label: const Text('کسب‌وکار'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onUploadProduct,
-                icon: const Icon(Icons.add_photo_alternate_outlined),
-                label: const Text('افزودن کالا'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onSouvenir,
-                icon: const Icon(Icons.card_giftcard_outlined),
-                label: const Text('گردونه سوغات'),
-              ),
-              OutlinedButton.icon(
-                onPressed: onZoo,
-                icon: const Icon(Icons.pets_outlined),
-                label: const Text('باغ وحش'),
-              ),
-              if (jsonString(city?['cellType']) == 'bandit')
+          if (!me!.isEliminated)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
                 OutlinedButton.icon(
-                  onPressed: onBandit,
-                  icon: const Icon(Icons.warning_amber_rounded),
-                  label: const Text('راهزن'),
+                  onPressed: onCity,
+                  icon: const Icon(Icons.storefront_outlined),
+                  label: const Text('شهر'),
                 ),
-            ],
-          ),
+                OutlinedButton.icon(
+                  onPressed: onInventory,
+                  icon: const Icon(Icons.style_outlined),
+                  label: const Text('کارت‌های من'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onBusiness,
+                  icon: const Icon(Icons.business_center_outlined),
+                  label: const Text('کسب‌وکار'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onUploadProduct,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: const Text('افزودن کالا'),
+                ),
+                if (me!.guardId != null)
+                  OutlinedButton.icon(
+                    onPressed: canUseWeapon ? onWeapon : null,
+                    icon: const Icon(Icons.gps_fixed_rounded),
+                    label: Text(
+                      me!.weaponUsed ? 'سلاح استفاده شد' : 'استفاده از سلاح',
+                    ),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: onSouvenir,
+                  icon: const Icon(Icons.card_giftcard_outlined),
+                  label: const Text('گردونه سوغات'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onZoo,
+                  icon: const Icon(Icons.pets_outlined),
+                  label: const Text('باغ وحش'),
+                ),
+                if (jsonString(city?['cellType']) == 'bandit')
+                  OutlinedButton.icon(
+                    onPressed: onBandit,
+                    icon: const Icon(Icons.warning_amber_rounded),
+                    label: const Text('راهزن'),
+                  ),
+              ],
+            ),
           const SizedBox(height: 10),
           Card(
             child: Padding(
@@ -855,7 +938,7 @@ class WorldBoard extends StatelessWidget {
                 ),
               ),
             ),
-            ...players.map((player) {
+            ...players.where((player) => !player.isEliminated).map((player) {
               final city = _cityForPosition(player.position);
               final x = city == null ? .5 : _coordinate(city, 'longitude', .5);
               final y = city == null ? .5 : _coordinate(city, 'latitude', .5);
@@ -896,7 +979,14 @@ class _FinishedGame extends StatelessWidget {
   Widget build(BuildContext context) {
     final winner = snapshot.player(snapshot.match.winnerId ?? '');
     final players = [...snapshot.players]
-      ..sort((a, b) => b.totalWealth.compareTo(a.totalWealth));
+      ..sort((a, b) {
+        final winnerComparison =
+            (b.uid == snapshot.match.winnerId ? 1 : 0) -
+            (a.uid == snapshot.match.winnerId ? 1 : 0);
+        if (winnerComparison != 0) return winnerComparison;
+        if (a.isEliminated != b.isEliminated) return a.isEliminated ? 1 : -1;
+        return b.totalWealth.compareTo(a.totalWealth);
+      });
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -927,6 +1017,9 @@ class _FinishedGame extends StatelessWidget {
                   (player) => ListTile(
                     leading: AvatarCircle(avatarId: player.avatarId),
                     title: Text(player.displayName),
+                    subtitle: player.isEliminated
+                        ? const Text('حذف شده')
+                        : null,
                     trailing: Text(money(player.totalWealth)),
                   ),
                 ),
@@ -1161,6 +1254,59 @@ class _InventorySheet extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WeaponTargetDialog extends StatefulWidget {
+  const _WeaponTargetDialog({required this.players});
+
+  final List<MatchPlayer> players;
+
+  @override
+  State<_WeaponTargetDialog> createState() => _WeaponTargetDialogState();
+}
+
+class _WeaponTargetDialogState extends State<_WeaponTargetDialog> {
+  String? _targetId;
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('استفاده از سلاح'),
+    content: SizedBox(
+      width: double.maxFinite,
+      child: ListView(
+        shrinkWrap: true,
+        children: widget.players
+            .map(
+              (player) => ListTile(
+                onTap: () => setState(() => _targetId = player.uid),
+                leading: AvatarCircle(avatarId: player.avatarId, size: 32),
+                title: Text(player.displayName),
+                subtitle: Text('${money(player.cashBalance)} تومان'),
+                trailing: Icon(
+                  _targetId == player.uid
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: _targetId == player.uid ? appRed : Colors.grey,
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('انصراف'),
+      ),
+      FilledButton(
+        style: FilledButton.styleFrom(backgroundColor: appRed),
+        onPressed: _targetId == null
+            ? null
+            : () => Navigator.pop(context, _targetId),
+        child: const Text('تأیید'),
+      ),
+    ],
+  );
 }
 
 class _TradeOffer {

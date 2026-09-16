@@ -212,6 +212,21 @@ class GameApi {
     );
   }
 
+  Future<GuardCollection> guards() async {
+    final data = await _request('GET', '/game/guards');
+    return GuardCollection.fromJson(data);
+  }
+
+  Future<GuardCollection> buyGuard(String guardId) async {
+    final data = await _request('POST', '/game/guards/$guardId/buy');
+    return GuardCollection.fromJson(data);
+  }
+
+  Future<GuardCollection> equipGuard(String guardId) async {
+    final data = await _request('POST', '/game/guards/$guardId/equip');
+    return GuardCollection.fromJson(data);
+  }
+
   Future<List<GamePdfDocument>> gamePdfs() async {
     final data = await _request('GET', '/public/game-pdf');
     final items = jsonMaps(data['items'])
@@ -333,6 +348,12 @@ class GameApi {
     'POST',
     '/game/matches/$matchId/bandit/choose',
     {'cardId': cardId},
+  );
+
+  Future<Json> useWeapon(String matchId, String targetId) => _request(
+    'POST',
+    '/game/matches/$matchId/weapon/use',
+    {'targetId': targetId},
   );
 
   Future<void> buyLegal(String matchId, String cardId) =>

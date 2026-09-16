@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'business_progress_page.dart';
+import 'guard_shop_page.dart';
 import 'game_page.dart';
 import 'lucky_wheel_page.dart';
 import 'models.dart';
@@ -603,6 +604,13 @@ class _HomePageState extends State<HomePage> {
     if (mounted) _loadBusiness();
   }
 
+  Future<void> _openGuards() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => GuardShopPage(api: widget.api)),
+    );
+    if (mounted) _loadBusiness();
+  }
+
   Future<void> _openGamePdfs() => Navigator.of(context).push<void>(
     MaterialPageRoute(builder: (_) => GamePdfLibraryPage(api: widget.api)),
   );
@@ -738,6 +746,14 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.pop(sheetContext);
                 _openLevel();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.shield_outlined),
+              title: const Text('محافظ'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openGuards();
               },
             ),
             ListTile(
