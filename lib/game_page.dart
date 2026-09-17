@@ -339,36 +339,26 @@ class _GamePageState extends State<GamePage> {
             cards: snapshot.cards
                 .where((card) => card.ownerId == me.uid)
                 .toList(),
+            allCards: snapshot.cards,
             players: snapshot.players
                 .where((player) => player.uid != me.uid && !player.isEliminated)
                 .toList(),
             pending: snapshot.trades,
             myId: me.uid,
-            onOffer: (card) async {
-              final offer = await showDialog<_TradeOffer>(
-                context: sheetContext,
-                builder: (_) => _OfferTradeDialog(
-                  card: card,
-                  buyers: snapshot.players
-                      .where(
-                        (player) =>
-                            player.uid != me.uid && !player.isEliminated,
-                      )
-                      .toList(),
-                ),
-              );
-              if (offer != null) {
-                await _invoke(
-                  () => widget.api.createTrade(widget.matchId, offer.buyerId, [
-                    card.cardId,
-                  ], offer.price),
-                );
-              }
+            onOffer: (card, buyerId, price) async {
+              await widget.api.createTrade(widget.matchId, buyerId, [
+                card.cardId,
+              ], price);
+              await _refresh(silent: true);
             },
-            onTradeAction: (trade, action) => _invoke(
-              () =>
-                  widget.api.changeTrade(widget.matchId, trade.tradeId, action),
-            ),
+            onTradeAction: (trade, action) async {
+              await widget.api.changeTrade(
+                widget.matchId,
+                trade.tradeId,
+                action,
+              );
+              await _refresh(silent: true);
+            },
           ),
         ),
       ),
@@ -1188,9 +1178,10 @@ class _CardDetails extends StatelessWidget {
   );
 }
 
-class _InventorySheet extends StatelessWidget {
+class _InventorySheet extends StatefulWidget {
   const _InventorySheet({
     required this.cards,
+    required this.allCards,
     required this.players,
     required this.pending,
     required this.myId,
@@ -1199,15 +1190,104 @@ class _InventorySheet extends StatelessWidget {
   });
 
   final List<TradeCard> cards;
+  final List<TradeCard> allCards;
   final List<MatchPlayer> players;
   final List<PendingTrade> pending;
   final String myId;
-  final ValueChanged<TradeCard> onOffer;
-  final void Function(PendingTrade, String) onTradeAction;
+  final Future<void> Function(TradeCard card, String buyerId, int price)
+  onOffer;
+  final Future<void> Function(PendingTrade trade, String action) onTradeAction;
+
+  @override
+  State<_InventorySheet> createState() => _InventorySheetState();
+}
+
+class _InventorySheetState extends State<_InventorySheet> {
+  final _price = TextEditingController();
+  String? _cardId;
+  String? _buyerId;
+  bool _working = false;
+
+  @override
+  void dispose() {
+    _price.dispose();
+    super.dispose();
+  }
+
+  int? get _offerPrice {
+    const persian = '۰۱۲۳۴۵۶۷۸۹';
+    const arabic = '٠١٢٣٤٥٦٧٨٩';
+    var raw = _price.text.trim();
+    for (var index = 0; index < 10; index++) {
+      raw = raw.replaceAll(persian[index], '$index');
+      raw = raw.replaceAll(arabic[index], '$index');
+    }
+    return int.tryParse(raw.replaceAll(RegExp(r'[^0-9]'), ''));
+  }
+
+  void _message(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _submitOffer() async {
+    final selectedCardId = _cardId;
+    final selectedBuyerId = _buyerId;
+    final price = _offerPrice;
+    if (selectedCardId == null ||
+        selectedBuyerId == null ||
+        price == null ||
+        price <= 0) {
+      _message('کارت، بازیکن و قیمت معتبر را انتخاب کن.');
+      return;
+    }
+    final card = widget.cards
+        .where((item) => item.cardId == selectedCardId)
+        .firstOrNull;
+    if (card == null) {
+      _message('این کارت دیگر برای پیشنهاد در دسترس نیست.');
+      return;
+    }
+    await _run(
+      () => widget.onOffer(card, selectedBuyerId, price),
+      'پیشنهاد ارسال شد.',
+    );
+  }
+
+  Future<void> _run(
+    Future<void> Function() action,
+    String successMessage,
+  ) async {
+    if (_working) return;
+    setState(() => _working = true);
+    try {
+      await action();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(successMessage)));
+    } on GameApiException catch (error) {
+      if (mounted) _message(error.message);
+    } catch (_) {
+      if (mounted) _message('ارتباط با سرور بازی برقرار نشد.');
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final incoming = pending.where((item) => item.buyerId == myId).toList();
+    final incoming = widget.pending
+        .where((item) => item.buyerId == widget.myId)
+        .toList();
+    final outgoing = widget.pending
+        .where((item) => item.sellerId == widget.myId)
+        .toList();
+    final offeredCardIds = outgoing.expand((item) => item.cardIds).toSet();
+    final availableCards = widget.cards
+        .where((card) => !offeredCardIds.contains(card.cardId))
+        .toList();
+    final cardsById = {for (final card in widget.allCards) card.cardId: card};
     return Padding(
       padding: const EdgeInsets.all(16),
       child: DefaultTabController(
@@ -1223,80 +1303,253 @@ class _InventorySheet extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  cards.isEmpty
+                  widget.cards.isEmpty
                       ? const Center(child: Text('هنوز کارتی نداری.'))
                       : ListView.separated(
                           padding: const EdgeInsets.only(top: 12),
-                          itemCount: cards.length,
+                          itemCount: widget.cards.length,
                           separatorBuilder: (_, _) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final card = cards[index];
+                            final card = widget.cards[index];
                             return Card(
                               child: Padding(
                                 padding: const EdgeInsets.all(10),
-                                child: Row(
-                                  children: [
-                                    Expanded(child: _CardDetails(card: card)),
-                                    if (players.isNotEmpty)
-                                      IconButton(
-                                        onPressed: () => onOffer(card),
-                                        icon: const Icon(Icons.sell_outlined),
-                                        tooltip: 'فروش کارت',
-                                      ),
-                                  ],
-                                ),
+                                child: _CardDetails(card: card),
                               ),
                             );
                           },
                         ),
-                  incoming.isEmpty
-                      ? const Center(child: Text('پیشنهاد خریدی نداری.'))
-                      : ListView.separated(
-                          padding: const EdgeInsets.only(top: 12),
-                          itemCount: incoming.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final trade = incoming[index];
-                            return Card(
-                              child: ListTile(
-                                title: Text(
-                                  'پیشنهاد ${money(trade.price)} تومان',
+                  ListView(
+                    padding: const EdgeInsets.only(top: 12),
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text(
+                                'ارسال پیشنهاد جدید',
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: 10),
+                              DropdownButtonFormField<String>(
+                                key: ValueKey('trade-card-$_cardId'),
+                                initialValue:
+                                    availableCards.any(
+                                      (card) => card.cardId == _cardId,
+                                    )
+                                    ? _cardId
+                                    : null,
+                                decoration: const InputDecoration(
+                                  labelText: 'کارت من',
                                 ),
-                                subtitle: Text(
-                                  '${persianDigits(trade.cardIds.length)} کارت',
+                                items: availableCards
+                                    .map(
+                                      (card) => DropdownMenuItem(
+                                        value: card.cardId,
+                                        child: Text(
+                                          card.title,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: _working || availableCards.isEmpty
+                                    ? null
+                                    : (value) =>
+                                          setState(() => _cardId = value),
+                              ),
+                              const SizedBox(height: 10),
+                              DropdownButtonFormField<String>(
+                                key: ValueKey('trade-buyer-$_buyerId'),
+                                initialValue:
+                                    widget.players.any(
+                                      (player) => player.uid == _buyerId,
+                                    )
+                                    ? _buyerId
+                                    : null,
+                                decoration: const InputDecoration(
+                                  labelText: 'بازیکن دریافت‌کننده',
                                 ),
-                                trailing: Wrap(
-                                  spacing: 4,
-                                  children: [
-                                    IconButton(
-                                      onPressed: () =>
-                                          onTradeAction(trade, 'accept'),
-                                      icon: const Icon(
-                                        Icons.check_circle,
-                                        color: appGreen,
+                                items: widget.players
+                                    .map(
+                                      (player) => DropdownMenuItem(
+                                        value: player.uid,
+                                        child: Text(
+                                          player.displayName,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      tooltip: 'پذیرفتن',
-                                    ),
-                                    IconButton(
-                                      onPressed: () =>
-                                          onTradeAction(trade, 'reject'),
-                                      icon: const Icon(
-                                        Icons.cancel,
-                                        color: appRed,
-                                      ),
-                                      tooltip: 'رد کردن',
-                                    ),
-                                  ],
+                                    )
+                                    .toList(),
+                                onChanged: _working || widget.players.isEmpty
+                                    ? null
+                                    : (value) =>
+                                          setState(() => _buyerId = value),
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: _price,
+                                enabled: !_working,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'قیمت پیشنهاد',
                                 ),
                               ),
-                            );
-                          },
+                              const SizedBox(height: 10),
+                              FilledButton.icon(
+                                onPressed:
+                                    _working ||
+                                        availableCards.isEmpty ||
+                                        widget.players.isEmpty
+                                    ? null
+                                    : _submitOffer,
+                                icon: _working
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.send_outlined),
+                                label: const Text('ارسال پیشنهاد'),
+                              ),
+                            ],
+                          ),
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'پیشنهادهای دریافتی',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 8),
+                      if (incoming.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: Text('پیشنهاد دریافتی نداری.'),
+                        )
+                      else
+                        ...incoming.map(
+                          (trade) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _TradeListItem(
+                              trade: trade,
+                              cardsById: cardsById,
+                              player: widget.players
+                                  .where((item) => item.uid == trade.sellerId)
+                                  .firstOrNull,
+                              actionButtons: [
+                                IconButton(
+                                  onPressed: _working
+                                      ? null
+                                      : () => _run(
+                                          () => widget.onTradeAction(
+                                            trade,
+                                            'accept',
+                                          ),
+                                          'پیشنهاد پذیرفته شد.',
+                                        ),
+                                  icon: const Icon(
+                                    Icons.check_circle,
+                                    color: appGreen,
+                                  ),
+                                  tooltip: 'پذیرفتن',
+                                ),
+                                IconButton(
+                                  onPressed: _working
+                                      ? null
+                                      : () => _run(
+                                          () => widget.onTradeAction(
+                                            trade,
+                                            'reject',
+                                          ),
+                                          'پیشنهاد رد شد.',
+                                        ),
+                                  icon: const Icon(Icons.cancel, color: appRed),
+                                  tooltip: 'رد کردن',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'پیشنهادهای ارسال‌شده',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 8),
+                      if (outgoing.isEmpty)
+                        const Text('پیشنهاد ارسال‌شده‌ای نداری.')
+                      else
+                        ...outgoing.map(
+                          (trade) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _TradeListItem(
+                              trade: trade,
+                              cardsById: cardsById,
+                              player: widget.players
+                                  .where((item) => item.uid == trade.buyerId)
+                                  .firstOrNull,
+                              actionButtons: [
+                                IconButton(
+                                  onPressed: _working
+                                      ? null
+                                      : () => _run(
+                                          () => widget.onTradeAction(
+                                            trade,
+                                            'cancel',
+                                          ),
+                                          'پیشنهاد لغو شد.',
+                                        ),
+                                  icon: const Icon(Icons.undo, color: appRed),
+                                  tooltip: 'لغو پیشنهاد',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TradeListItem extends StatelessWidget {
+  const _TradeListItem({
+    required this.trade,
+    required this.cardsById,
+    required this.player,
+    required this.actionButtons,
+  });
+
+  final PendingTrade trade;
+  final Map<String, TradeCard> cardsById;
+  final MatchPlayer? player;
+  final List<Widget> actionButtons;
+
+  @override
+  Widget build(BuildContext context) {
+    final cardNames = trade.cardIds
+        .map((id) => cardsById[id]?.title ?? 'کارت حذف‌شده')
+        .join('، ');
+    final playerName = player?.displayName ?? 'بازیکن';
+    return Card(
+      child: ListTile(
+        leading: player == null
+            ? null
+            : AvatarCircle(avatarId: player!.avatarId, size: 36),
+        title: Text('${money(trade.price)} تومان'),
+        subtitle: Text('$playerName | $cardNames'),
+        trailing: Wrap(spacing: 2, children: actionButtons),
       ),
     );
   }
@@ -1354,80 +1607,6 @@ class _WeaponTargetDialogState extends State<_WeaponTargetDialog> {
             ? null
             : () => Navigator.pop(context, _targetId),
         child: const Text('تأیید'),
-      ),
-    ],
-  );
-}
-
-class _TradeOffer {
-  const _TradeOffer(this.buyerId, this.price);
-
-  final String buyerId;
-  final int price;
-}
-
-class _OfferTradeDialog extends StatefulWidget {
-  const _OfferTradeDialog({required this.card, required this.buyers});
-
-  final TradeCard card;
-  final List<MatchPlayer> buyers;
-
-  @override
-  State<_OfferTradeDialog> createState() => _OfferTradeDialogState();
-}
-
-class _OfferTradeDialogState extends State<_OfferTradeDialog> {
-  String? _buyer;
-  final _price = TextEditingController();
-
-  @override
-  void dispose() {
-    _price.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('فروش کارت'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(widget.card.title),
-        const SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          value: _buyer,
-          decoration: const InputDecoration(labelText: 'خریدار'),
-          items: widget.buyers
-              .map(
-                (player) => DropdownMenuItem(
-                  value: player.uid,
-                  child: Text(player.displayName),
-                ),
-              )
-              .toList(),
-          onChanged: (value) => setState(() => _buyer = value),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _price,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'قیمت دلخواه'),
-        ),
-      ],
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('انصراف'),
-      ),
-      FilledButton(
-        onPressed: () {
-          final price = int.tryParse(_price.text);
-          if (_buyer != null && price != null && price > 0) {
-            Navigator.pop(context, _TradeOffer(_buyer!, price));
-          }
-        },
-        child: const Text('ارسال پیشنهاد'),
       ),
     ],
   );

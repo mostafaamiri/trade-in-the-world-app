@@ -1776,51 +1776,94 @@ class _GamePdfLibraryPageState extends State<GamePdfLibraryPage> {
   );
 }
 
-class LeaguePage extends StatelessWidget {
+class LeaguePage extends StatefulWidget {
   const LeaguePage({super.key, required this.api});
   final GameApi api;
+
+  @override
+  State<LeaguePage> createState() => _LeaguePageState();
+}
+
+class _LeaguePageState extends State<LeaguePage> {
+  late Future<List<Json>> _league;
+
+  @override
+  void initState() {
+    super.initState();
+    _league = widget.api.league();
+  }
+
+  Future<void> _refresh() async {
+    final league = widget.api.league();
+    setState(() => _league = league);
+    await league;
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('لیگ امتیاز و رتبه')),
+    appBar: AppBar(
+      title: const Text('لیگ امتیاز و رتبه'),
+      actions: [
+        IconButton(
+          onPressed: _refresh,
+          icon: const Icon(Icons.refresh),
+          tooltip: 'تازه‌سازی رتبه‌ها',
+        ),
+      ],
+    ),
     body: ScreenBackground(
       child: FutureBuilder<List<Json>>(
-        future: api.league(),
+        future: _league,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done)
             return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError)
-            return const Center(child: Text('دریافت جدول لیگ ناموفق بود.'));
+          if (snapshot.hasError) {
+            return Center(
+              child: FilledButton.icon(
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('تلاش دوباره'),
+              ),
+            );
+          }
           final items = snapshot.data!;
           if (items.isEmpty)
             return const Center(
               child: Text('هنوز نتیجه‌ای در لیگ ثبت نشده است.'),
             );
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final name = jsonString(item['displayName']).trim();
-              final points =
-                  item['totalPoints'] ?? item['score'] ?? item['points'];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: index < 3 ? appGold : appNavy,
-                  child: Text(
-                    persianDigits(jsonInt(item['rank'], index + 1)),
-                    style: const TextStyle(color: Colors.white),
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final name = jsonString(item['displayName']).trim();
+                final points =
+                    item['totalPoints'] ?? item['score'] ?? item['points'];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: index < 3 ? appGold : appNavy,
+                    child: Text(
+                      persianDigits(jsonInt(item['rank'], index + 1)),
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-                title: Text(
-                  name.isEmpty || name == 'بازرگان'
-                      ? 'نام و نام خانوادگی ثبت نشده'
-                      : name,
-                ),
-                subtitle: Text('برد: ${persianDigits(jsonInt(item['wins']))}'),
-                trailing: Text('${money(jsonInt(points))} امتیاز'),
-              );
-            },
+                  title: Text(
+                    name.isEmpty || name == 'بازرگان'
+                        ? 'نام و نام خانوادگی ثبت نشده'
+                        : name,
+                  ),
+                  subtitle: Text(
+                    'برد: ${persianDigits(jsonInt(item['wins']))} | مسابقه: ${persianDigits(jsonInt(item['matches']))}\nدارایی آخرین مسابقه: ${money(jsonInt(item['latestWealth']))} تومان',
+                  ),
+                  isThreeLine: true,
+                  trailing: Text('${persianDigits(jsonInt(points))} امتیاز'),
+                );
+              },
+            ),
           );
         },
       ),
