@@ -740,6 +740,8 @@ class ZooStatus {
     required this.lastDailyRewardOn,
     required this.coins,
     required this.tokens,
+    required this.animalCount,
+    required this.animals,
   });
 
   final bool isUnlocked;
@@ -750,6 +752,8 @@ class ZooStatus {
   final String lastDailyRewardOn;
   final int coins;
   final int tokens;
+  final int animalCount;
+  final List<String> animals;
 
   factory ZooStatus.fromJson(Json json) {
     final dailyReward = (json['dailyReward'] as Map? ?? const {})
@@ -763,6 +767,11 @@ class ZooStatus {
       lastDailyRewardOn: jsonString(json['lastDailyRewardOn']),
       coins: jsonInt(json['coins']),
       tokens: jsonInt(json['tokens']),
+      animalCount: jsonInt(json['animalCount']),
+      animals: (json['animals'] as List? ?? const [])
+          .map(jsonString)
+          .where((name) => name.isNotEmpty)
+          .toList(),
     );
   }
 }

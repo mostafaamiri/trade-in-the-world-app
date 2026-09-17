@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trade_around_the_world/models.dart';
 import 'package:trade_around_the_world/services/jalali_date.dart';
 import 'package:trade_around_the_world/ui.dart';
 
@@ -14,5 +15,17 @@ void main() {
 
     expect([nowruz.year, nowruz.month, nowruz.day], [1403, 1, 1]);
     expect([autumn.year, autumn.month, autumn.day], [1405, 6, 18]);
+  });
+
+  test('parses the complete zoo collection from the API', () {
+    final zoo = ZooStatus.fromJson({
+      'isUnlocked': true,
+      'animalCount': 124,
+      'animals': ['شیر', 'لاما', 'باسیلیسک'],
+      'dailyReward': {'coins': 100, 'tokens': 200},
+    });
+
+    expect(zoo.animalCount, 124);
+    expect(zoo.animals, ['شیر', 'لاما', 'باسیلیسک']);
   });
 }

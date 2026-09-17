@@ -4,11 +4,13 @@ import 'models.dart';
 import 'services/game_api.dart';
 import 'ui.dart';
 
-const _zooAnimals = <_ZooAnimal>[
-  _ZooAnimal('شیر ماده', 'assets/zoo/lioness.jpg'),
-  _ZooAnimal('باسیلیسک', 'assets/zoo/basilisk.jpg'),
-  _ZooAnimal('لاما', 'assets/zoo/llama.jpg'),
-];
+const _legacyZooAnimals = <String>['شیر', 'باسیلیسک', 'لاما'];
+
+const _zooAnimalAssets = <String, String>{
+  'شیر': 'assets/zoo/lioness.jpg',
+  'باسیلیسک': 'assets/zoo/basilisk.jpg',
+  'لاما': 'assets/zoo/llama.jpg',
+};
 
 class ZooPage extends StatefulWidget {
   const ZooPage({super.key, required this.api});
@@ -26,7 +28,12 @@ class _ZooPageState extends State<ZooPage> {
   var _working = false;
   var _page = 0;
 
-  int get _pageCount => (_zooAnimals.length / 6).ceil();
+  List<_ZooAnimal> _animalsFor(ZooStatus zoo) {
+    final names = zoo.animals.isEmpty ? _legacyZooAnimals : zoo.animals;
+    return names
+        .map((name) => _ZooAnimal(name, _zooAnimalAssets[name]))
+        .toList();
+  }
 
   @override
   void initState() {
@@ -130,31 +137,37 @@ class _ZooPageState extends State<ZooPage> {
     ),
   );
 
-  Widget _buildZoo(ZooStatus zoo) => ListView(
-    padding: const EdgeInsets.all(14),
-    children: [
-      _ZooSummary(zoo: zoo),
-      const SizedBox(height: 12),
-      if (!zoo.isUnlocked)
-        _ZooLockedCard(zoo: zoo, working: _working, onUnlock: _unlock)
-      else ...[
-        _DailyRewardCard(
-          zoo: zoo,
-          working: _working,
-          onClaim: _claimDailyReward,
-        ),
-        const SizedBox(height: 14),
-        _AnimalGrid(
-          page: _page,
-          pageCount: _pageCount,
-          onPrevious: _page > 0 ? () => setState(() => _page -= 1) : null,
-          onNext: _page + 1 < _pageCount
-              ? () => setState(() => _page += 1)
-              : null,
-        ),
+  Widget _buildZoo(ZooStatus zoo) {
+    final animals = _animalsFor(zoo);
+    final pageCount = (animals.length / 6).ceil();
+    final page = _page.clamp(0, pageCount - 1).toInt();
+    return ListView(
+      padding: const EdgeInsets.all(14),
+      children: [
+        _ZooSummary(zoo: zoo),
+        const SizedBox(height: 12),
+        if (!zoo.isUnlocked)
+          _ZooLockedCard(zoo: zoo, working: _working, onUnlock: _unlock)
+        else ...[
+          _DailyRewardCard(
+            zoo: zoo,
+            working: _working,
+            onClaim: _claimDailyReward,
+          ),
+          const SizedBox(height: 14),
+          _AnimalGrid(
+            animals: animals,
+            page: page,
+            pageCount: pageCount,
+            onPrevious: page > 0 ? () => setState(() => _page -= 1) : null,
+            onNext: page + 1 < pageCount
+                ? () => setState(() => _page += 1)
+                : null,
+          ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }
 
 class _ZooSummary extends StatelessWidget {
@@ -200,6 +213,11 @@ class _ZooSummary extends StatelessWidget {
                   'کوین: ${persianDigits(zoo.coins)}  |  سکه: ${persianDigits(zoo.tokens)}',
                   style: const TextStyle(color: Colors.white70),
                 ),
+                if (zoo.animalCount > 0)
+                  Text(
+                    '${persianDigits(zoo.animalCount)} حیوان در مجموعه',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
               ],
             ),
           ),
@@ -294,12 +312,14 @@ class _DailyRewardCard extends StatelessWidget {
 
 class _AnimalGrid extends StatelessWidget {
   const _AnimalGrid({
+    required this.animals,
     required this.page,
     required this.pageCount,
     required this.onPrevious,
     required this.onNext,
   });
 
+  final List<_ZooAnimal> animals;
   final int page;
   final int pageCount;
   final VoidCallback? onPrevious;
@@ -308,7 +328,7 @@ class _AnimalGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final start = page * 6;
-    final animals = _zooAnimals.skip(start).take(6).toList();
+    final pageAnimals = animals.skip(start).take(6).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -325,7 +345,7 @@ class _AnimalGrid extends StatelessWidget {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: animals.length,
+              itemCount: pageAnimals.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
                 mainAxisSpacing: 10,
@@ -333,7 +353,7 @@ class _AnimalGrid extends StatelessWidget {
                 childAspectRatio: .82,
               ),
               itemBuilder: (context, index) =>
-                  _AnimalCage(animal: animals[index]),
+                  _AnimalCage(animal: pageAnimals[index]),
             );
           },
         ),
@@ -383,7 +403,9 @@ class _AnimalCage extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 1,
-                child: Image.asset(animal.asset, fit: BoxFit.cover),
+                child: animal.asset == null
+                    ? _ZooAnimalArtwork(name: animal.name)
+                    : Image.asset(animal.asset!, fit: BoxFit.cover),
               ),
               Padding(
                 padding: const EdgeInsets.all(14),
@@ -413,7 +435,9 @@ class _AnimalCage extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(animal.asset, fit: BoxFit.cover),
+                    animal.asset == null
+                        ? _ZooAnimalArtwork(name: animal.name)
+                        : Image.asset(animal.asset!, fit: BoxFit.cover),
                     const IgnorePointer(
                       child: CustomPaint(painter: _CageBarsPainter()),
                     ),
@@ -470,5 +494,42 @@ class _ZooAnimal {
   const _ZooAnimal(this.name, this.asset);
 
   final String name;
-  final String asset;
+  final String? asset;
+}
+
+class _ZooAnimalArtwork extends StatelessWidget {
+  const _ZooAnimalArtwork({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final aquatic = RegExp(
+      'نهنگ|دلفین|کوسه|سفره|اره‌ماهی|شیر دریایی|گراز دریایی|ماهی|بادکنک|اردک|لاک‌پشت',
+    ).hasMatch(name);
+    final flying = RegExp(
+      'عقاب|باز |شاهین|جغد|طاووس|طوطی|توکان|قو|درنا|پلیکان|حواصیل|لک‌لک|بوقیر|کاسکو|عروس هلندی|کلاغ|کرکس|مرغ|بوقلمون',
+    ).hasMatch(name);
+    final crawling = RegExp(
+      'مار|تمساح|مارمولک|کبرا|ایگوانا|آفتاب‌پرست|رتیل|عقرب|قورباغه|وزغ|سمندر|باسیلیسک',
+    ).hasMatch(name);
+    final icon = aquatic
+        ? Icons.water_rounded
+        : flying
+        ? Icons.air_rounded
+        : crawling
+        ? Icons.pest_control_rounded
+        : Icons.pets_rounded;
+    final color = aquatic
+        ? const Color(0xffc4eaf5)
+        : flying
+        ? const Color(0xffd4edcf)
+        : crawling
+        ? const Color(0xfff1dfae)
+        : const Color(0xffd9e3ed);
+    return ColoredBox(
+      color: color,
+      child: Center(child: Icon(icon, size: 62, color: appNavy)),
+    );
+  }
 }
