@@ -580,6 +580,7 @@ class BusinessProgress {
     required this.nextStageName,
     required this.nextStageIcon,
     required this.nextStageCost,
+    required this.nextStageTokenCost,
     required this.canUpgrade,
     required this.requirements,
     required this.features,
@@ -624,6 +625,7 @@ class BusinessProgress {
   final String nextStageName;
   final String nextStageIcon;
   final int nextStageCost;
+  final int nextStageTokenCost;
   final bool canUpgrade;
   final List<BusinessRequirement> requirements;
   final List<BusinessFeature> features;
@@ -678,6 +680,7 @@ class BusinessProgress {
       nextStageName: jsonString(next['name']),
       nextStageIcon: jsonString(next['icon']),
       nextStageCost: jsonInt(next['upgradeCost']),
+      nextStageTokenCost: jsonInt(next['upgradeTokenCost'], 200),
       canUpgrade: jsonBool(next['canUpgrade']),
       requirements: jsonMaps(next['requirements'])
           .map(BusinessRequirement.fromJson)

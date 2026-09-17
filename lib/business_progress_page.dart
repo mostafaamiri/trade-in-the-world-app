@@ -228,12 +228,15 @@ class _BusinessProgressPageState extends State<BusinessProgressPage> {
                         color: appGold,
                       ),
                       const SizedBox(height: 11),
-                      Text(
-                        'سکه: ${persianDigits(_business.tokens)} | هر برد: ${persianDigits(_business.tokenRewardPerWin)} سکه',
-                        style: const TextStyle(
-                          color: Color(0xffd6f2ec),
-                          fontWeight: FontWeight.w800,
-                        ),
+                      _ProgressLine(
+                        label: _business.isFinalStage
+                            ? 'سکه: ${persianDigits(_business.tokens)} | هر برد: ${persianDigits(_business.tokenRewardPerWin)} سکه'
+                            : 'سکه: ${persianDigits(_business.tokens)} / ${persianDigits(_business.nextStageTokenCost)} | هر برد: ${persianDigits(_business.tokenRewardPerWin)} سکه',
+                        value: _business.isFinalStage
+                            ? 1
+                            : (_business.tokens / _business.nextStageTokenCost)
+                                  .clamp(0.0, 1.0),
+                        color: const Color(0xffa9d9ce),
                       ),
                       const SizedBox(height: 11),
                       _ProgressLine(
@@ -616,7 +619,7 @@ class _UpgradePanel extends StatelessWidget {
             ),
             const Divider(),
             Text(
-              'هزینه ارتقا: ${persianDigits(business.nextStageCost)} کوین',
+              'هزینه ارتقا: ${persianDigits(business.nextStageCost)} کوین و ${persianDigits(business.nextStageTokenCost)} سکه',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 9),
