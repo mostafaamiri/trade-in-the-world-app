@@ -8,6 +8,7 @@ class GameMusicService {
   static const _channel = MethodChannel('trade_around_the_world/game_music');
   static int _owners = 0;
   static final Set<String> _winnerMatchesPlayed = <String>{};
+  static final Set<String> _loserMatchesPlayed = <String>{};
 
   static Future<void> acquire() async {
     _owners++;
@@ -35,6 +36,15 @@ class GameMusicService {
       await _channel.invokeMethod<void>('winner');
     } catch (_) {
       _winnerMatchesPlayed.remove(matchId);
+    }
+  }
+
+  static Future<void> playLoser(String matchId) async {
+    if (!_loserMatchesPlayed.add(matchId)) return;
+    try {
+      await _channel.invokeMethod<void>('loser');
+    } catch (_) {
+      _loserMatchesPlayed.remove(matchId);
     }
   }
 }

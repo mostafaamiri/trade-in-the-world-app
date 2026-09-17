@@ -71,7 +71,7 @@ class _GamePageState extends State<GamePage> {
           _loading = false;
           _error = null;
         });
-        _maybePlayWinnerSound(snapshot);
+        _maybePlayResultSound(snapshot);
       }
     } catch (error) {
       if (mounted && !silent) {
@@ -83,12 +83,13 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
-  void _maybePlayWinnerSound(GameSnapshot snapshot) {
-    if (snapshot.match.status != 'finished' ||
-        snapshot.match.winnerId != widget.api.userId) {
-      return;
+  void _maybePlayResultSound(GameSnapshot snapshot) {
+    if (snapshot.match.status != 'finished') return;
+    if (snapshot.match.winnerId == widget.api.userId) {
+      unawaited(GameMusicService.playWinner(widget.matchId));
+    } else {
+      unawaited(GameMusicService.playLoser(widget.matchId));
     }
-    unawaited(GameMusicService.playWinner(widget.matchId));
   }
 
   MatchPlayer? get _me => _snapshot?.player(widget.api.userId ?? '');
@@ -1023,46 +1024,68 @@ class _FinishedGame extends StatelessWidget {
         if (a.isEliminated != b.isEliminated) return a.isEliminated ? 1 : -1;
         return b.totalWealth.compareTo(a.totalWealth);
       });
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.emoji_events_rounded,
-                  color: appGold,
-                  size: 76,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'مسابقه تمام شد',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  winner == null
-                      ? 'نتیجه در حال ثبت است.'
-                      : 'برنده: ${winner.displayName}',
-                ),
-                const SizedBox(height: 16),
-                ...players.map(
-                  (player) => ListTile(
-                    leading: AvatarCircle(avatarId: player.avatarId),
-                    title: Text(player.displayName),
-                    subtitle: player.isEliminated
-                        ? const Text('حذف شده')
-                        : null,
-                    trailing: Text(money(player.totalWealth)),
-                  ),
-                ),
-              ],
-            ),
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 28, 18, 18),
+        children: [
+          const Icon(Icons.emoji_events_rounded, color: appGold, size: 76),
+          const SizedBox(height: 12),
+          const Text(
+            'مسابقه تمام شد',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            winner == null
+                ? 'نتیجه در حال ثبت است.'
+                : 'برنده مسابقه: ${winner.displayName}',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 28),
+          const Text(
+            'نتیجه بازیکنان',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          ...players.map((player) {
+            final isWinner = player.uid == snapshot.match.winnerId;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: AvatarCircle(avatarId: player.avatarId),
+                title: Text(player.displayName),
+                subtitle: Text(money(player.totalWealth)),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isWinner
+                          ? Icons.emoji_events_rounded
+                          : Icons.cancel_outlined,
+                      color: isWinner ? appGold : appRed,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isWinner ? 'برد' : 'باخت',
+                      style: TextStyle(
+                        color: isWinner ? appGreen : appRed,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
+            icon: const Icon(Icons.home_rounded),
+            label: const Text('بازگشت به خانه'),
+          ),
+        ],
       ),
     );
   }
