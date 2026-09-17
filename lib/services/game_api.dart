@@ -212,6 +212,24 @@ class GameApi {
     );
   }
 
+  Future<ZooStatus> zoo() async {
+    final data = await _request('GET', '/game/zoo');
+    return ZooStatus.fromJson((data['zoo'] as Map).cast<String, dynamic>());
+  }
+
+  Future<ZooActionResult> _zooAction(String path) async {
+    final data = await _request('POST', path);
+    return ZooActionResult(
+      ZooStatus.fromJson((data['zoo'] as Map).cast<String, dynamic>()),
+      jsonString(data['message']),
+    );
+  }
+
+  Future<ZooActionResult> unlockZoo() => _zooAction('/game/zoo/unlock');
+
+  Future<ZooActionResult> claimZooDailyReward() =>
+      _zooAction('/game/zoo/daily-reward/claim');
+
   Future<GuardCollection> guards() async {
     final data = await _request('GET', '/game/guards');
     return GuardCollection.fromJson(data);

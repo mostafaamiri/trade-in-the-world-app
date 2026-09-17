@@ -424,7 +424,7 @@ class _GamePageState extends State<GamePage> {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: Text(zoo ? 'کارت باغ وحش' : 'کارت سوغات'),
+          title: Text(zoo ? 'کارت گردونه حیوانات' : 'کارت سوغات'),
           content: _CardDetails(card: card),
           actions: [
             FilledButton(
@@ -848,7 +848,7 @@ class _ActiveGame extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: onZoo,
                   icon: const Icon(Icons.pets_outlined),
-                  label: const Text('باغ وحش'),
+                  label: const Text('گردونه حیوانات'),
                 ),
                 if (jsonString(city?['cellType']) == 'bandit')
                   OutlinedButton.icon(

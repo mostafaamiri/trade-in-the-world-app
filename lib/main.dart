@@ -12,6 +12,7 @@ import 'guard_shop_page.dart';
 import 'game_page.dart';
 import 'lucky_wheel_page.dart';
 import 'models.dart';
+import 'zoo_page.dart';
 import 'services/game_api.dart';
 import 'services/game_music_service.dart';
 import 'services/jalali_date.dart';
@@ -611,6 +612,13 @@ class _HomePageState extends State<HomePage> {
     if (mounted) _loadBusiness();
   }
 
+  Future<void> _openZoo() async {
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => ZooPage(api: widget.api)));
+    if (mounted) _loadBusiness();
+  }
+
   Future<void> _openGamePdfs() => Navigator.of(context).push<void>(
     MaterialPageRoute(builder: (_) => GamePdfLibraryPage(api: widget.api)),
   );
@@ -754,6 +762,14 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.pop(sheetContext);
                 _openGuards();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.pets_rounded),
+              title: const Text('باغ وحش'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openZoo();
               },
             ),
             ListTile(

@@ -1,6 +1,7 @@
 # Miscellaneous
 *.class
 *.log
+*.hprof
 *-result.txt
 *.pyc
 *.swp

@@ -730,6 +730,50 @@ class BusinessActionResult {
   final String message;
 }
 
+class ZooStatus {
+  const ZooStatus({
+    required this.isUnlocked,
+    required this.unlockCost,
+    required this.dailyCoinReward,
+    required this.dailyTokenReward,
+    required this.canClaimDailyReward,
+    required this.lastDailyRewardOn,
+    required this.coins,
+    required this.tokens,
+  });
+
+  final bool isUnlocked;
+  final int unlockCost;
+  final int dailyCoinReward;
+  final int dailyTokenReward;
+  final bool canClaimDailyReward;
+  final String lastDailyRewardOn;
+  final int coins;
+  final int tokens;
+
+  factory ZooStatus.fromJson(Json json) {
+    final dailyReward = (json['dailyReward'] as Map? ?? const {})
+        .cast<String, dynamic>();
+    return ZooStatus(
+      isUnlocked: jsonBool(json['isUnlocked']),
+      unlockCost: jsonInt(json['unlockCost'], 1010),
+      dailyCoinReward: jsonInt(dailyReward['coins'], 100),
+      dailyTokenReward: jsonInt(dailyReward['tokens'], 200),
+      canClaimDailyReward: jsonBool(json['canClaimDailyReward']),
+      lastDailyRewardOn: jsonString(json['lastDailyRewardOn']),
+      coins: jsonInt(json['coins']),
+      tokens: jsonInt(json['tokens']),
+    );
+  }
+}
+
+class ZooActionResult {
+  const ZooActionResult(this.zoo, this.message);
+
+  final ZooStatus zoo;
+  final String message;
+}
+
 class LuckyWheelOutcome {
   const LuckyWheelOutcome({
     required this.id,

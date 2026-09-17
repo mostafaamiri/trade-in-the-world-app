@@ -74,6 +74,7 @@ flutter:
     - assets/data/
     - assets/images/
     - assets/guards/
+    - assets/zoo/
 
   # Asset directories copied from the released APK.
   # assets:
