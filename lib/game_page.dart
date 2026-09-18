@@ -338,7 +338,11 @@ class _GamePageState extends State<GamePage> {
           heightFactor: .84,
           child: _InventorySheet(
             cards: snapshot.cards
-                .where((card) => card.ownerId == me.uid)
+                .where(
+                  (card) =>
+                      card.ownerId == me.uid ||
+                      me.cardIds.contains(card.cardId),
+                )
                 .toList(),
             allCards: snapshot.cards,
             players: snapshot.players
@@ -671,7 +675,7 @@ class _ActiveGame extends StatelessWidget {
         me!.guardId != null &&
         !me!.isEliminated &&
         hasActiveCompetitor &&
-        (me!.weaponUseCount == 0 || me!.cashBalance >= 200) &&
+        (me!.weaponUseCount == 0 || me!.cashBalance >= 100) &&
         !busy;
     return SafeArea(
       child: ListView(
@@ -756,7 +760,7 @@ class _ActiveGame extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${guardTitleForId(me!.guardId)} | ${persianDigits(me!.lives)} جان${me!.guardProtectionUsed ? ' | سپر استفاده شده' : ' | سپر راهزن آماده'}${me!.weaponUseCount == 0 ? ' | سلاح اول رایگان' : ' | استفاده بعدی: ۲۰۰ تومان'}',
+                        '${guardTitleForId(me!.guardId)} | ${persianDigits(me!.lives)} جان${me!.guardProtectionUsed ? ' | سپر استفاده شده' : ' | سپر راهزن آماده'}${me!.weaponUseCount == 0 ? ' | سلاح اول رایگان' : ' | استفاده بعدی: ۱۰۰ تومان'}',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -806,7 +810,7 @@ class _ActiveGame extends StatelessWidget {
                     label: Text(
                       me!.weaponUseCount == 0
                           ? 'انتخاب کشتن یک بازیکن'
-                          : 'انتخاب کشتن بازیکن | ۲۰۰ تومان',
+                          : 'انتخاب کشتن بازیکن | ۱۰۰ تومان',
                     ),
                   ),
                 ),
