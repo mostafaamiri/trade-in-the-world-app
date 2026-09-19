@@ -125,8 +125,35 @@ class _GamePageState extends State<GamePage> {
         barrierDismissible: false,
         builder: (_) => DiceResultDialog(value: jsonInt(result['dice'], 1)),
       );
+      final eventCard = result['eventCard'];
+      if (eventCard is Map && mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (_) =>
+              EventCardDialog(card: eventCard.cast<String, dynamic>()),
+        );
+      }
       await _refresh(silent: true);
       if (!mounted) return;
+
+      if (jsonBool(result['bankrupt'])) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('ورشکستگی'),
+            content: const Text(
+              'دارایی‌ها برای پرداخت بدهی استفاده شد، اما کافی نبود. از این مسابقه حذف شدی.',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('متوجه شدم'),
+              ),
+            ],
+          ),
+        );
+      }
+      if (_me?.isEliminated ?? true) return;
 
       final cellType = jsonString(result['cellType']);
       if (cellType == 'bandit') {
@@ -210,7 +237,7 @@ class _GamePageState extends State<GamePage> {
   Future<void> _showCityActions() async {
     final snapshot = _snapshot;
     final me = _me;
-    if (snapshot == null || me == null) return;
+    if (snapshot == null || me == null || me.isEliminated) return;
     final city = _cityForPosition(me.position);
     if (city == null) return;
 
@@ -721,6 +748,32 @@ class _ActiveGame extends StatelessWidget {
                     ),
                   ),
                   Text(jsonString(city?['description'], 'نقشه جهانی تجارت')),
+                  if (const {
+                    'chance',
+                    'communityChest',
+                  }.contains(jsonString(city?['cellType'])))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: Row(
+                        children: [
+                          Icon(
+                            jsonString(city?['cellType']) == 'chance'
+                                ? Icons.style_outlined
+                                : Icons.inventory_2_outlined,
+                            color: jsonString(city?['cellType']) == 'chance'
+                                ? appGold
+                                : appGreen,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            jsonString(city?['cellType']) == 'chance'
+                                ? 'خانه شانس'
+                                : 'خانه صندوق جامعه',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (me!.hasSheriffShield)
                     const Padding(
                       padding: EdgeInsets.only(top: 7),
@@ -1147,6 +1200,72 @@ class _DiceResultDialogState extends State<DiceResultDialog> {
       ),
     ),
   );
+}
+
+class EventCardDialog extends StatelessWidget {
+  const EventCardDialog({super.key, required this.card});
+
+  final Json card;
+
+  @override
+  Widget build(BuildContext context) {
+    final isChance = jsonString(card['deck']) == 'chance';
+    final effect = jsonString(card['effect']);
+    final amount = jsonInt(card['amount']);
+    final moved = jsonBool(card['moved']);
+    final debt = card['debtSettlement'];
+    final bankrupt = debt is Map && jsonBool(debt['bankrupt']);
+    final effectText = switch (effect) {
+      'credit' => 'دریافت ${money(amount)} تومان',
+      'debit' => 'پرداخت ${money(amount)} تومان',
+      'move' => moved ? 'به مقصد کارت منتقل شدی' : 'حرکت انجام نشد',
+      _ => '',
+    };
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(
+            isChance ? Icons.style_outlined : Icons.inventory_2_outlined,
+            color: isChance ? appGold : appGreen,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(jsonString(card['deckTitle']))),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            jsonString(card['title']),
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          Text(jsonString(card['description'])),
+          if (effectText.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              effectText,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ],
+          if (bankrupt) ...[
+            const SizedBox(height: 10),
+            const Text(
+              'دارایی‌ها برای پرداخت بدهی کافی نبود.',
+              style: TextStyle(color: appRed, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('ادامه'),
+        ),
+      ],
+    );
+  }
 }
 
 class _CardRow extends StatelessWidget {
