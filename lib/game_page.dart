@@ -1028,7 +1028,7 @@ class WorldBoard extends StatelessWidget {
                 left: constraints.maxWidth * _coordinate(city, 'longitude', .5),
                 top: constraints.maxHeight * _coordinate(city, 'latitude', .5),
                 child: const IgnorePointer(
-                  child: Icon(Icons.circle, color: appGold, size: 5),
+                  child: Icon(Icons.circle, color: appGold, size: 4),
                 ),
               ),
             ),
