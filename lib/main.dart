@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'business_progress_page.dart';
+import 'duz_page.dart';
 import 'guard_shop_page.dart';
 import 'game_page.dart';
 import 'lucky_wheel_page.dart';
@@ -854,6 +855,17 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
                 if (id != null && mounted) _openMatch(id);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.grid_3x3_outlined),
+              title: const Text('دوز'),
+              subtitle: const Text('بازی دوز با حریف هوشمند'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute(builder: (_) => const DuzPage()),
+                );
               },
             ),
             ListTile(
