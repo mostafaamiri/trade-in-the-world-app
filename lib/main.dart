@@ -840,6 +840,23 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.style_outlined),
+              title: const Text('ساخت اتاق اونو'),
+              subtitle: const Text('مسابقه ۲ تا ۱۰ نفره با کارت‌های اونو'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                final id = await Navigator.of(context).push<String>(
+                  MaterialPageRoute(
+                    builder: (_) => CreateMatchPage(
+                      api: widget.api,
+                      initialSection: 'اونو',
+                    ),
+                  ),
+                );
+                if (id != null && mounted) _openMatch(id);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.pin_outlined),
               title: const Text('وارد کردن کد اتاق'),
               onTap: () async {
@@ -1526,14 +1543,20 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   late final TextEditingController _name;
   late String _section;
   bool _private = true;
-  int _maxPlayers = 4;
+  late int _maxPlayers;
+  String _unoScoringMode = 'simple';
   bool _busy = false;
   @override
   void initState() {
     super.initState();
     _section = widget.initialSection ?? 'تجارت جهانی';
+    _maxPlayers = _section == 'کودتا' ? 4 : _section == 'اونو' ? 10 : 6;
     _name = TextEditingController(
-      text: _section == 'کودتا' ? 'اتاق کودتا' : 'مسابقه تجارت جهانی',
+      text: _section == 'کودتا'
+          ? 'اتاق کودتا'
+          : _section == 'اونو'
+          ? 'اتاق اونو'
+          : 'مسابقه تجارت جهانی',
     );
   }
   @override
@@ -1550,7 +1573,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         name: _name.text.trim(),
         section: _section,
         isPrivate: _private,
-        maxPlayers: _section == 'کودتا' ? _maxPlayers : null,
+        maxPlayers: _section == 'کودتا' || _section == 'اونو' ? _maxPlayers : null,
+        unoScoringMode: _section == 'اونو' ? _unoScoringMode : null,
         appVersion: info.version,
         appBuild: info.buildNumber,
       );
@@ -1575,6 +1599,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               Text(
                 _section == 'کودتا'
                     ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۴ نفر را مشخص کن. بعد از شروع، هر بازیکن دو نفوذ مخفی می‌گیرد.'
+                    : _section == 'اونو'
+                    ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۱۰ نفر را مشخص کن. کارت‌ها و قوانین رسمی اونو بعد از شروع اجرا می‌شوند.'
                     : 'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
                 style: const TextStyle(height: 1.8),
               ),
@@ -1588,23 +1614,38 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               DropdownButtonFormField<String>(
                 value: _section,
                 decoration: const InputDecoration(labelText: 'بخش مسابقه'),
-                items: const ['تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای', 'کودتا']
+                items: const ['تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای', 'کودتا', 'اونو']
                     .map(
                       (item) =>
                           DropdownMenuItem(value: item, child: Text(item)),
                     )
                     .toList(),
-                onChanged: (value) => setState(() => _section = value!),
+                onChanged: (value) => setState(() {
+                  _section = value!;
+                  _maxPlayers = _section == 'اونو' ? 10 : _section == 'کودتا' ? 4 : 6;
+                }),
               ),
-              if (_section == 'کودتا') ...[
+              if (_section == 'کودتا' || _section == 'اونو') ...[
                 const SizedBox(height: 14),
                 DropdownButtonFormField<int>(
                   value: _maxPlayers,
-                  decoration: const InputDecoration(labelText: 'ظرفیت اتاق کودتا'),
-                  items: const [2, 3, 4]
+                  decoration: InputDecoration(labelText: _section == 'اونو' ? 'ظرفیت اتاق اونو' : 'ظرفیت اتاق کودتا'),
+                  items: (_section == 'اونو' ? [2, 3, 4, 5, 6, 7, 8, 9, 10] : [2, 3, 4])
                       .map((item) => DropdownMenuItem(value: item, child: Text('$item نفر')))
                       .toList(),
-                  onChanged: (value) => setState(() => _maxPlayers = value ?? 4),
+                  onChanged: (value) => setState(() => _maxPlayers = value ?? (_section == 'اونو' ? 10 : 4)),
+                ),
+              ],
+              if (_section == 'اونو') ...[
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  value: _unoScoringMode,
+                  decoration: const InputDecoration(labelText: 'حالت امتیازدهی'),
+                  items: const [
+                    DropdownMenuItem(value: 'simple', child: Text('ساده؛ برنده همان دست')),
+                    DropdownMenuItem(value: 'points', child: Text('امتیازی؛ تا ۵۰۰ امتیاز')),
+                  ],
+                  onChanged: (value) => setState(() => _unoScoringMode = value ?? 'simple'),
                 ),
               ],
               SwitchListTile(
@@ -1622,7 +1663,15 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 style: FilledButton.styleFrom(backgroundColor: appRed),
                 onPressed: _busy ? null : _create,
                 icon: const Icon(Icons.add_business),
-                label: Text(_busy ? 'در حال ساخت...' : (_section == 'کودتا' ? 'ساخت اتاق کودتا' : 'ساخت اتاق')),
+                label: Text(
+                  _busy
+                      ? 'در حال ساخت...'
+                      : (_section == 'کودتا'
+                          ? 'ساخت اتاق کودتا'
+                          : _section == 'اونو'
+                          ? 'ساخت اتاق اونو'
+                          : 'ساخت اتاق'),
+                ),
               ),
             ],
           ),

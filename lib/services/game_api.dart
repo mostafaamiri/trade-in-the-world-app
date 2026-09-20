@@ -150,6 +150,7 @@ class GameApi {
     required String section,
     required bool isPrivate,
     int? maxPlayers,
+    String? unoScoringMode,
     required String appVersion,
     required String appBuild,
   }) async {
@@ -158,6 +159,7 @@ class GameApi {
       'section': section,
       'isPrivate': isPrivate,
       if (maxPlayers != null) 'maxPlayers': maxPlayers,
+      if (unoScoringMode != null) 'unoScoringMode': unoScoringMode,
       'appVersion': appVersion,
       'appBuild': appBuild,
     });
@@ -369,6 +371,28 @@ class GameApi {
 
   Future<void> blockCoup(String matchId) =>
       _request('POST', '/game/matches/$matchId/coup/block');
+
+  Future<void> unoPlay(
+    String matchId,
+    String cardId, {
+    String? chosenColor,
+    bool uno = false,
+  }) => _request('POST', '/game/matches/$matchId/uno/play', {
+    'cardId': cardId,
+    if (chosenColor != null) 'chosenColor': chosenColor,
+    'uno': uno,
+  });
+
+  Future<void> unoDraw(String matchId) =>
+      _request('POST', '/game/matches/$matchId/uno/draw');
+
+  Future<void> unoCall(String matchId) =>
+      _request('POST', '/game/matches/$matchId/uno/call');
+
+  Future<void> unoCatch(String matchId, {String? targetId}) =>
+      _request('POST', '/game/matches/$matchId/uno/catch', {
+        if (targetId != null) 'targetId': targetId,
+      });
 
   Future<Json> roll(String matchId) =>
       _request('POST', '/game/matches/$matchId/roll');

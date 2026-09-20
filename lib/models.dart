@@ -17,6 +17,12 @@ List<Json> jsonMaps(Object? value) => value is List
           .toList()
     : const [];
 
+Json jsonIntMap(Object? value) => value is Map
+    ? value.map<String, dynamic>(
+        (key, item) => MapEntry(key.toString(), jsonInt(item)),
+      )
+    : <String, dynamic>{};
+
 const Map<String, String> guardTitles = {
   'missile_guard': 'محافظ موشکی',
   'iron_guard': 'محافظ آهنین',
@@ -113,6 +119,12 @@ class MatchInfo {
     this.endsAt,
     this.winnerId,
     this.coupPendingAction,
+    this.unoCurrentColor,
+    this.unoDirection,
+    this.unoPendingDraw,
+    this.unoDiscardTop,
+    this.unoScores,
+    this.unoScoringMode,
   });
 
   final String matchId;
@@ -128,6 +140,12 @@ class MatchInfo {
   final DateTime? endsAt;
   final String? winnerId;
   final Json? coupPendingAction;
+  final String? unoCurrentColor;
+  final int unoDirection;
+  final int unoPendingDraw;
+  final Json? unoDiscardTop;
+  final Json unoScores;
+  final String unoScoringMode;
 
   factory MatchInfo.fromJson(Json json) => MatchInfo(
     matchId: jsonString(json['matchId']),
@@ -145,6 +163,14 @@ class MatchInfo {
     coupPendingAction: json['coupPendingAction'] is Map
         ? (json['coupPendingAction'] as Map).cast<String, dynamic>()
         : null,
+    unoCurrentColor: json['unoCurrentColor']?.toString(),
+    unoDirection: jsonInt(json['unoDirection'], 1),
+    unoPendingDraw: jsonInt(json['unoPendingDraw']),
+    unoDiscardTop: json['unoDiscardTop'] is Map
+        ? (json['unoDiscardTop'] as Map).cast<String, dynamic>()
+        : null,
+    unoScores: jsonIntMap(json['unoScores']),
+    unoScoringMode: jsonString(json['unoScoringMode'], 'simple'),
   );
 }
 
@@ -169,6 +195,10 @@ class MatchPlayer {
     required this.appVersion,
     required this.coupInfluenceCount,
     required this.coupRoles,
+    required this.unoHand,
+    required this.unoHandCount,
+    required this.unoCalled,
+    required this.unoAtRisk,
   });
 
   final String uid;
@@ -190,6 +220,10 @@ class MatchPlayer {
   final String appVersion;
   final int coupInfluenceCount;
   final List<String> coupRoles;
+  final List<Json> unoHand;
+  final int unoHandCount;
+  final bool unoCalled;
+  final bool unoAtRisk;
 
   factory MatchPlayer.fromJson(Json json) => MatchPlayer(
     uid: jsonString(json['uid']),
@@ -216,6 +250,10 @@ class MatchPlayer {
     appVersion: jsonString(json['appVersion'], 'نامشخص'),
     coupInfluenceCount: jsonInt(json['coupInfluenceCount'], 0),
     coupRoles: (json['coupRoles'] as List? ?? const []).map(jsonString).toList(),
+    unoHand: jsonMaps(json['unoHand']),
+    unoHandCount: jsonInt(json['unoHandCount']),
+    unoCalled: jsonBool(json['unoCalled']),
+    unoAtRisk: jsonBool(json['unoAtRisk']),
   );
 }
 

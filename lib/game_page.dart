@@ -126,6 +126,15 @@ class _GamePageState extends State<GamePage> {
   Future<void> _coupBlock() =>
       _invoke(() => widget.api.blockCoup(widget.matchId));
 
+  Future<void> _unoPlay(String cardId, {String? chosenColor, bool uno = false}) =>
+      _invoke(() => widget.api.unoPlay(widget.matchId, cardId, chosenColor: chosenColor, uno: uno));
+
+  Future<void> _unoDraw() => _invoke(() => widget.api.unoDraw(widget.matchId));
+
+  Future<void> _unoCall() => _invoke(() => widget.api.unoCall(widget.matchId));
+
+  Future<void> _unoCatch() => _invoke(() => widget.api.unoCatch(widget.matchId));
+
   Future<void> _roll() async {
     if (_working) return;
     setState(() => _working = true);
@@ -521,9 +530,13 @@ class _GamePageState extends State<GamePage> {
                 ),
                 'finished' => snapshot.match.section == 'کودتا'
                     ? _CoupGame(snapshot: snapshot, me: _me, busy: _working, onAction: _coupAction, onChallenge: _coupChallenge, onBlock: _coupBlock, onResolve: _coupResolve)
+                    : snapshot.match.section == 'اونو'
+                    ? _UnoGame(snapshot: snapshot, me: _me, busy: _working, onPlay: _unoPlay, onDraw: _unoDraw, onCall: _unoCall, onCatch: _unoCatch)
                     : _FinishedGame(snapshot: snapshot),
                 _ => snapshot.match.section == 'کودتا'
                     ? _CoupGame(snapshot: snapshot, me: _me, busy: _working, onAction: _coupAction, onChallenge: _coupChallenge, onBlock: _coupBlock, onResolve: _coupResolve)
+                    : snapshot.match.section == 'اونو'
+                    ? _UnoGame(snapshot: snapshot, me: _me, busy: _working, onPlay: _unoPlay, onDraw: _unoDraw, onCall: _unoCall, onCatch: _unoCatch)
                     : _ActiveGame(
                   snapshot: snapshot,
                   me: _me,
@@ -657,6 +670,8 @@ class _WaitingRoom extends StatelessWidget {
               label: Text(
                 snapshot.match.section == 'کودتا'
                     ? 'شروع کودتا (۲ تا ۴ نفر)'
+                    : snapshot.match.section == 'اونو'
+                    ? 'شروع اونو (۲ تا ۱۰ نفر)'
                     : 'شروع بازی (۲ تا ۶ نفر)',
               ),
             ),
@@ -856,6 +871,173 @@ class _CoupGame extends StatelessWidget {
           ],
           const SizedBox(height: 18),
           const Text('قانون برد: آخرین بازیکنی که حداقل یک نفوذ داشته باشد برنده است. کارت‌ها مخفی‌اند و ادعاها قابل چالش هستند.', style: TextStyle(height: 1.7)),
+        ],
+      ),
+    );
+  }
+}
+
+Color _unoCardColor(String color) => switch (color) {
+  'red' => const Color(0xffd83b3b),
+  'yellow' => const Color(0xffe4b51d),
+  'green' => const Color(0xff23945e),
+  'blue' => const Color(0xff2876c7),
+  _ => appNavy,
+};
+
+String _unoColorLabel(String color) => switch (color) {
+  'red' => 'قرمز',
+  'yellow' => 'زرد',
+  'green' => 'سبز',
+  'blue' => 'آبی',
+  _ => 'نامشخص',
+};
+
+String _unoCardLabel(Json card) => switch (jsonString(card['type'])) {
+  'number' => persianDigits(jsonInt(card['value'])),
+  'skip' => 'رد',
+  'reverse' => 'برعکس',
+  'draw2' => '+۲',
+  'wild' => 'وحشی',
+  'wild4' => '+۴',
+  _ => '?',
+};
+
+class _UnoGame extends StatelessWidget {
+  const _UnoGame({
+    required this.snapshot,
+    required this.me,
+    required this.busy,
+    required this.onPlay,
+    required this.onDraw,
+    required this.onCall,
+    required this.onCatch,
+  });
+
+  final GameSnapshot snapshot;
+  final MatchPlayer? me;
+  final bool busy;
+  final Future<void> Function(String cardId, {String? chosenColor, bool uno}) onPlay;
+  final Future<void> Function() onDraw;
+  final Future<void> Function() onCall;
+  final Future<void> Function() onCatch;
+
+  Future<String?> _chooseColor(BuildContext context) => showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('رنگ بعدی را انتخاب کن'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          ['red', 'قرمز'],
+          ['yellow', 'زرد'],
+          ['green', 'سبز'],
+          ['blue', 'آبی'],
+        ].map((item) => ListTile(title: Text(item[1]), leading: Icon(Icons.circle, color: _unoCardColor(item[0])), onTap: () => Navigator.pop(dialogContext, item[0]))).toList(),
+      ),
+    ),
+  );
+
+  Future<void> _play(BuildContext context, Json card) async {
+    final type = jsonString(card['type']);
+    final color = type == 'wild' || type == 'wild4'
+        ? await _chooseColor(context)
+        : null;
+    if ((type == 'wild' || type == 'wild4') && color == null) return;
+    var shouldCallUno = false;
+    if ((me?.unoHand.length ?? 0) == 2) {
+      shouldCallUno = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('یک کارت می‌ماند'),
+              content: const Text('می‌خواهی قبل از بازی اعلام کنی «اونو!»؟'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('بدون اعلام')),
+                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('اونو!')),
+              ],
+            ),
+          ) ??
+          false;
+    }
+    await onPlay(card['id'].toString(), chosenColor: color, uno: shouldCallUno);
+  }
+
+  Widget _cardButton(BuildContext context, Json card, bool enabled) {
+    final color = jsonString(card['color']);
+    return SizedBox(
+      width: 76,
+      height: 104,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: _unoCardColor(color),
+          foregroundColor: color == 'yellow' ? Colors.black : Colors.white,
+          padding: const EdgeInsets.all(4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: enabled && !busy ? () => _play(context, card) : null,
+        child: Text(_unoCardLabel(card), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMyTurn = snapshot.match.currentTurnPlayerId == me?.uid;
+    final top = snapshot.match.unoDiscardTop;
+    final atRisk = snapshot.players.where((player) => player.unoAtRisk && player.uid != me?.uid).toList();
+    final scores = snapshot.match.unoScores;
+    final winner = snapshot.players.where((player) => player.uid == snapshot.match.winnerId).firstOrNull;
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            color: appNavy,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const Text('اونو', style: TextStyle(color: appGold, fontSize: 24, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 8),
+                  Text(snapshot.match.status == 'finished' ? 'برنده: ${winner?.displayName ?? 'نامشخص'}' : (isMyTurn ? 'نوبت توست' : 'نوبت بازیکن دیگر است'), style: const TextStyle(color: Colors.white, fontSize: 17)),
+                  const SizedBox(height: 12),
+                  if (top != null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _cardButton(context, top, false),
+                        const SizedBox(width: 14),
+                        Text('رنگ فعلی: ${_unoColorLabel(snapshot.match.unoCurrentColor ?? '')}\n${snapshot.match.unoDirection == 1 ? 'جهت ساعتگرد' : 'جهت پادساعتگرد'}', style: const TextStyle(color: Colors.white, height: 1.8)),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text('بازیکنان', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          ...snapshot.players.map((player) => Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: Icon(player.uid == snapshot.match.currentTurnPlayerId ? Icons.play_arrow : Icons.person_outline, color: player.uid == snapshot.match.currentTurnPlayerId ? appGold : appNavy), title: Text('${player.displayName}${player.uid == me?.uid ? ' (تو)' : ''}'), subtitle: Text('کارت‌ها: ${persianDigits(player.unoHandCount)} | امتیاز: ${persianDigits(jsonInt(scores[player.uid]))}'), trailing: player.unoAtRisk ? const Chip(label: Text('اونو؟')) : null))),
+          if (me != null) ...[
+            const SizedBox(height: 14),
+            Text('دست تو (${persianDigits(me!.unoHand.length)} کارت)', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, runSpacing: 8, children: me!.unoHand.map((card) => _cardButton(context, card, isMyTurn && snapshot.match.status == 'active')).toList()),
+          ],
+          if (snapshot.match.status == 'active' && isMyTurn && me != null) ...[
+            const SizedBox(height: 14),
+            OutlinedButton.icon(onPressed: busy ? null : onDraw, icon: const Icon(Icons.download_outlined), label: const Text('کشیدن یک کارت')),
+          ],
+          if (me?.unoAtRisk == true) ...[
+            const SizedBox(height: 8),
+            FilledButton.icon(onPressed: busy ? null : onCall, icon: const Icon(Icons.campaign_outlined), label: const Text('اعلام اونو!')),
+          ],
+          if (snapshot.match.status == 'active' && isMyTurn && atRisk.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(onPressed: busy ? null : onCatch, icon: const Icon(Icons.gavel_outlined), label: const Text('گرفتن بازیکنِ بدون اونو')),
+          ],
+          const SizedBox(height: 18),
+          Text(snapshot.match.unoScoringMode == 'points' ? 'حالت امتیازی: بازی تا رسیدن یک بازیکن به ۵۰۰ امتیاز ادامه دارد.' : 'حالت ساده: اولین بازیکنی که همه کارت‌هایش را بازی کند برنده است.', style: const TextStyle(height: 1.7)),
         ],
       ),
     );
