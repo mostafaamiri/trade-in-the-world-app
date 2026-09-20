@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'business_progress_page.dart';
+import 'chess_page.dart';
 import 'duz_page.dart';
 import 'guard_shop_page.dart';
 import 'game_page.dart';
@@ -865,6 +866,17 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(sheetContext);
                 Navigator.of(context).push<void>(
                   MaterialPageRoute(builder: (_) => const DuzPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.extension_outlined),
+              title: const Text('شطرنج'),
+              subtitle: const Text('شطرنج هوشمند با قوانین کامل'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute(builder: (_) => const ChessPage()),
                 );
               },
             ),
