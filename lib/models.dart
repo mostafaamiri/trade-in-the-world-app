@@ -343,6 +343,27 @@ class TradeCard {
   );
 }
 
+class CardPurchase {
+  const CardPurchase({required this.card, required this.player});
+
+  final TradeCard card;
+  final MatchPlayer player;
+
+  factory CardPurchase.fromJson(Json json) {
+    final card = (json['card'] as Map? ?? const {}).cast<String, dynamic>();
+    final player = (json['player'] as Map? ?? const {})
+        .cast<String, dynamic>();
+    final purchase = CardPurchase(
+      card: TradeCard.fromJson(card),
+      player: MatchPlayer.fromJson(player),
+    );
+    if (purchase.card.cardId.isEmpty || purchase.player.uid.isEmpty) {
+      throw const FormatException('پاسخ خرید کارت کامل نیست.');
+    }
+    return purchase;
+  }
+}
+
 class PendingTrade {
   const PendingTrade({
     required this.tradeId,

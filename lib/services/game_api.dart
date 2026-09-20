@@ -418,14 +418,21 @@ class GameApi {
     {'targetId': targetId},
   );
 
-  Future<void> buyLegal(String matchId, String cardId) =>
-      _request('POST', '/game/matches/$matchId/buy/legal', {'cardId': cardId});
+  Future<CardPurchase> buyLegal(String matchId, String cardId) async {
+    final data = await _request('POST', '/game/matches/$matchId/buy/legal', {
+      'cardId': cardId,
+    });
+    return CardPurchase.fromJson(data);
+  }
 
-  Future<void> buyContraband(String matchId, String cardId) => _request(
-    'POST',
-    '/game/matches/$matchId/buy/contraband',
-    {'cardId': cardId},
-  );
+  Future<CardPurchase> buyContraband(String matchId, String cardId) async {
+    final data = await _request(
+      'POST',
+      '/game/matches/$matchId/buy/contraband',
+      {'cardId': cardId},
+    );
+    return CardPurchase.fromJson(data);
+  }
 
   Future<void> createTrade(
     String matchId,

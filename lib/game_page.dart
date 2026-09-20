@@ -28,6 +28,7 @@ class _GamePageState extends State<GamePage> {
   bool _loading = true;
   bool _working = false;
   String? _error;
+  int _refreshRequest = 0;
 
   @override
   void initState() {
@@ -57,6 +58,7 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future<void> _refresh({bool silent = false}) async {
+    final request = ++_refreshRequest;
     if (!silent && mounted) {
       setState(() {
         _loading = _snapshot == null;
@@ -65,7 +67,7 @@ class _GamePageState extends State<GamePage> {
     }
     try {
       final snapshot = await widget.api.snapshot(widget.matchId);
-      if (mounted) {
+      if (mounted && request == _refreshRequest) {
         setState(() {
           _snapshot = snapshot;
           _loading = false;
@@ -74,7 +76,7 @@ class _GamePageState extends State<GamePage> {
         _maybePlayResultSound(snapshot);
       }
     } catch (error) {
-      if (mounted && !silent) {
+      if (mounted && !silent && request == _refreshRequest) {
         setState(() {
           _loading = false;
           _error = error.toString();
@@ -112,6 +114,62 @@ class _GamePageState extends State<GamePage> {
     } finally {
       if (mounted) setState(() => _working = false);
     }
+  }
+
+  Future<bool> _buyCard(Future<CardPurchase> Function() action) async {
+    if (_working) return false;
+    setState(() => _working = true);
+    try {
+      final purchase = await action();
+      if (!mounted) return false;
+      _applyCardPurchase(purchase);
+      unawaited(_refresh(silent: true));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('«${purchase.card.title}» به کارت‌های من اضافه شد.'),
+        ),
+      );
+      return true;
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+      return false;
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  void _applyCardPurchase(CardPurchase purchase) {
+    final snapshot = _snapshot;
+    if (snapshot == null) return;
+
+    // Invalidate in-flight polls before showing the confirmed purchase.
+    _refreshRequest++;
+    final cards = [...snapshot.cards];
+    final cardIndex = cards.indexWhere(
+      (card) => card.cardId == purchase.card.cardId,
+    );
+    if (cardIndex < 0) {
+      cards.add(purchase.card);
+    } else {
+      cards[cardIndex] = purchase.card;
+    }
+    final players = snapshot.players
+        .map(
+          (player) =>
+              player.uid == purchase.player.uid ? purchase.player : player,
+        )
+        .toList();
+
+    setState(() {
+      _snapshot = GameSnapshot(
+        match: snapshot.match,
+        players: players,
+        cards: cards,
+        events: snapshot.events,
+        trades: snapshot.trades,
+        business: snapshot.business,
+      );
+    });
   }
 
   Future<void> _coupAction(String action, String? targetId) =>
@@ -297,7 +355,7 @@ class _GamePageState extends State<GamePage> {
         ),
       );
       if (shouldBuy == true) {
-        await _invoke(() => widget.api.buyLegal(widget.matchId, card.cardId));
+        await _buyCard(() => widget.api.buyLegal(widget.matchId, card.cardId));
       }
       return;
     }
@@ -346,19 +404,14 @@ class _GamePageState extends State<GamePage> {
                           onAction: me.hasSheriffShield
                               ? null
                               : () async {
-                                  try {
-                                    await widget.api.buyContraband(
+                                  final bought = await _buyCard(
+                                    () => widget.api.buyContraband(
                                       widget.matchId,
                                       card.cardId,
-                                    );
-                                    if (sheetContext.mounted) {
-                                      Navigator.pop(sheetContext);
-                                    }
-                                    await _refresh(silent: true);
-                                  } catch (error) {
-                                    if (sheetContext.mounted) {
-                                      await showFailure(sheetContext, error);
-                                    }
+                                    ),
+                                  );
+                                  if (bought && sheetContext.mounted) {
+                                    Navigator.pop(sheetContext);
                                   }
                                 },
                         ),
