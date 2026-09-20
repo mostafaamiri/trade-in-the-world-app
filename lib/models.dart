@@ -112,6 +112,7 @@ class MatchInfo {
     required this.turnNumber,
     this.endsAt,
     this.winnerId,
+    this.coupPendingAction,
   });
 
   final String matchId;
@@ -126,6 +127,7 @@ class MatchInfo {
   final int turnNumber;
   final DateTime? endsAt;
   final String? winnerId;
+  final Json? coupPendingAction;
 
   factory MatchInfo.fromJson(Json json) => MatchInfo(
     matchId: jsonString(json['matchId']),
@@ -140,6 +142,9 @@ class MatchInfo {
     turnNumber: jsonInt(json['turnNumber']),
     endsAt: DateTime.tryParse(jsonString(json['endsAt'])),
     winnerId: json['winnerId']?.toString(),
+    coupPendingAction: json['coupPendingAction'] is Map
+        ? (json['coupPendingAction'] as Map).cast<String, dynamic>()
+        : null,
   );
 }
 
@@ -162,6 +167,8 @@ class MatchPlayer {
     required this.turnOrder,
     required this.totalWealth,
     required this.appVersion,
+    required this.coupInfluenceCount,
+    required this.coupRoles,
   });
 
   final String uid;
@@ -181,6 +188,8 @@ class MatchPlayer {
   final int turnOrder;
   final int totalWealth;
   final String appVersion;
+  final int coupInfluenceCount;
+  final List<String> coupRoles;
 
   factory MatchPlayer.fromJson(Json json) => MatchPlayer(
     uid: jsonString(json['uid']),
@@ -205,6 +214,8 @@ class MatchPlayer {
     turnOrder: jsonInt(json['turnOrder']),
     totalWealth: jsonInt(json['totalWealth']),
     appVersion: jsonString(json['appVersion'], 'نامشخص'),
+    coupInfluenceCount: jsonInt(json['coupInfluenceCount'], 0),
+    coupRoles: (json['coupRoles'] as List? ?? const []).map(jsonString).toList(),
   );
 }
 

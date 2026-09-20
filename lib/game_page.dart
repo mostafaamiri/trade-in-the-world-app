@@ -114,6 +114,18 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
+  Future<void> _coupAction(String action, String? targetId) =>
+      _invoke(() => widget.api.coupAction(widget.matchId, action, targetId: targetId));
+
+  Future<void> _coupChallenge() =>
+      _invoke(() => widget.api.challengeCoup(widget.matchId));
+
+  Future<void> _coupResolve() =>
+      _invoke(() => widget.api.resolveCoup(widget.matchId));
+
+  Future<void> _coupBlock() =>
+      _invoke(() => widget.api.blockCoup(widget.matchId));
+
   Future<void> _roll() async {
     if (_working) return;
     setState(() => _working = true);
@@ -507,8 +519,12 @@ class _GamePageState extends State<GamePage> {
                     if (mounted) Navigator.pop(context);
                   },
                 ),
-                'finished' => _FinishedGame(snapshot: snapshot),
-                _ => _ActiveGame(
+                'finished' => snapshot.match.section == 'کودتا'
+                    ? _CoupGame(snapshot: snapshot, me: _me, busy: _working, onAction: _coupAction, onChallenge: _coupChallenge, onBlock: _coupBlock, onResolve: _coupResolve)
+                    : _FinishedGame(snapshot: snapshot),
+                _ => snapshot.match.section == 'کودتا'
+                    ? _CoupGame(snapshot: snapshot, me: _me, busy: _working, onAction: _coupAction, onChallenge: _coupChallenge, onBlock: _coupBlock, onResolve: _coupResolve)
+                    : _ActiveGame(
                   snapshot: snapshot,
                   me: _me,
                   cities: _cities,
@@ -636,9 +652,13 @@ class _WaitingRoom extends StatelessWidget {
           ),
           if (isHost) ...[
             FilledButton.icon(
-              onPressed: snapshot.players.length >= 2 ? onStart : null,
+              onPressed: snapshot.players.length >= snapshot.match.minPlayers ? onStart : null,
               icon: const Icon(Icons.play_arrow),
-              label: const Text('شروع بازی (۲ تا ۶ نفر)'),
+              label: Text(
+                snapshot.match.section == 'کودتا'
+                    ? 'شروع کودتا (۲ تا ۴ نفر)'
+                    : 'شروع بازی (۲ تا ۶ نفر)',
+              ),
             ),
             TextButton.icon(
               onPressed: onDelete,
@@ -649,6 +669,193 @@ class _WaitingRoom extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+String _coupRoleLabel(String role) => switch (role) {
+  'duke' => 'دوک',
+  'assassin' => 'قاتل',
+  'captain' => 'کاپیتان',
+  'ambassador' => 'سفیر',
+  'contessa' => 'کنتسا',
+  _ => 'نقش مخفی',
+};
+
+String _coupActionLabel(String action) => switch (action) {
+  'tax' => 'مالیات',
+  'steal' => 'سرقت',
+  'assassinate' => 'ترور',
+  'exchange' => 'تبادل نفوذ',
+  _ => action,
+};
+
+class _CoupGame extends StatelessWidget {
+  const _CoupGame({
+    required this.snapshot,
+    required this.me,
+    required this.busy,
+    required this.onAction,
+    required this.onChallenge,
+    required this.onBlock,
+    required this.onResolve,
+  });
+
+  final GameSnapshot snapshot;
+  final MatchPlayer? me;
+  final bool busy;
+  final Future<void> Function(String action, String? targetId) onAction;
+  final Future<void> Function() onChallenge;
+  final Future<void> Function() onBlock;
+  final Future<void> Function() onResolve;
+
+  Future<void> _targetAction(BuildContext context, String action) async {
+    final targets = snapshot.players
+        .where((player) => player.uid != me?.uid && !player.isEliminated)
+        .toList();
+    final targetId = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(action == 'coup' ? 'هدف کودتا' : 'انتخاب هدف'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: targets
+              .map(
+                (player) => ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(player.displayName),
+                  subtitle: Text('نفوذ: ${persianDigits(player.coupInfluenceCount)}'),
+                  onTap: () => Navigator.pop(dialogContext, player.uid),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+    if (targetId != null) await onAction(action, targetId);
+  }
+
+  Widget _actionButton(BuildContext context, String action, String label, IconData icon, {String? targetAction}) {
+    return FilledButton.icon(
+      onPressed: busy
+          ? null
+          : () => targetAction == null ? onAction(action, null) : _targetAction(context, targetAction),
+      icon: Icon(icon),
+      label: Text(label),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = snapshot.match.coupPendingAction;
+    final isMyTurn = snapshot.match.currentTurnPlayerId == me?.uid;
+    final isPendingActor = pending?['actorId']?.toString() == me?.uid;
+    final isAssassinationTarget = pending?['action'] == 'assassinate' && pending?['targetId']?.toString() == me?.uid;
+    final winner = snapshot.players.where((player) => player.uid == snapshot.match.winnerId).firstOrNull;
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            color: appNavy,
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  const Text('کودتا', style: TextStyle(color: appGold, fontSize: 24, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 8),
+                  Text(
+                    snapshot.match.status == 'finished'
+                        ? 'برنده: ${winner?.displayName ?? 'نامشخص'}'
+                        : (isMyTurn ? 'نوبت توست' : 'نوبت بازیکن دیگر است'),
+                    style: const TextStyle(color: Colors.white, fontSize: 17),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('سکه‌های تو: ${persianDigits(me?.cashBalance ?? 0)}', style: const TextStyle(color: Colors.white)),
+                ],
+              ),
+            ),
+          ),
+          if (me != null) ...[
+            const SizedBox(height: 14),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('نفوذهای مخفی تو', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: me!.coupRoles.isEmpty
+                          ? [Text('نفوذ باقی‌مانده: ${persianDigits(me!.coupInfluenceCount)}')]
+                          : me!.coupRoles.map((role) => Chip(label: Text(_coupRoleLabel(role)), avatar: const Icon(Icons.visibility_off_outlined, size: 16))).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          const Text('بازیکنان', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          ...snapshot.players.map(
+            (player) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Icon(player.isEliminated ? Icons.remove_circle_outline : Icons.shield_outlined, color: player.isEliminated ? Colors.grey : appGreen),
+                title: Text('${player.displayName}${player.uid == me?.uid ? ' (تو)' : ''}'),
+                subtitle: Text(player.isEliminated ? 'حذف شده' : 'نفوذ: ${persianDigits(player.coupInfluenceCount)} | سکه: ${persianDigits(player.cashBalance)}'),
+                trailing: player.uid == snapshot.match.currentTurnPlayerId ? const Icon(Icons.play_arrow, color: appGold) : null,
+              ),
+            ),
+          ),
+          if (pending != null) ...[
+            const SizedBox(height: 8),
+            Card(
+              color: const Color(0xfffff3d6),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      pending['action'] == 'foreignAid'
+                          ? 'کمک خارجی در انتظار است؛ بازیکنان می‌توانند با ادعای دوک آن را بلاک کنند.'
+                          : 'ادعای «${_coupRoleLabel(pending['claimedRole']?.toString() ?? '')}» برای ${_coupActionLabel(pending['action']?.toString() ?? '')} در انتظار است.',
+                    ),
+                    const SizedBox(height: 10),
+                    if (isPendingActor)
+                      FilledButton.icon(onPressed: busy ? null : onResolve, icon: const Icon(Icons.check), label: const Text('تأیید و اجرای اقدام'))
+                    else if (me != null && !me!.isEliminated)
+                      OutlinedButton.icon(
+                        onPressed: busy ? null : (pending['action'] == 'foreignAid' || isAssassinationTarget ? onBlock : onChallenge),
+                        icon: Icon(pending['action'] == 'foreignAid' || isAssassinationTarget ? Icons.block : Icons.gavel_outlined),
+                        label: Text(pending['action'] == 'foreignAid' ? 'بلاک کمک خارجی' : (isAssassinationTarget ? 'بلاک با کنتسا' : 'چالش ادعا')),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (snapshot.match.status == 'active' && pending == null && isMyTurn && me != null && !me!.isEliminated) ...[
+            const SizedBox(height: 14),
+            const Text('اقدام این نوبت', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            _actionButton(context, 'income', 'درآمد (+۱)', Icons.add_circle_outline),
+            _actionButton(context, 'foreignAid', 'کمک خارجی (+۲)', Icons.volunteer_activism_outlined),
+            _actionButton(context, 'tax', 'مالیات (+۳، ادعای دوک)', Icons.account_balance_outlined),
+            _actionButton(context, 'exchange', 'تبادل نفوذ (ادعای سفیر)', Icons.sync_alt_outlined),
+            _actionButton(context, 'steal', 'سرقت (ادعای کاپیتان)', Icons.monetization_on_outlined, targetAction: 'steal'),
+            _actionButton(context, 'assassinate', 'ترور (۳ سکه)', Icons.bolt_outlined, targetAction: 'assassinate'),
+            _actionButton(context, 'coup', 'کودتا (۷ سکه)', Icons.gavel_outlined, targetAction: 'coup'),
+          ],
+          const SizedBox(height: 18),
+          const Text('قانون برد: آخرین بازیکنی که حداقل یک نفوذ داشته باشد برنده است. کارت‌ها مخفی‌اند و ادعاها قابل چالش هستند.', style: TextStyle(height: 1.7)),
         ],
       ),
     );

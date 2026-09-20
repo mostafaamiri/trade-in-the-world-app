@@ -149,6 +149,7 @@ class GameApi {
     required String name,
     required String section,
     required bool isPrivate,
+    int? maxPlayers,
     required String appVersion,
     required String appBuild,
   }) async {
@@ -156,6 +157,7 @@ class GameApi {
       'name': name,
       'section': section,
       'isPrivate': isPrivate,
+      if (maxPlayers != null) 'maxPlayers': maxPlayers,
       'appVersion': appVersion,
       'appBuild': appBuild,
     });
@@ -349,6 +351,24 @@ class GameApi {
 
   Future<void> start(String matchId) =>
       _request('POST', '/game/matches/$matchId/start');
+
+  Future<void> coupAction(
+    String matchId,
+    String action, {
+    String? targetId,
+  }) => _request('POST', '/game/matches/$matchId/coup/action', {
+    'action': action,
+    if (targetId != null) 'targetId': targetId,
+  });
+
+  Future<void> resolveCoup(String matchId) =>
+      _request('POST', '/game/matches/$matchId/coup/resolve');
+
+  Future<void> challengeCoup(String matchId) =>
+      _request('POST', '/game/matches/$matchId/coup/challenge');
+
+  Future<void> blockCoup(String matchId) =>
+      _request('POST', '/game/matches/$matchId/coup/block');
 
   Future<Json> roll(String matchId) =>
       _request('POST', '/game/matches/$matchId/roll');
