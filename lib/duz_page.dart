@@ -246,7 +246,7 @@ class _DuzPageState extends State<DuzPage> {
                           SizedBox(
                             width: 150,
                             child: DropdownButtonFormField<String>(
-                              value: _difficulty,
+                              initialValue: _difficulty,
                               isDense: true,
                               dropdownColor: Colors.white,
                               decoration: const InputDecoration(

@@ -120,11 +120,11 @@ class MatchInfo {
     this.winnerId,
     this.coupPendingAction,
     this.unoCurrentColor,
-    this.unoDirection,
-    this.unoPendingDraw,
+    this.unoDirection = 1,
+    this.unoPendingDraw = 0,
     this.unoDiscardTop,
-    this.unoScores,
-    this.unoScoringMode,
+    this.unoScores = const {},
+    this.unoScoringMode = 'simple',
   });
 
   final String matchId;

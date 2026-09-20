@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'ui.dart';
-
 class ChessPage extends StatefulWidget {
   const ChessPage({super.key});
 
@@ -897,7 +895,7 @@ class _ChessPageState extends State<ChessPage> {
           ),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(
-            value: _difficulty,
+            initialValue: _difficulty,
             dropdownColor: Colors.white,
             decoration: const InputDecoration(
               filled: true,
