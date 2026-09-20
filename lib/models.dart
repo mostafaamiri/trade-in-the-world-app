@@ -713,7 +713,7 @@ class BusinessProgress {
       businessStage: jsonInt(json['businessStage'], 1),
       businessLevel: jsonInt(json['businessLevel'], 1),
       coins: jsonInt(json['coins']),
-      coinRewardPerWin: jsonInt(json['coinRewardPerWin'], 100),
+      coinRewardPerWin: jsonInt(json['coinRewardPerWin'], 20),
       tokens: jsonInt(json['tokens']),
       tokenRewardPerWin: jsonInt(json['tokenRewardPerWin'], 500),
       luckyWheelCost: jsonInt(luckyWheel['cost'], 200),
