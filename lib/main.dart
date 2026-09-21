@@ -697,7 +697,46 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _showCategories() => showModalBottomSheet<void>(
+  Future<void> _showCategories() => _showCategoryGroup(
+    title: 'دسته‌بندی',
+    actions: [
+      _CategoryAction(
+        icon: Icons.add_business_rounded,
+        title: 'ساخت اتاق',
+        subtitle: 'اونو، کودتا یا تجارت در جهان',
+        onSelected: _showRoomCreationMenu,
+      ),
+      _CategoryAction(
+        icon: Icons.emoji_events_outlined,
+        title: 'مسابقات',
+        subtitle: 'شطرنج، دوز و اتاق‌های عمومی',
+        onSelected: _showContestsMenu,
+      ),
+      _CategoryAction(
+        icon: Icons.settings_outlined,
+        title: 'تنظیمات',
+        subtitle: 'حساب کاربری، کد اتاق و بروزرسانی',
+        onSelected: _showSettingsMenu,
+      ),
+      _CategoryAction(
+        icon: Icons.celebration_outlined,
+        title: 'تفریحی',
+        subtitle: 'اعضا، لیگ، تقویم و پاداش‌ها',
+        onSelected: _showEntertainmentMenu,
+      ),
+      _CategoryAction(
+        icon: Icons.bolt_outlined,
+        title: 'تقویت',
+        subtitle: 'جاسوس، محافظ و سطح',
+        onSelected: _showBoostMenu,
+      ),
+    ],
+  );
+
+  Future<void> _showCategoryGroup({
+    required String title,
+    required List<_CategoryAction> actions,
+  }) => showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
@@ -710,247 +749,307 @@ class _HomePageState extends State<HomePage> {
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
           children: [
-            const ListTile(
+            ListTile(
               title: Text(
-                'دسته‌بندی',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19),
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 19,
+                ),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.people_outline_rounded),
-              title: const Text('نمایش اعضا'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => MembersPage(api: widget.api),
+            for (final action in actions)
+              ListTile(
+                leading: Icon(action.icon, color: action.color),
+                title: Text(
+                  action.title,
+                  style: TextStyle(
+                    color: action.color,
+                    fontWeight: FontWeight.w700,
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_month_outlined),
-              title: const Text('تقویم'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const CalendarPage()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.emoji_events_outlined),
-              title: const Text('لیگ امتیاز و رتبه'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => LeaguePage(api: widget.api),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.military_tech_outlined),
-              title: const Text('سطح'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _openLevel();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shield_outlined),
-              title: const Text('محافظ'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _openGuards();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.pets_rounded),
-              title: const Text('باغ وحش'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _openZoo();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.task_alt_outlined),
-              title: const Text('ماموریت‌های روزانه و مرحله‌ای'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _openMissions();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.casino_outlined),
-              title: const Text('گردونه شانس'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _openLuckyWheel();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf_outlined),
-              title: const Text('مشاهده PDF'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _openGamePdfs();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.groups_rounded),
-              title: const Text('مسابقات'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        MatchesPage(api: widget.api, onOpen: _openMatch),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.add_business_rounded),
-              title: const Text('ساخت اتاق'),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                final id = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => CreateMatchPage(api: widget.api),
-                  ),
-                );
-                if (id != null && mounted) _openMatch(id);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shield_moon_outlined),
-              title: const Text('ساخت اتاق کودتا'),
-              subtitle: const Text('مسابقه ۲ تا ۴ نفره با نفوذهای مخفی'),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                final id = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => CreateMatchPage(
-                      api: widget.api,
-                      initialSection: 'کودتا',
-                    ),
-                  ),
-                );
-                if (id != null && mounted) _openMatch(id);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.style_outlined),
-              title: const Text('ساخت اتاق اونو'),
-              subtitle: const Text('مسابقه ۲ تا ۱۰ نفره با کارت‌های اونو'),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                final id = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => CreateMatchPage(
-                      api: widget.api,
-                      initialSection: 'اونو',
-                    ),
-                  ),
-                );
-                if (id != null && mounted) _openMatch(id);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.grid_3x3_outlined),
-              title: const Text('دوز'),
-              subtitle: const Text('بازی دوز با حریف هوشمند'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(context).push<void>(
-                  MaterialPageRoute(builder: (_) => const DuzPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.extension_outlined),
-              title: const Text('شطرنج'),
-              subtitle: const Text('شطرنج هوشمند با قوانین کامل'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(context).push<void>(
-                  MaterialPageRoute(builder: (_) => const ChessPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.pin_outlined),
-              title: const Text('وارد کردن کد اتاق'),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                final id = await Navigator.of(context).push<String>(
-                  MaterialPageRoute(
-                    builder: (_) => JoinMatchPage(api: widget.api),
-                  ),
-                );
-                if (id != null && mounted) _openMatch(id);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.manage_accounts_outlined),
-              title: const Text('ویرایش حساب کاربری'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _editProfile();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.new_releases_outlined),
-              title: Text('نسخه: $_version'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                showDialog<void>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('نسخه برنامه'),
-                    content: Text('شما از نسخه $_version استفاده می‌کنید.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('بستن'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: Badge(
-                isLabelVisible: _hasUpdate,
-                child: const Icon(Icons.system_update_alt_rounded),
+                ),
+                subtitle: action.subtitle == null
+                    ? null
+                    : Text(action.subtitle!),
+                trailing: action.trailing,
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  action.onSelected();
+                },
               ),
-              title: const Text('بروزرسانی'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => UpdatePage(
-                      hasUpdate: _hasUpdate,
-                      onChecked: _checkUpdate,
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: appRed),
-              title: const Text('حذف حساب', style: TextStyle(color: appRed)),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _deleteProfile();
-              },
-            ),
           ],
         ),
       ),
+    ),
+  );
+
+  Future<void> _showRoomCreationMenu() => _showCategoryGroup(
+    title: 'ساخت اتاق',
+    actions: [
+      _CategoryAction(
+        icon: Icons.style_outlined,
+        title: 'ساخت اتاق اونو',
+        subtitle: 'بازی ۲ تا ۱۰ نفره',
+        onSelected: () => _createRoom('اونو'),
+      ),
+      _CategoryAction(
+        icon: Icons.shield_moon_outlined,
+        title: 'ساخت اتاق کودتا',
+        subtitle: 'بازی ۲ تا ۴ نفره',
+        onSelected: () => _createRoom('کودتا'),
+      ),
+      _CategoryAction(
+        icon: Icons.public_outlined,
+        title: 'ساخت اتاق تجارت در جهان',
+        onSelected: () => _createRoom('تجارت جهانی'),
+      ),
+    ],
+  );
+
+  Future<void> _createRoom(String section) async {
+    final id = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => CreateMatchPage(
+          api: widget.api,
+          initialSection: section,
+          lockSection: true,
+        ),
+      ),
+    );
+    if (id != null && mounted) await _openMatch(id);
+  }
+
+  Future<void> _showContestsMenu() => _showCategoryGroup(
+    title: 'مسابقات',
+    actions: [
+      _CategoryAction(
+        icon: Icons.extension_outlined,
+        title: 'شطرنج',
+        onSelected: () => Navigator.of(context)
+            .push<void>(MaterialPageRoute(builder: (_) => const ChessPage())),
+      ),
+      _CategoryAction(
+        icon: Icons.grid_3x3_outlined,
+        title: 'دوز',
+        onSelected: () =>
+            Navigator.of(context)
+                .push<void>(MaterialPageRoute(builder: (_) => const DuzPage())),
+      ),
+      _CategoryAction(
+        icon: Icons.public_outlined,
+        title: 'بازی‌های تجارت در جهان',
+        onSelected: () => _openPublicMatches(
+          title: 'بازی‌های تجارت در جهان',
+          allowedSections: const {'تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای'},
+        ),
+      ),
+      _CategoryAction(
+        icon: Icons.style_outlined,
+        title: 'بازی‌های اونو',
+        onSelected: () => _openPublicMatches(
+          title: 'بازی‌های اونو',
+          allowedSections: const {'اونو'},
+        ),
+      ),
+      _CategoryAction(
+        icon: Icons.shield_moon_outlined,
+        title: 'بازی‌های کودتا',
+        onSelected: () => _openPublicMatches(
+          title: 'بازی‌های کودتا',
+          allowedSections: const {'کودتا'},
+        ),
+      ),
+    ],
+  );
+
+  Future<void> _openPublicMatches({
+    required String title,
+    required Set<String> allowedSections,
+  }) => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => MatchesPage(
+        api: widget.api,
+        onOpen: _openMatch,
+        title: title,
+        allowedSections: allowedSections,
+      ),
+    ),
+  );
+
+  Future<void> _showSettingsMenu() => _showCategoryGroup(
+    title: 'تنظیمات',
+    actions: [
+      _CategoryAction(
+        icon: Icons.manage_accounts_outlined,
+        title: 'ویرایش حساب کاربری',
+        onSelected: _editProfile,
+      ),
+      _CategoryAction(
+        icon: Icons.delete_outline,
+        title: 'حذف حساب کاربری',
+        color: appRed,
+        onSelected: _deleteProfile,
+      ),
+      _CategoryAction(
+        icon: Icons.pin_outlined,
+        title: 'وارد کردن کد',
+        onSelected: _showJoinCodeMenu,
+      ),
+      _CategoryAction(
+        icon: Icons.picture_as_pdf_outlined,
+        title: 'راهنما و قوانین بازی',
+        onSelected: _openGamePdfs,
+      ),
+      _CategoryAction(
+        icon: Icons.new_releases_outlined,
+        title: 'نسخه: $_version',
+        onSelected: _showVersion,
+      ),
+      _CategoryAction(
+        icon: Icons.system_update_alt_rounded,
+        title: 'بروزرسانی',
+        trailing: _hasUpdate
+            ? const Badge(child: Icon(Icons.fiber_new_rounded))
+            : null,
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) =>
+                UpdatePage(hasUpdate: _hasUpdate, onChecked: _checkUpdate),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Future<void> _showJoinCodeMenu() => _showCategoryGroup(
+    title: 'وارد کردن کد',
+    actions: [
+      _CategoryAction(
+        icon: Icons.public_outlined,
+        title: 'تجارت در جهان',
+        onSelected: () => _joinRoomByCode('تجارت در جهان'),
+      ),
+      _CategoryAction(
+        icon: Icons.shield_moon_outlined,
+        title: 'کودتا',
+        onSelected: () => _joinRoomByCode('کودتا'),
+      ),
+      _CategoryAction(
+        icon: Icons.style_outlined,
+        title: 'اونو',
+        onSelected: () => _joinRoomByCode('اونو'),
+      ),
+    ],
+  );
+
+  Future<void> _joinRoomByCode(String roomTypeLabel) async {
+    final id = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) =>
+            JoinMatchPage(api: widget.api, roomTypeLabel: roomTypeLabel),
+      ),
+    );
+    if (id != null && mounted) await _openMatch(id);
+  }
+
+  Future<void> _showEntertainmentMenu() => _showCategoryGroup(
+    title: 'تفریحی',
+    actions: [
+      _CategoryAction(
+        icon: Icons.people_outline_rounded,
+        title: 'اعضا',
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(builder: (_) => MembersPage(api: widget.api)),
+        ),
+      ),
+      _CategoryAction(
+        icon: Icons.emoji_events_outlined,
+        title: 'لیگ',
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(builder: (_) => LeaguePage(api: widget.api)),
+        ),
+      ),
+      _CategoryAction(
+        icon: Icons.calendar_month_outlined,
+        title: 'تقویم',
+        onSelected: () => Navigator.of(
+          context,
+        ).push<void>(MaterialPageRoute(builder: (_) => const CalendarPage())),
+      ),
+      _CategoryAction(
+        icon: Icons.task_alt_outlined,
+        title: 'ماموریت‌های روزانه',
+        onSelected: _openMissions,
+      ),
+      _CategoryAction(
+        icon: Icons.pets_rounded,
+        title: 'باغ وحش',
+        onSelected: _openZoo,
+      ),
+      _CategoryAction(
+        icon: Icons.casino_outlined,
+        title: 'گردونه شانس',
+        onSelected: _openLuckyWheel,
+      ),
+    ],
+  );
+
+  Future<void> _showBoostMenu() => _showCategoryGroup(
+    title: 'تقویت',
+    actions: [
+      _CategoryAction(
+        icon: Icons.person_search_outlined,
+        title: 'جاسوس',
+        subtitle: 'در بازی تجارت در جهان',
+        onSelected: _showSpyNotice,
+      ),
+      _CategoryAction(
+        icon: Icons.shield_outlined,
+        title: 'محافظ',
+        onSelected: _openGuards,
+      ),
+      _CategoryAction(
+        icon: Icons.military_tech_outlined,
+        title: 'سطح',
+        onSelected: _openLevel,
+      ),
+    ],
+  );
+
+  Future<void> _showSpyNotice() => showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('جاسوس'),
+      content: const Text(
+        'جاسوس در مسابقه تجارت در جهان، پس از انتخاب محافظ، در نوبت شما قابل استفاده است.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('بستن'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(dialogContext);
+            _openGuards();
+          },
+          child: const Text('محافظ'),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _showVersion() => showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('نسخه برنامه'),
+      content: Text('شما از نسخه $_version استفاده می‌کنید.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('بستن'),
+        ),
+      ],
     ),
   );
 
@@ -1468,10 +1567,37 @@ class _CurrencyBalance extends StatelessWidget {
   );
 }
 
+class _CategoryAction {
+  const _CategoryAction({
+    required this.icon,
+    required this.title,
+    required this.onSelected,
+    this.subtitle,
+    this.color,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final FutureOr<void> Function() onSelected;
+  final String? subtitle;
+  final Color? color;
+  final Widget? trailing;
+}
+
 class MatchesPage extends StatefulWidget {
-  const MatchesPage({super.key, required this.api, required this.onOpen});
+  const MatchesPage({
+    super.key,
+    required this.api,
+    required this.onOpen,
+    this.title = 'مسابقات',
+    this.allowedSections,
+  });
+
   final GameApi api;
   final ValueChanged<String> onOpen;
+  final String title;
+  final Set<String>? allowedSections;
   @override
   State<MatchesPage> createState() => _MatchesPageState();
 }
@@ -1487,7 +1613,7 @@ class _MatchesPageState extends State<MatchesPage> {
   void _refresh() => setState(() => _matches = widget.api.publicMatches());
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('مسابقات')),
+    appBar: AppBar(title: Text(widget.title)),
     body: ScreenBackground(
       child: FutureBuilder<List<MatchInfo>>(
         future: _matches,
@@ -1502,7 +1628,13 @@ class _MatchesPageState extends State<MatchesPage> {
                 label: const Text('دریافت مسابقات ناموفق بود'),
               ),
             );
-          final matches = snapshot.data!;
+          final matches = snapshot.data!
+              .where(
+                (item) =>
+                    widget.allowedSections == null ||
+                    widget.allowedSections!.contains(item.section),
+              )
+              .toList();
           return RefreshIndicator(
             onRefresh: () async => _refresh(),
             child: ListView.separated(
@@ -1556,9 +1688,16 @@ class _MatchesPageState extends State<MatchesPage> {
 }
 
 class CreateMatchPage extends StatefulWidget {
-  const CreateMatchPage({super.key, required this.api, this.initialSection});
+  const CreateMatchPage({
+    super.key,
+    required this.api,
+    this.initialSection,
+    this.lockSection = false,
+  });
+
   final GameApi api;
   final String? initialSection;
+  final bool lockSection;
   @override
   State<CreateMatchPage> createState() => _CreateMatchPageState();
 }
@@ -1574,7 +1713,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   void initState() {
     super.initState();
     _section = widget.initialSection ?? 'تجارت جهانی';
-    _maxPlayers = _section == 'کودتا' ? 4 : _section == 'اونو' ? 10 : 6;
+    _maxPlayers = _section == 'کودتا'
+        ? 4
+        : _section == 'اونو'
+        ? 10
+        : 6;
     _name = TextEditingController(
       text: _section == 'کودتا'
           ? 'اتاق کودتا'
@@ -1583,6 +1726,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
           : 'مسابقه تجارت جهانی',
     );
   }
+
   @override
   void dispose() {
     _name.dispose();
@@ -1597,7 +1741,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         name: _name.text.trim(),
         section: _section,
         isPrivate: _private,
-        maxPlayers: _section == 'کودتا' || _section == 'اونو' ? _maxPlayers : null,
+        maxPlayers: _section == 'کودتا' || _section == 'اونو'
+            ? _maxPlayers
+            : null,
         unoScoringMode: _section == 'اونو' ? _unoScoringMode : null,
         appVersion: info.version,
         appBuild: info.buildNumber,
@@ -1635,41 +1781,85 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 decoration: const InputDecoration(labelText: 'نام مسابقه'),
               ),
               const SizedBox(height: 14),
-              DropdownButtonFormField<String>(
-                value: _section,
-                decoration: const InputDecoration(labelText: 'بخش مسابقه'),
-                items: const ['تجارت جهانی', 'بازار آزاد', 'چالش حرفه‌ای', 'کودتا', 'اونو']
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item)),
-                    )
-                    .toList(),
-                onChanged: (value) => setState(() {
-                  _section = value!;
-                  _maxPlayers = _section == 'اونو' ? 10 : _section == 'کودتا' ? 4 : 6;
-                }),
-              ),
+              if (widget.lockSection)
+                InputDecorator(
+                  decoration: const InputDecoration(labelText: 'نوع اتاق'),
+                  child: Text(
+                    _section == 'تجارت جهانی' ? 'تجارت در جهان' : _section,
+                  ),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  value: _section,
+                  decoration: const InputDecoration(labelText: 'بخش مسابقه'),
+                  items:
+                      const [
+                            'تجارت جهانی',
+                            'بازار آزاد',
+                            'چالش حرفه‌ای',
+                            'کودتا',
+                            'اونو',
+                          ]
+                          .map(
+                            (item) => DropdownMenuItem(
+                              value: item,
+                              child: Text(item),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) => setState(() {
+                    _section = value!;
+                    _maxPlayers = _section == 'اونو'
+                        ? 10
+                        : _section == 'کودتا'
+                        ? 4
+                        : 6;
+                  }),
+                ),
               if (_section == 'کودتا' || _section == 'اونو') ...[
                 const SizedBox(height: 14),
                 DropdownButtonFormField<int>(
                   value: _maxPlayers,
-                  decoration: InputDecoration(labelText: _section == 'اونو' ? 'ظرفیت اتاق اونو' : 'ظرفیت اتاق کودتا'),
-                  items: (_section == 'اونو' ? [2, 3, 4, 5, 6, 7, 8, 9, 10] : [2, 3, 4])
-                      .map((item) => DropdownMenuItem(value: item, child: Text('$item نفر')))
-                      .toList(),
-                  onChanged: (value) => setState(() => _maxPlayers = value ?? (_section == 'اونو' ? 10 : 4)),
+                  decoration: InputDecoration(
+                    labelText: _section == 'اونو'
+                        ? 'ظرفیت اتاق اونو'
+                        : 'ظرفیت اتاق کودتا',
+                  ),
+                  items:
+                      (_section == 'اونو'
+                              ? [2, 3, 4, 5, 6, 7, 8, 9, 10]
+                              : [2, 3, 4])
+                          .map(
+                            (item) => DropdownMenuItem(
+                              value: item,
+                              child: Text('$item نفر'),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) => setState(
+                    () => _maxPlayers = value ?? (_section == 'اونو' ? 10 : 4),
+                  ),
                 ),
               ],
               if (_section == 'اونو') ...[
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   value: _unoScoringMode,
-                  decoration: const InputDecoration(labelText: 'حالت امتیازدهی'),
+                  decoration: const InputDecoration(
+                    labelText: 'حالت امتیازدهی',
+                  ),
                   items: const [
-                    DropdownMenuItem(value: 'simple', child: Text('ساده؛ برنده همان دست')),
-                    DropdownMenuItem(value: 'points', child: Text('امتیازی؛ تا ۵۰۰ امتیاز')),
+                    DropdownMenuItem(
+                      value: 'simple',
+                      child: Text('ساده؛ برنده همان دست'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'points',
+                      child: Text('امتیازی؛ تا ۵۰۰ امتیاز'),
+                    ),
                   ],
-                  onChanged: (value) => setState(() => _unoScoringMode = value ?? 'simple'),
+                  onChanged: (value) =>
+                      setState(() => _unoScoringMode = value ?? 'simple'),
                 ),
               ],
               SwitchListTile(
@@ -1691,10 +1881,10 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                   _busy
                       ? 'در حال ساخت...'
                       : (_section == 'کودتا'
-                          ? 'ساخت اتاق کودتا'
-                          : _section == 'اونو'
-                          ? 'ساخت اتاق اونو'
-                          : 'ساخت اتاق'),
+                            ? 'ساخت اتاق کودتا'
+                            : _section == 'اونو'
+                            ? 'ساخت اتاق اونو'
+                            : 'ساخت اتاق'),
                 ),
               ),
             ],
@@ -1706,8 +1896,10 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 }
 
 class JoinMatchPage extends StatefulWidget {
-  const JoinMatchPage({super.key, required this.api});
+  const JoinMatchPage({super.key, required this.api, this.roomTypeLabel});
+
   final GameApi api;
+  final String? roomTypeLabel;
   @override
   State<JoinMatchPage> createState() => _JoinMatchPageState();
 }
@@ -1744,7 +1936,13 @@ class _JoinMatchPageState extends State<JoinMatchPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('وارد کردن کد اتاق')),
+    appBar: AppBar(
+      title: Text(
+        widget.roomTypeLabel == null
+            ? 'وارد کردن کد اتاق'
+            : 'کد اتاق ${widget.roomTypeLabel}',
+      ),
+    ),
     body: ScreenBackground(
       child: Center(
         child: Padding(
@@ -1761,8 +1959,10 @@ class _JoinMatchPageState extends State<JoinMatchPage> {
                   color: Color(0xff2674bd),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'کد هشت رقمی اتاق را وارد کن.',
+                Text(
+                  widget.roomTypeLabel == null
+                      ? 'کد هشت رقمی اتاق را وارد کن.'
+                      : 'کد هشت رقمی اتاق ${widget.roomTypeLabel} را وارد کن.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 18),
