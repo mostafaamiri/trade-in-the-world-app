@@ -216,6 +216,22 @@ class GameApi {
     );
   }
 
+  Future<ArcadeMatchSession> startTouchCarMatch() async {
+    final data = await _request('POST', '/game/arcade/touch-car/start');
+    return ArcadeMatchSession.fromJson(data);
+  }
+
+  Future<ArcadeMatchReward> completeTouchCarMatch(
+    String sessionId,
+    int score,
+  ) async {
+    final data = await _request('POST', '/game/arcade/touch-car/complete', {
+      'sessionId': sessionId,
+      'score': score,
+    });
+    return ArcadeMatchReward.fromJson(data);
+  }
+
   Future<ZooStatus> zoo() async {
     final data = await _request('GET', '/game/zoo');
     return ZooStatus.fromJson((data['zoo'] as Map).cast<String, dynamic>());
@@ -354,14 +370,11 @@ class GameApi {
   Future<void> start(String matchId) =>
       _request('POST', '/game/matches/$matchId/start');
 
-  Future<void> coupAction(
-    String matchId,
-    String action, {
-    String? targetId,
-  }) => _request('POST', '/game/matches/$matchId/coup/action', {
-    'action': action,
-    if (targetId != null) 'targetId': targetId,
-  });
+  Future<void> coupAction(String matchId, String action, {String? targetId}) =>
+      _request('POST', '/game/matches/$matchId/coup/action', {
+        'action': action,
+        if (targetId != null) 'targetId': targetId,
+      });
 
   Future<void> resolveCoup(String matchId) =>
       _request('POST', '/game/matches/$matchId/coup/resolve');
@@ -389,10 +402,11 @@ class GameApi {
   Future<void> unoCall(String matchId) =>
       _request('POST', '/game/matches/$matchId/uno/call');
 
-  Future<void> unoCatch(String matchId, {String? targetId}) =>
-      _request('POST', '/game/matches/$matchId/uno/catch', {
-        if (targetId != null) 'targetId': targetId,
-      });
+  Future<void> unoCatch(String matchId, {String? targetId}) => _request(
+    'POST',
+    '/game/matches/$matchId/uno/catch',
+    {if (targetId != null) 'targetId': targetId},
+  );
 
   Future<Json> roll(String matchId) =>
       _request('POST', '/game/matches/$matchId/roll');

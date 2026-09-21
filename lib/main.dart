@@ -15,6 +15,7 @@ import 'game_page.dart';
 import 'lucky_wheel_page.dart';
 import 'models.dart';
 import 'ping_pong_page.dart';
+import 'touch_car_page.dart';
 import 'zoo_page.dart';
 import 'services/game_api.dart';
 import 'services/game_music_service.dart';
@@ -844,6 +845,12 @@ class _HomePageState extends State<HomePage> {
         ).push<void>(MaterialPageRoute(builder: (_) => const PingPongPage())),
       ),
       _CategoryAction(
+        icon: Icons.directions_car_filled_outlined,
+        title: 'مسابقه ماشین لمسی',
+        subtitle: '۲۰ کوین برای هر مسابقه کامل',
+        onSelected: _openTouchCar,
+      ),
+      _CategoryAction(
         icon: Icons.public_outlined,
         title: 'بازی‌های تجارت در جهان',
         onSelected: () => _openPublicMatches(
@@ -883,6 +890,13 @@ class _HomePageState extends State<HomePage> {
       ),
     ),
   );
+
+  Future<void> _openTouchCar() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => TouchCarPage(api: widget.api)),
+    );
+    if (mounted) _loadBusiness();
+  }
 
   Future<void> _showSettingsMenu() => _showCategoryGroup(
     title: 'تنظیمات',

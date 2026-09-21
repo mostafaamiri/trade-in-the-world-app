@@ -104,6 +104,42 @@ class GameMember {
   );
 }
 
+class ArcadeMatchSession {
+  const ArcadeMatchSession({required this.sessionId, required this.coinReward});
+
+  final String sessionId;
+  final int coinReward;
+
+  factory ArcadeMatchSession.fromJson(Json json) => ArcadeMatchSession(
+    sessionId: jsonString(json['sessionId']),
+    coinReward: jsonInt(json['coinReward']),
+  );
+}
+
+class ArcadeMatchReward {
+  const ArcadeMatchReward({
+    required this.coinsAwarded,
+    required this.coins,
+    required this.qualified,
+    required this.alreadyCompleted,
+    required this.message,
+  });
+
+  final int coinsAwarded;
+  final int coins;
+  final bool qualified;
+  final bool alreadyCompleted;
+  final String message;
+
+  factory ArcadeMatchReward.fromJson(Json json) => ArcadeMatchReward(
+    coinsAwarded: jsonInt(json['coinsAwarded']),
+    coins: jsonInt(json['coins']),
+    qualified: jsonBool(json['qualified']),
+    alreadyCompleted: jsonBool(json['alreadyCompleted']),
+    message: jsonString(json['message']),
+  );
+}
+
 class MatchInfo {
   const MatchInfo({
     required this.matchId,
@@ -249,7 +285,9 @@ class MatchPlayer {
     totalWealth: jsonInt(json['totalWealth']),
     appVersion: jsonString(json['appVersion'], 'نامشخص'),
     coupInfluenceCount: jsonInt(json['coupInfluenceCount'], 0),
-    coupRoles: (json['coupRoles'] as List? ?? const []).map(jsonString).toList(),
+    coupRoles: (json['coupRoles'] as List? ?? const [])
+        .map(jsonString)
+        .toList(),
     unoHand: jsonMaps(json['unoHand']),
     unoHandCount: jsonInt(json['unoHandCount']),
     unoCalled: jsonBool(json['unoCalled']),
@@ -351,8 +389,7 @@ class CardPurchase {
 
   factory CardPurchase.fromJson(Json json) {
     final card = (json['card'] as Map? ?? const {}).cast<String, dynamic>();
-    final player = (json['player'] as Map? ?? const {})
-        .cast<String, dynamic>();
+    final player = (json['player'] as Map? ?? const {}).cast<String, dynamic>();
     final purchase = CardPurchase(
       card: TradeCard.fromJson(card),
       player: MatchPlayer.fromJson(player),
