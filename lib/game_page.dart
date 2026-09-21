@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -172,8 +173,9 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
-  Future<void> _coupAction(String action, String? targetId) =>
-      _invoke(() => widget.api.coupAction(widget.matchId, action, targetId: targetId));
+  Future<void> _coupAction(String action, String? targetId) => _invoke(
+    () => widget.api.coupAction(widget.matchId, action, targetId: targetId),
+  );
 
   Future<void> _coupChallenge() =>
       _invoke(() => widget.api.challengeCoup(widget.matchId));
@@ -184,14 +186,25 @@ class _GamePageState extends State<GamePage> {
   Future<void> _coupBlock() =>
       _invoke(() => widget.api.blockCoup(widget.matchId));
 
-  Future<void> _unoPlay(String cardId, {String? chosenColor, bool uno = false}) =>
-      _invoke(() => widget.api.unoPlay(widget.matchId, cardId, chosenColor: chosenColor, uno: uno));
+  Future<void> _unoPlay(
+    String cardId, {
+    String? chosenColor,
+    bool uno = false,
+  }) => _invoke(
+    () => widget.api.unoPlay(
+      widget.matchId,
+      cardId,
+      chosenColor: chosenColor,
+      uno: uno,
+    ),
+  );
 
   Future<void> _unoDraw() => _invoke(() => widget.api.unoDraw(widget.matchId));
 
   Future<void> _unoCall() => _invoke(() => widget.api.unoCall(widget.matchId));
 
-  Future<void> _unoCatch() => _invoke(() => widget.api.unoCatch(widget.matchId));
+  Future<void> _unoCatch() =>
+      _invoke(() => widget.api.unoCatch(widget.matchId));
 
   Future<void> _roll() async {
     if (_working) return;
@@ -581,45 +594,79 @@ class _GamePageState extends State<GamePage> {
                     if (mounted) Navigator.pop(context);
                   },
                 ),
-                'finished' => snapshot.match.section == 'کودتا'
-                    ? _CoupGame(snapshot: snapshot, me: _me, busy: _working, onAction: _coupAction, onChallenge: _coupChallenge, onBlock: _coupBlock, onResolve: _coupResolve)
-                    : snapshot.match.section == 'اونو'
-                    ? _UnoGame(snapshot: snapshot, me: _me, busy: _working, onPlay: _unoPlay, onDraw: _unoDraw, onCall: _unoCall, onCatch: _unoCatch)
-                    : _FinishedGame(snapshot: snapshot),
-                _ => snapshot.match.section == 'کودتا'
-                    ? _CoupGame(snapshot: snapshot, me: _me, busy: _working, onAction: _coupAction, onChallenge: _coupChallenge, onBlock: _coupBlock, onResolve: _coupResolve)
-                    : snapshot.match.section == 'اونو'
-                    ? _UnoGame(snapshot: snapshot, me: _me, busy: _working, onPlay: _unoPlay, onDraw: _unoDraw, onCall: _unoCall, onCatch: _unoCatch)
-                    : _ActiveGame(
-                  snapshot: snapshot,
-                  me: _me,
-                  cities: _cities,
-                  busy: _working,
-                  cityForPosition: _cityForPosition,
-                  onRoll: _roll,
-                  onCity: _showCityActions,
-                  onInventory: _inventory,
-                  onBusiness: () {
-                    Navigator.of(context)
-                        .push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => BusinessProgressPage(
-                              api: widget.api,
-                              matchId: widget.matchId,
-                              initialBusiness: snapshot.business,
-                            ),
-                          ),
+                'finished' =>
+                  snapshot.match.section == 'کودتا'
+                      ? _CoupGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          busy: _working,
+                          onAction: _coupAction,
+                          onChallenge: _coupChallenge,
+                          onBlock: _coupBlock,
+                          onResolve: _coupResolve,
                         )
-                        .then((_) {
-                          if (mounted) _refresh(silent: true);
-                        });
-                  },
-                  onUploadProduct: _uploadProduct,
-                  onWeapon: _useWeapon,
-                  onSouvenir: () => _wheel(false),
-                  onZoo: () => _wheel(true),
-                  onBandit: _showBandit,
-                ),
+                      : snapshot.match.section == 'اونو'
+                      ? _UnoGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          busy: _working,
+                          onPlay: _unoPlay,
+                          onDraw: _unoDraw,
+                          onCall: _unoCall,
+                          onCatch: _unoCatch,
+                        )
+                      : _FinishedGame(snapshot: snapshot),
+                _ =>
+                  snapshot.match.section == 'کودتا'
+                      ? _CoupGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          busy: _working,
+                          onAction: _coupAction,
+                          onChallenge: _coupChallenge,
+                          onBlock: _coupBlock,
+                          onResolve: _coupResolve,
+                        )
+                      : snapshot.match.section == 'اونو'
+                      ? _UnoGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          busy: _working,
+                          onPlay: _unoPlay,
+                          onDraw: _unoDraw,
+                          onCall: _unoCall,
+                          onCatch: _unoCatch,
+                        )
+                      : _ActiveGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          cities: _cities,
+                          busy: _working,
+                          cityForPosition: _cityForPosition,
+                          onRoll: _roll,
+                          onCity: _showCityActions,
+                          onInventory: _inventory,
+                          onBusiness: () {
+                            Navigator.of(context)
+                                .push<void>(
+                                  MaterialPageRoute(
+                                    builder: (_) => BusinessProgressPage(
+                                      api: widget.api,
+                                      matchId: widget.matchId,
+                                      initialBusiness: snapshot.business,
+                                    ),
+                                  ),
+                                )
+                                .then((_) {
+                                  if (mounted) _refresh(silent: true);
+                                });
+                          },
+                          onUploadProduct: _uploadProduct,
+                          onWeapon: _useWeapon,
+                          onSouvenir: () => _wheel(false),
+                          onZoo: () => _wheel(true),
+                          onBandit: _showBandit,
+                        ),
               },
       ),
     );
@@ -718,7 +765,9 @@ class _WaitingRoom extends StatelessWidget {
           ),
           if (isHost) ...[
             FilledButton.icon(
-              onPressed: snapshot.players.length >= snapshot.match.minPlayers ? onStart : null,
+              onPressed: snapshot.players.length >= snapshot.match.minPlayers
+                  ? onStart
+                  : null,
               icon: const Icon(Icons.play_arrow),
               label: Text(
                 snapshot.match.section == 'کودتا'
@@ -746,19 +795,310 @@ class _WaitingRoom extends StatelessWidget {
 String _coupRoleLabel(String role) => switch (role) {
   'duke' => 'دوک',
   'assassin' => 'قاتل',
+  'contessa' => 'کنتس',
   'captain' => 'کاپیتان',
   'ambassador' => 'سفیر',
-  'contessa' => 'کنتسا',
+  'banker' => 'بانکدار',
+  'capitalist' => 'سرمایه‌دار',
+  'farmer' => 'کشاورز',
+  'tax_collector' => 'مالیه‌چی',
+  'landowner' => 'مالک مزرعه',
+  'spy' => 'جاسوس',
+  'guerrilla' => 'چریک',
+  'crime_boss' => 'رئیس جنایتکاران',
+  'general' => 'ژنرال',
+  'mercenary' => 'مزدور',
+  'director' => 'کارگردان',
+  'journalist' => 'خبرنگار',
+  'producer' => 'تهیه‌کننده',
+  'reporter' => 'گزارشگر',
+  'writer' => 'نویسنده',
+  'communist' => 'کمونیست',
+  'customs_officer' => 'مأمور گمرک',
+  'foreign_advisor' => 'مشاور خارجی',
+  'intellectual' => 'روشنفکر',
+  'lawyer' => 'وکیل',
   _ => 'نقش مخفی',
 };
 
 String _coupActionLabel(String action) => switch (action) {
+  'income' => 'درآمد',
+  'foreignAid' => 'کمک خارجی',
   'tax' => 'مالیات',
+  'bankerIncome' => 'درآمد بانکدار',
+  'capitalistIncome' => 'درآمد سرمایه‌دار',
+  'farmerIncome' => 'برداشت کشاورز',
+  'taxCollectorIncome' => 'دریافت مالیه‌چی',
+  'landownerIncome' => 'درآمد مالک مزرعه',
+  'spyIncome' => 'اقدام جاسوس',
   'steal' => 'سرقت',
   'assassinate' => 'ترور',
+  'guerrilla' => 'حمله چریک',
+  'crimeBoss' => 'باج‌گیری',
+  'general' => 'فشار ژنرال',
+  'mercenary' => 'تهدید مزدور',
   'exchange' => 'تبادل نفوذ',
+  'directorExchange' => 'انتخاب کارگردان',
+  'journalist' => 'خبرنگار',
+  'producer' => 'تهیه‌کننده',
+  'reporter' => 'گزارشگر',
+  'writerExchange' => 'بررسی نویسنده',
+  'communist' => 'برداشت کمونیست',
+  'customsOfficer' => 'عوارض گمرک',
+  'foreignAdvisor' => 'پیمان مشاور خارجی',
+  'block' => 'دفاع',
+  'coup' => 'کودتا',
   _ => action,
 };
+
+class _CoupActionDefinition {
+  const _CoupActionDefinition(
+    this.action,
+    this.label,
+    this.icon, {
+    this.targeted = false,
+  });
+
+  final String action;
+  final String label;
+  final IconData icon;
+  final bool targeted;
+}
+
+const _coupRoleGuide = <({String role, String category, String description})>[
+  (role: 'duke', category: 'مالی', description: '۳ سکه از خزانه بگیر.'),
+  (
+    role: 'assassin',
+    category: 'قدرت',
+    description: 'با پرداخت ۳ سکه، یک نفوذ از هدف کم کن.',
+  ),
+  (
+    role: 'contessa',
+    category: 'قدرت',
+    description: 'در برابر قاتل ادعای دفاع کن.',
+  ),
+  (
+    role: 'captain',
+    category: 'قدرت',
+    description: 'تا ۲ سکه از یک بازیکن بگیر.',
+  ),
+  (
+    role: 'ambassador',
+    category: 'ارتباطات',
+    description: 'کارت‌ها را با بانک مبادله کن.',
+  ),
+  (role: 'banker', category: 'مالی', description: '۳ سکه بگیر.'),
+  (role: 'capitalist', category: 'مالی', description: '۴ سکه بگیر.'),
+  (
+    role: 'farmer',
+    category: 'مالی',
+    description: '۳ سکه بگیر و ۱ سکه به بازیکن انتخابی بده.',
+  ),
+  (
+    role: 'tax_collector',
+    category: 'مالی',
+    description: '۵ سکه از خزانه دریافت کن.',
+  ),
+  (role: 'landowner', category: 'مالی', description: '۱ سکه بگیر.'),
+  (
+    role: 'spy',
+    category: 'مالی',
+    description: '۱ سکه بگیر و یک اقدام اضافه انجام بده.',
+  ),
+  (
+    role: 'guerrilla',
+    category: 'قدرت',
+    description: 'با پرداخت ۲ سکه، یک نفوذ از هدف کم کن.',
+  ),
+  (
+    role: 'crime_boss',
+    category: 'قدرت',
+    description: 'هدف ۲ سکه می‌دهد تا نفوذش را نگه دارد.',
+  ),
+  (
+    role: 'general',
+    category: 'قدرت',
+    description: 'با پرداخت ۵ سکه، به همهٔ رقیبان فشار مالی وارد کن.',
+  ),
+  (
+    role: 'mercenary',
+    category: 'قدرت',
+    description: 'با پرداخت ۲ سکه، هدف را وادار به از دست‌دادن نفوذ کن.',
+  ),
+  (
+    role: 'director',
+    category: 'ارتباطات',
+    description: 'دو کارت بانک را بررسی و مبادله کن.',
+  ),
+  (
+    role: 'journalist',
+    category: 'ارتباطات',
+    description: 'یک کارت و یک سکه دریافت کن.',
+  ),
+  (
+    role: 'producer',
+    category: 'ارتباطات',
+    description: 'یک کارت از بانک و یک کارت از بازیکن هدف بگیر.',
+  ),
+  (
+    role: 'reporter',
+    category: 'ارتباطات',
+    description: 'یک کارت و یک سکه بگیر.',
+  ),
+  (
+    role: 'writer',
+    category: 'ارتباطات',
+    description: 'سه کارت بانک را بررسی و مبادله کن.',
+  ),
+  (
+    role: 'communist',
+    category: 'منافع ویژه',
+    description: 'تا ۳ سکه از ثروتمندترین بازیکن بگیر.',
+  ),
+  (
+    role: 'customs_officer',
+    category: 'منافع ویژه',
+    description: '۲ سکه عوارض از هدف بگیر.',
+  ),
+  (
+    role: 'foreign_advisor',
+    category: 'منافع ویژه',
+    description: 'با یک بازیکن پیمان عدم تعرض بساز.',
+  ),
+  (
+    role: 'intellectual',
+    category: 'منافع ویژه',
+    description: 'پس از از دست‌دادن نفوذ، ۵ سکه دریافت کن.',
+  ),
+  (
+    role: 'lawyer',
+    category: 'منافع ویژه',
+    description: 'پس از حذف بازیکن، سکه‌های او را بگیر.',
+  ),
+];
+
+const _coupActions = <_CoupActionDefinition>[
+  _CoupActionDefinition(
+    'tax',
+    'دوک: مالیات (+۳)',
+    Icons.account_balance_outlined,
+  ),
+  _CoupActionDefinition(
+    'bankerIncome',
+    'بانکدار: +۳ سکه',
+    Icons.account_balance_wallet_outlined,
+  ),
+  _CoupActionDefinition(
+    'capitalistIncome',
+    'سرمایه‌دار: +۴ سکه',
+    Icons.trending_up_outlined,
+  ),
+  _CoupActionDefinition(
+    'farmerIncome',
+    'کشاورز: +۳ و اهدای ۱',
+    Icons.agriculture_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'taxCollectorIncome',
+    'مالیه‌چی: +۵ سکه',
+    Icons.receipt_long_outlined,
+  ),
+  _CoupActionDefinition(
+    'landownerIncome',
+    'مالک مزرعه: +۱ سکه',
+    Icons.landscape_outlined,
+  ),
+  _CoupActionDefinition(
+    'spyIncome',
+    'جاسوس: +۱ و اقدام اضافه',
+    Icons.visibility_outlined,
+  ),
+  _CoupActionDefinition(
+    'steal',
+    'کاپیتان: سرقت تا ۲',
+    Icons.monetization_on_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'assassinate',
+    'قاتل: ترور (۳ سکه)',
+    Icons.bolt_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'guerrilla',
+    'چریک: حمله (۲ سکه)',
+    Icons.flash_on_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'crimeBoss',
+    'رئیس جنایتکاران: باج‌گیری',
+    Icons.local_police_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'general',
+    'ژنرال: فشار همهٔ رقیبان (۵ سکه)',
+    Icons.groups_outlined,
+  ),
+  _CoupActionDefinition(
+    'mercenary',
+    'مزدور: تهدید (۲ سکه)',
+    Icons.security_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'exchange',
+    'سفیر: تبادل کارت',
+    Icons.sync_alt_outlined,
+  ),
+  _CoupActionDefinition(
+    'directorExchange',
+    'کارگردان: بررسی ۲ کارت',
+    Icons.movie_outlined,
+  ),
+  _CoupActionDefinition(
+    'journalist',
+    'خبرنگار: کارت و سکه',
+    Icons.article_outlined,
+  ),
+  _CoupActionDefinition(
+    'producer',
+    'تهیه‌کننده: کارت بانک و هدف',
+    Icons.video_camera_back_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'reporter',
+    'گزارشگر: کارت و سکه',
+    Icons.photo_camera_outlined,
+  ),
+  _CoupActionDefinition(
+    'writerExchange',
+    'نویسنده: بررسی ۳ کارت',
+    Icons.edit_note_outlined,
+  ),
+  _CoupActionDefinition(
+    'communist',
+    'کمونیست: تا ۳ از ثروتمندترین',
+    Icons.balance_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'customsOfficer',
+    'مأمور گمرک: عوارض ۲',
+    Icons.assignment_outlined,
+    targeted: true,
+  ),
+  _CoupActionDefinition(
+    'foreignAdvisor',
+    'مشاور خارجی: پیمان',
+    Icons.handshake_outlined,
+    targeted: true,
+  ),
+];
 
 class _CoupGame extends StatelessWidget {
   const _CoupGame({
@@ -780,13 +1120,25 @@ class _CoupGame extends StatelessWidget {
   final Future<void> Function() onResolve;
 
   Future<void> _targetAction(BuildContext context, String action) async {
-    final targets = snapshot.players
+    var targets = snapshot.players
         .where((player) => player.uid != me?.uid && !player.isEliminated)
         .toList();
+    if (action == 'communist' && targets.isNotEmpty) {
+      final greatestCash = targets
+          .map((player) => player.cashBalance)
+          .reduce(max);
+      targets = targets
+          .where((player) => player.cashBalance == greatestCash)
+          .toList();
+    }
     final targetId = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(action == 'coup' ? 'هدف کودتا' : 'انتخاب هدف'),
+        title: Text(
+          action == 'coup'
+              ? 'هدف کودتا'
+              : 'انتخاب هدف برای ${_coupActionLabel(action)}',
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: targets
@@ -794,7 +1146,9 @@ class _CoupGame extends StatelessWidget {
                 (player) => ListTile(
                   leading: const Icon(Icons.person_outline),
                   title: Text(player.displayName),
-                  subtitle: Text('نفوذ: ${persianDigits(player.coupInfluenceCount)}'),
+                  subtitle: Text(
+                    'نفوذ: ${persianDigits(player.coupInfluenceCount)}',
+                  ),
                   onTap: () => Navigator.pop(dialogContext, player.uid),
                 ),
               )
@@ -805,11 +1159,19 @@ class _CoupGame extends StatelessWidget {
     if (targetId != null) await onAction(action, targetId);
   }
 
-  Widget _actionButton(BuildContext context, String action, String label, IconData icon, {String? targetAction}) {
+  Widget _actionButton(
+    BuildContext context,
+    String action,
+    String label,
+    IconData icon, {
+    String? targetAction,
+  }) {
     return FilledButton.icon(
       onPressed: busy
           ? null
-          : () => targetAction == null ? onAction(action, null) : _targetAction(context, targetAction),
+          : () => targetAction == null
+                ? onAction(action, null)
+                : _targetAction(context, targetAction),
       icon: Icon(icon),
       label: Text(label),
     );
@@ -820,8 +1182,13 @@ class _CoupGame extends StatelessWidget {
     final pending = snapshot.match.coupPendingAction;
     final isMyTurn = snapshot.match.currentTurnPlayerId == me?.uid;
     final isPendingActor = pending?['actorId']?.toString() == me?.uid;
-    final isAssassinationTarget = pending?['action'] == 'assassinate' && pending?['targetId']?.toString() == me?.uid;
-    final winner = snapshot.players.where((player) => player.uid == snapshot.match.winnerId).firstOrNull;
+    final isDefenceClaim = pending?['kind']?.toString() == 'block';
+    final isAssassinationTarget =
+        pending?['action'] == 'assassinate' &&
+        pending?['targetId']?.toString() == me?.uid;
+    final winner = snapshot.players
+        .where((player) => player.uid == snapshot.match.winnerId)
+        .firstOrNull;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -832,7 +1199,14 @@ class _CoupGame extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               child: Column(
                 children: [
-                  const Text('کودتا', style: TextStyle(color: appGold, fontSize: 24, fontWeight: FontWeight.w900)),
+                  const Text(
+                    'کودتا',
+                    style: TextStyle(
+                      color: appGold,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     snapshot.match.status == 'finished'
@@ -841,7 +1215,10 @@ class _CoupGame extends StatelessWidget {
                     style: const TextStyle(color: Colors.white, fontSize: 17),
                   ),
                   const SizedBox(height: 12),
-                  Text('سکه‌های تو: ${persianDigits(me?.cashBalance ?? 0)}', style: const TextStyle(color: Colors.white)),
+                  Text(
+                    'سکه‌های تو: ${persianDigits(me?.cashBalance ?? 0)}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ),
@@ -854,14 +1231,31 @@ class _CoupGame extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('نفوذهای مخفی تو', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Text(
+                      'نفوذهای مخفی تو',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: me!.coupRoles.isEmpty
-                          ? [Text('نفوذ باقی‌مانده: ${persianDigits(me!.coupInfluenceCount)}')]
-                          : me!.coupRoles.map((role) => Chip(label: Text(_coupRoleLabel(role)), avatar: const Icon(Icons.visibility_off_outlined, size: 16))).toList(),
+                          ? [
+                              Text(
+                                'نفوذ باقی‌مانده: ${persianDigits(me!.coupInfluenceCount)}',
+                              ),
+                            ]
+                          : me!.coupRoles
+                                .map(
+                                  (role) => Chip(
+                                    label: Text(_coupRoleLabel(role)),
+                                    avatar: const Icon(
+                                      Icons.visibility_off_outlined,
+                                      size: 16,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                     ),
                   ],
                 ),
@@ -869,16 +1263,32 @@ class _CoupGame extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 14),
-          const Text('بازیکنان', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const Text(
+            'بازیکنان',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 8),
           ...snapshot.players.map(
             (player) => Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
-                leading: Icon(player.isEliminated ? Icons.remove_circle_outline : Icons.shield_outlined, color: player.isEliminated ? Colors.grey : appGreen),
-                title: Text('${player.displayName}${player.uid == me?.uid ? ' (تو)' : ''}'),
-                subtitle: Text(player.isEliminated ? 'حذف شده' : 'نفوذ: ${persianDigits(player.coupInfluenceCount)} | سکه: ${persianDigits(player.cashBalance)}'),
-                trailing: player.uid == snapshot.match.currentTurnPlayerId ? const Icon(Icons.play_arrow, color: appGold) : null,
+                leading: Icon(
+                  player.isEliminated
+                      ? Icons.remove_circle_outline
+                      : Icons.shield_outlined,
+                  color: player.isEliminated ? Colors.grey : appGreen,
+                ),
+                title: Text(
+                  '${player.displayName}${player.uid == me?.uid ? ' (تو)' : ''}',
+                ),
+                subtitle: Text(
+                  player.isEliminated
+                      ? 'حذف شده'
+                      : 'نفوذ: ${persianDigits(player.coupInfluenceCount)} | سکه: ${persianDigits(player.cashBalance)}',
+                ),
+                trailing: player.uid == snapshot.match.currentTurnPlayerId
+                    ? const Icon(Icons.play_arrow, color: appGold)
+                    : null,
               ),
             ),
           ),
@@ -892,38 +1302,114 @@ class _CoupGame extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      pending['action'] == 'foreignAid'
+                      isDefenceClaim
+                          ? '${_coupRoleLabel(pending['claimedRole']?.toString() ?? '')} برای دفاع ادعا شده است؛ این ادعا هم قابل چالش است.'
+                          : pending['action'] == 'foreignAid'
                           ? 'کمک خارجی در انتظار است؛ بازیکنان می‌توانند با ادعای دوک آن را بلاک کنند.'
                           : 'ادعای «${_coupRoleLabel(pending['claimedRole']?.toString() ?? '')}» برای ${_coupActionLabel(pending['action']?.toString() ?? '')} در انتظار است.',
                     ),
                     const SizedBox(height: 10),
                     if (isPendingActor)
-                      FilledButton.icon(onPressed: busy ? null : onResolve, icon: const Icon(Icons.check), label: const Text('تأیید و اجرای اقدام'))
+                      FilledButton.icon(
+                        onPressed: busy ? null : onResolve,
+                        icon: const Icon(Icons.check),
+                        label: Text(
+                          isDefenceClaim ? 'تأیید دفاع' : 'تأیید و اجرای اقدام',
+                        ),
+                      )
                     else if (me != null && !me!.isEliminated)
                       OutlinedButton.icon(
-                        onPressed: busy ? null : (pending['action'] == 'foreignAid' || isAssassinationTarget ? onBlock : onChallenge),
-                        icon: Icon(pending['action'] == 'foreignAid' || isAssassinationTarget ? Icons.block : Icons.gavel_outlined),
-                        label: Text(pending['action'] == 'foreignAid' ? 'بلاک کمک خارجی' : (isAssassinationTarget ? 'بلاک با کنتسا' : 'چالش ادعا')),
+                        onPressed: busy
+                            ? null
+                            : (pending['action'] == 'foreignAid' ||
+                                      isAssassinationTarget
+                                  ? onBlock
+                                  : onChallenge),
+                        icon: Icon(
+                          pending['action'] == 'foreignAid' ||
+                                  isAssassinationTarget
+                              ? Icons.block
+                              : Icons.gavel_outlined,
+                        ),
+                        label: Text(
+                          pending['action'] == 'foreignAid'
+                              ? 'بلاک کمک خارجی'
+                              : (isAssassinationTarget
+                                    ? 'بلاک با کنتسا'
+                                    : 'چالش ادعا'),
+                        ),
                       ),
                   ],
                 ),
               ),
             ),
           ],
-          if (snapshot.match.status == 'active' && pending == null && isMyTurn && me != null && !me!.isEliminated) ...[
+          if (snapshot.match.status == 'active' &&
+              pending == null &&
+              isMyTurn &&
+              me != null &&
+              !me!.isEliminated) ...[
             const SizedBox(height: 14),
-            const Text('اقدام این نوبت', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const Text(
+              'اقدام این نوبت',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 8),
-            _actionButton(context, 'income', 'درآمد (+۱)', Icons.add_circle_outline),
-            _actionButton(context, 'foreignAid', 'کمک خارجی (+۲)', Icons.volunteer_activism_outlined),
-            _actionButton(context, 'tax', 'مالیات (+۳، ادعای دوک)', Icons.account_balance_outlined),
-            _actionButton(context, 'exchange', 'تبادل نفوذ (ادعای سفیر)', Icons.sync_alt_outlined),
-            _actionButton(context, 'steal', 'سرقت (ادعای کاپیتان)', Icons.monetization_on_outlined, targetAction: 'steal'),
-            _actionButton(context, 'assassinate', 'ترور (۳ سکه)', Icons.bolt_outlined, targetAction: 'assassinate'),
-            _actionButton(context, 'coup', 'کودتا (۷ سکه)', Icons.gavel_outlined, targetAction: 'coup'),
+            _actionButton(
+              context,
+              'income',
+              'درآمد (+۱)',
+              Icons.add_circle_outline,
+            ),
+            _actionButton(
+              context,
+              'foreignAid',
+              'کمک خارجی (+۲)',
+              Icons.volunteer_activism_outlined,
+            ),
+            ..._coupActions.map(
+              (definition) => _actionButton(
+                context,
+                definition.action,
+                definition.label,
+                definition.icon,
+                targetAction: definition.targeted ? definition.action : null,
+              ),
+            ),
+            _actionButton(
+              context,
+              'coup',
+              'کودتا (۷ سکه)',
+              Icons.gavel_outlined,
+              targetAction: 'coup',
+            ),
           ],
           const SizedBox(height: 18),
-          const Text('قانون برد: آخرین بازیکنی که حداقل یک نفوذ داشته باشد برنده است. کارت‌ها مخفی‌اند و ادعاها قابل چالش هستند.', style: TextStyle(height: 1.7)),
+          Card(
+            child: ExpansionTile(
+              leading: const Icon(Icons.style_outlined),
+              title: const Text('نقش‌ها و توانایی‌ها'),
+              children: _coupRoleGuide
+                  .map(
+                    (role) => ListTile(
+                      title: Text(_coupRoleLabel(role.role)),
+                      subtitle: Text(role.description),
+                      trailing: Text(role.category),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'قانون چالش: می‌توانی هر نقش را ادعا کنی، حتی اگر کارت آن را نداشته باشی. اگر چالش شوی و نقش را داشته باشی، چالش‌گر یک نفوذ از دست می‌دهد؛ و اگر ادعایت نادرست باشد، خودت یک نفوذ از دست می‌دهی.',
+            style: TextStyle(height: 1.7),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'قانون برد: آخرین بازیکنی که حداقل یک نفوذ داشته باشد برنده است.',
+            style: TextStyle(height: 1.7),
+          ),
         ],
       ),
     );
@@ -970,7 +1456,8 @@ class _UnoGame extends StatelessWidget {
   final GameSnapshot snapshot;
   final MatchPlayer? me;
   final bool busy;
-  final Future<void> Function(String cardId, {String? chosenColor, bool uno}) onPlay;
+  final Future<void> Function(String cardId, {String? chosenColor, bool uno})
+  onPlay;
   final Future<void> Function() onDraw;
   final Future<void> Function() onCall;
   final Future<void> Function() onCatch;
@@ -981,12 +1468,21 @@ class _UnoGame extends StatelessWidget {
       title: const Text('رنگ بعدی را انتخاب کن'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
-        children: const [
-          ['red', 'قرمز'],
-          ['yellow', 'زرد'],
-          ['green', 'سبز'],
-          ['blue', 'آبی'],
-        ].map((item) => ListTile(title: Text(item[1]), leading: Icon(Icons.circle, color: _unoCardColor(item[0])), onTap: () => Navigator.pop(dialogContext, item[0]))).toList(),
+        children:
+            const [
+                  ['red', 'قرمز'],
+                  ['yellow', 'زرد'],
+                  ['green', 'سبز'],
+                  ['blue', 'آبی'],
+                ]
+                .map(
+                  (item) => ListTile(
+                    title: Text(item[1]),
+                    leading: Icon(Icons.circle, color: _unoCardColor(item[0])),
+                    onTap: () => Navigator.pop(dialogContext, item[0]),
+                  ),
+                )
+                .toList(),
       ),
     ),
   );
@@ -999,14 +1495,21 @@ class _UnoGame extends StatelessWidget {
     if ((type == 'wild' || type == 'wild4') && color == null) return;
     var shouldCallUno = false;
     if ((me?.unoHand.length ?? 0) == 2) {
-      shouldCallUno = await showDialog<bool>(
+      shouldCallUno =
+          await showDialog<bool>(
             context: context,
             builder: (dialogContext) => AlertDialog(
               title: const Text('یک کارت می‌ماند'),
               content: const Text('می‌خواهی قبل از بازی اعلام کنی «اونو!»؟'),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('بدون اعلام')),
-                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('اونو!')),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('بدون اعلام'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: const Text('اونو!'),
+                ),
               ],
             ),
           ) ??
@@ -1025,10 +1528,16 @@ class _UnoGame extends StatelessWidget {
           backgroundColor: _unoCardColor(color),
           foregroundColor: color == 'yellow' ? Colors.black : Colors.white,
           padding: const EdgeInsets.all(4),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         onPressed: enabled && !busy ? () => _play(context, card) : null,
-        child: Text(_unoCardLabel(card), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        child: Text(
+          _unoCardLabel(card),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
       ),
     );
   }
@@ -1037,9 +1546,13 @@ class _UnoGame extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMyTurn = snapshot.match.currentTurnPlayerId == me?.uid;
     final top = snapshot.match.unoDiscardTop;
-    final atRisk = snapshot.players.where((player) => player.unoAtRisk && player.uid != me?.uid).toList();
+    final atRisk = snapshot.players
+        .where((player) => player.unoAtRisk && player.uid != me?.uid)
+        .toList();
     final scores = snapshot.match.unoScores;
-    final winner = snapshot.players.where((player) => player.uid == snapshot.match.winnerId).firstOrNull;
+    final winner = snapshot.players
+        .where((player) => player.uid == snapshot.match.winnerId)
+        .firstOrNull;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -1050,9 +1563,21 @@ class _UnoGame extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const Text('اونو', style: TextStyle(color: appGold, fontSize: 24, fontWeight: FontWeight.w900)),
+                  const Text(
+                    'اونو',
+                    style: TextStyle(
+                      color: appGold,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(snapshot.match.status == 'finished' ? 'برنده: ${winner?.displayName ?? 'نامشخص'}' : (isMyTurn ? 'نوبت توست' : 'نوبت بازیکن دیگر است'), style: const TextStyle(color: Colors.white, fontSize: 17)),
+                  Text(
+                    snapshot.match.status == 'finished'
+                        ? 'برنده: ${winner?.displayName ?? 'نامشخص'}'
+                        : (isMyTurn ? 'نوبت توست' : 'نوبت بازیکن دیگر است'),
+                    style: const TextStyle(color: Colors.white, fontSize: 17),
+                  ),
                   const SizedBox(height: 12),
                   if (top != null)
                     Row(
@@ -1060,7 +1585,13 @@ class _UnoGame extends StatelessWidget {
                       children: [
                         _cardButton(context, top, false),
                         const SizedBox(width: 14),
-                        Text('رنگ فعلی: ${_unoColorLabel(snapshot.match.unoCurrentColor ?? '')}\n${snapshot.match.unoDirection == 1 ? 'جهت ساعتگرد' : 'جهت پادساعتگرد'}', style: const TextStyle(color: Colors.white, height: 1.8)),
+                        Text(
+                          'رنگ فعلی: ${_unoColorLabel(snapshot.match.unoCurrentColor ?? '')}\n${snapshot.match.unoDirection == 1 ? 'جهت ساعتگرد' : 'جهت پادساعتگرد'}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            height: 1.8,
+                          ),
+                        ),
                       ],
                     ),
                 ],
@@ -1068,29 +1599,89 @@ class _UnoGame extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text('بازیکنان', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const Text(
+            'بازیکنان',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 8),
-          ...snapshot.players.map((player) => Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile(leading: Icon(player.uid == snapshot.match.currentTurnPlayerId ? Icons.play_arrow : Icons.person_outline, color: player.uid == snapshot.match.currentTurnPlayerId ? appGold : appNavy), title: Text('${player.displayName}${player.uid == me?.uid ? ' (تو)' : ''}'), subtitle: Text('کارت‌ها: ${persianDigits(player.unoHandCount)} | امتیاز: ${persianDigits(jsonInt(scores[player.uid]))}'), trailing: player.unoAtRisk ? const Chip(label: Text('اونو؟')) : null))),
+          ...snapshot.players.map(
+            (player) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Icon(
+                  player.uid == snapshot.match.currentTurnPlayerId
+                      ? Icons.play_arrow
+                      : Icons.person_outline,
+                  color: player.uid == snapshot.match.currentTurnPlayerId
+                      ? appGold
+                      : appNavy,
+                ),
+                title: Text(
+                  '${player.displayName}${player.uid == me?.uid ? ' (تو)' : ''}',
+                ),
+                subtitle: Text(
+                  'کارت‌ها: ${persianDigits(player.unoHandCount)} | امتیاز: ${persianDigits(jsonInt(scores[player.uid]))}',
+                ),
+                trailing: player.unoAtRisk
+                    ? const Chip(label: Text('اونو؟'))
+                    : null,
+              ),
+            ),
+          ),
           if (me != null) ...[
             const SizedBox(height: 14),
-            Text('دست تو (${persianDigits(me!.unoHand.length)} کارت)', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text(
+              'دست تو (${persianDigits(me!.unoHand.length)} کارت)',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 8),
-            Wrap(spacing: 8, runSpacing: 8, children: me!.unoHand.map((card) => _cardButton(context, card, isMyTurn && snapshot.match.status == 'active')).toList()),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: me!.unoHand
+                  .map(
+                    (card) => _cardButton(
+                      context,
+                      card,
+                      isMyTurn && snapshot.match.status == 'active',
+                    ),
+                  )
+                  .toList(),
+            ),
           ],
           if (snapshot.match.status == 'active' && isMyTurn && me != null) ...[
             const SizedBox(height: 14),
-            OutlinedButton.icon(onPressed: busy ? null : onDraw, icon: const Icon(Icons.download_outlined), label: const Text('کشیدن یک کارت')),
+            OutlinedButton.icon(
+              onPressed: busy ? null : onDraw,
+              icon: const Icon(Icons.download_outlined),
+              label: const Text('کشیدن یک کارت'),
+            ),
           ],
           if (me?.unoAtRisk == true) ...[
             const SizedBox(height: 8),
-            FilledButton.icon(onPressed: busy ? null : onCall, icon: const Icon(Icons.campaign_outlined), label: const Text('اعلام اونو!')),
+            FilledButton.icon(
+              onPressed: busy ? null : onCall,
+              icon: const Icon(Icons.campaign_outlined),
+              label: const Text('اعلام اونو!'),
+            ),
           ],
-          if (snapshot.match.status == 'active' && isMyTurn && atRisk.isNotEmpty) ...[
+          if (snapshot.match.status == 'active' &&
+              isMyTurn &&
+              atRisk.isNotEmpty) ...[
             const SizedBox(height: 8),
-            OutlinedButton.icon(onPressed: busy ? null : onCatch, icon: const Icon(Icons.gavel_outlined), label: const Text('گرفتن بازیکنِ بدون اونو')),
+            OutlinedButton.icon(
+              onPressed: busy ? null : onCatch,
+              icon: const Icon(Icons.gavel_outlined),
+              label: const Text('گرفتن بازیکنِ بدون اونو'),
+            ),
           ],
           const SizedBox(height: 18),
-          Text(snapshot.match.unoScoringMode == 'points' ? 'حالت امتیازی: بازی تا رسیدن یک بازیکن به ۵۰۰ امتیاز ادامه دارد.' : 'حالت ساده: اولین بازیکنی که همه کارت‌هایش را بازی کند برنده است.', style: const TextStyle(height: 1.7)),
+          Text(
+            snapshot.match.unoScoringMode == 'points'
+                ? 'حالت امتیازی: بازی تا رسیدن یک بازیکن به ۵۰۰ امتیاز ادامه دارد.'
+                : 'حالت ساده: اولین بازیکنی که همه کارت‌هایش را بازی کند برنده است.',
+            style: const TextStyle(height: 1.7),
+          ),
         ],
       ),
     );
