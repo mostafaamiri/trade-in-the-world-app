@@ -1654,7 +1654,7 @@ class _UnoGame extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: busy ? null : onDraw,
               icon: const Icon(Icons.download_outlined),
-              label: const Text('کشیدن یک کارت'),
+              label: const Text('کشیدن ۴ کارت در صورت نداشتن تطابق'),
             ),
           ],
           if (me?.unoAtRisk == true) ...[
@@ -1681,6 +1681,11 @@ class _UnoGame extends StatelessWidget {
                 ? 'حالت امتیازی: بازی تا رسیدن یک بازیکن به ۵۰۰ امتیاز ادامه دارد.'
                 : 'حالت ساده: اولین بازیکنی که همه کارت‌هایش را بازی کند برنده است.',
             style: const TextStyle(height: 1.7),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'قانون کشیدن: اگر کارت هم‌رنگ، هم‌عدد یا هم‌عملکرد نداشته باشی، ۴ کارت می‌گیری و نوبتت تمام می‌شود.',
+            style: TextStyle(height: 1.7),
           ),
         ],
       ),
