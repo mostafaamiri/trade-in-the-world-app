@@ -14,6 +14,7 @@ import 'guard_shop_page.dart';
 import 'game_page.dart';
 import 'lucky_wheel_page.dart';
 import 'models.dart';
+import 'ping_pong_page.dart';
 import 'zoo_page.dart';
 import 'services/game_api.dart';
 import 'services/game_music_service.dart';
@@ -834,6 +835,13 @@ class _HomePageState extends State<HomePage> {
         onSelected: () =>
             Navigator.of(context)
                 .push<void>(MaterialPageRoute(builder: (_) => const DuzPage())),
+      ),
+      _CategoryAction(
+        icon: Icons.sports_tennis_rounded,
+        title: 'پینگ پنگ هوشمند',
+        onSelected: () => Navigator.of(
+          context,
+        ).push<void>(MaterialPageRoute(builder: (_) => const PingPongPage())),
       ),
       _CategoryAction(
         icon: Icons.public_outlined,
