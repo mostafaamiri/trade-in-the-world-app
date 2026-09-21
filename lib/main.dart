@@ -36,7 +36,7 @@ class TradeInTheWorldApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'تجارت در جهان',
+    title: 'سوپر بازی',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
@@ -181,7 +181,7 @@ class _SplashPageState extends State<SplashPage>
                 ),
                 const SizedBox(height: 18),
                 const Text(
-                  'تجارت در جهان',
+                  'سوپر بازی',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -1004,7 +1004,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 22),
                   const Text(
-                    'تجارت در جهان',
+                    'سوپر بازی',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 31,

@@ -28,7 +28,7 @@ class NotificationService {
       FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
       const channel = AndroidNotificationChannel(
         'general_notifications',
-        'اعلان‌های تجارت در جهان',
+        'اعلان‌های سوپر بازی',
         description: 'اطلاع‌رسانی مسابقه‌ها و پیام‌های مدیریت',
         importance: Importance.high,
       );
@@ -96,7 +96,7 @@ class NotificationService {
     final notification = message.notification;
     final title = notification?.title?.trim().isNotEmpty == true
         ? notification!.title!
-        : 'تجارت در جهان';
+        : 'سوپر بازی';
     final body = notification?.body?.trim().isNotEmpty == true
         ? notification!.body!
         : message.data['body']?.toString() ?? '';
@@ -108,7 +108,7 @@ class NotificationService {
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'general_notifications',
-          'اعلان‌های تجارت در جهان',
+          'اعلان‌های سوپر بازی',
           channelDescription: 'اطلاع‌رسانی مسابقه‌ها و پیام‌های مدیریت',
           importance: Importance.high,
           priority: Priority.high,

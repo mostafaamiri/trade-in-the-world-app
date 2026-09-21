@@ -1,6 +1,6 @@
-# Trade in the World
+# Super Game
 
-Flutter source reconstruction for the Android game "تجارت در جهان".
+Flutter source reconstruction for the Android game "سوپر بازی".
 
 The original source directory was deleted. This repository was reconstructed
 from the released APK's public assets, configuration, Android metadata, and
@@ -27,7 +27,7 @@ build/app/outputs/flutter-apk/app-release.apk
 - Application ID: `com.tradearoundworld.trade_around_the_world`
 - Minimum Android version: 7.0 (API 24)
 - Target Android version: 14 (API 34)
-- Version: `0.4.0+29`
+- Version: `0.5.32+63`
 
 The app uses the existing public game API at `https://mojtabaamiri.ir/api` and
 includes Firebase Cloud Messaging configuration for notifications.
