@@ -1214,6 +1214,11 @@ class _CoupGame extends StatelessWidget {
                         : (isMyTurn ? 'نوبت توست' : 'نوبت بازیکن دیگر است'),
                     style: const TextStyle(color: Colors.white, fontSize: 17),
                   ),
+                  if (snapshot.match.status == 'finished')
+                    const Text(
+                      'پاداش برنده: ۲۰ کوین',
+                      style: TextStyle(color: Color(0xffffd166)),
+                    ),
                   const SizedBox(height: 12),
                   Text(
                     'سکه‌های تو: ${persianDigits(me?.cashBalance ?? 0)}',
@@ -1579,6 +1584,11 @@ class _UnoGame extends StatelessWidget {
                         : (isMyTurn ? 'نوبت توست' : 'نوبت بازیکن دیگر است'),
                     style: const TextStyle(color: Colors.white, fontSize: 17),
                   ),
+                  if (snapshot.match.status == 'finished')
+                    const Text(
+                      'پاداش برنده: ۲۰ کوین',
+                      style: TextStyle(color: Color(0xffffd166)),
+                    ),
                   const SizedBox(height: 12),
                   if (top != null)
                     Row(
@@ -2137,6 +2147,12 @@ class _FinishedGame extends StatelessWidget {
                 ? 'نتیجه در حال ثبت است.'
                 : 'برنده مسابقه: ${winner.displayName}',
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'پاداش برنده: ۲۰ کوین',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: appGold, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 28),
           const Text(
