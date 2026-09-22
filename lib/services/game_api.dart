@@ -249,6 +249,22 @@ class GameApi {
     return ArcadeMatchReward.fromJson(data);
   }
 
+  Future<ArcadeMatchSession> startBallTargetMatch() async {
+    final data = await _request('POST', '/game/arcade/ball-target/start');
+    return ArcadeMatchSession.fromJson(data);
+  }
+
+  Future<ArcadeMatchReward> completeBallTargetMatch(
+    String sessionId,
+    int stage,
+  ) async {
+    final data = await _request('POST', '/game/arcade/ball-target/complete', {
+      'sessionId': sessionId,
+      'stage': stage,
+    });
+    return ArcadeMatchReward.fromJson(data);
+  }
+
   Future<ZooStatus> zoo() async {
     final data = await _request('GET', '/game/zoo');
     return ZooStatus.fromJson((data['zoo'] as Map).cast<String, dynamic>());
