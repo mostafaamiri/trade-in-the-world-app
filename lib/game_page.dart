@@ -591,7 +591,7 @@ class _GamePageState extends State<GamePage> {
                       _invoke(() => widget.api.start(widget.matchId)),
                   onDelete: () async {
                     await _invoke(() => widget.api.deleteMatch(widget.matchId));
-                    if (mounted) Navigator.pop(context);
+                    if (context.mounted) Navigator.pop(context);
                   },
                 ),
                 'finished' =>
@@ -1492,6 +1492,7 @@ class _UnoGame extends StatelessWidget {
     final color = type == 'wild' || type == 'wild4'
         ? await _chooseColor(context)
         : null;
+    if (!context.mounted) return;
     if ((type == 'wild' || type == 'wild4') && color == null) return;
     var shouldCallUno = false;
     if ((me?.unoHand.length ?? 0) == 2) {

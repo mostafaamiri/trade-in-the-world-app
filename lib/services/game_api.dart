@@ -154,15 +154,16 @@ class GameApi {
     required String appVersion,
     required String appBuild,
   }) async {
-    final data = await _request('POST', '/game/matches', {
+    final body = <String, dynamic>{
       'name': name,
       'section': section,
       'isPrivate': isPrivate,
-      if (maxPlayers != null) 'maxPlayers': maxPlayers,
-      if (unoScoringMode != null) 'unoScoringMode': unoScoringMode,
       'appVersion': appVersion,
       'appBuild': appBuild,
-    });
+    };
+    if (maxPlayers != null) body['maxPlayers'] = maxPlayers;
+    if (unoScoringMode != null) body['unoScoringMode'] = unoScoringMode;
+    final data = await _request('POST', '/game/matches', body);
     return jsonString(data['matchId']);
   }
 
@@ -370,11 +371,11 @@ class GameApi {
   Future<void> start(String matchId) =>
       _request('POST', '/game/matches/$matchId/start');
 
-  Future<void> coupAction(String matchId, String action, {String? targetId}) =>
-      _request('POST', '/game/matches/$matchId/coup/action', {
-        'action': action,
-        if (targetId != null) 'targetId': targetId,
-      });
+  Future<void> coupAction(String matchId, String action, {String? targetId}) {
+    final body = <String, dynamic>{'action': action};
+    if (targetId != null) body['targetId'] = targetId;
+    return _request('POST', '/game/matches/$matchId/coup/action', body);
+  }
 
   Future<void> resolveCoup(String matchId) =>
       _request('POST', '/game/matches/$matchId/coup/resolve');
@@ -390,11 +391,11 @@ class GameApi {
     String cardId, {
     String? chosenColor,
     bool uno = false,
-  }) => _request('POST', '/game/matches/$matchId/uno/play', {
-    'cardId': cardId,
-    if (chosenColor != null) 'chosenColor': chosenColor,
-    'uno': uno,
-  });
+  }) {
+    final body = <String, dynamic>{'cardId': cardId, 'uno': uno};
+    if (chosenColor != null) body['chosenColor'] = chosenColor;
+    return _request('POST', '/game/matches/$matchId/uno/play', body);
+  }
 
   Future<void> unoDraw(String matchId) =>
       _request('POST', '/game/matches/$matchId/uno/draw');
@@ -402,11 +403,11 @@ class GameApi {
   Future<void> unoCall(String matchId) =>
       _request('POST', '/game/matches/$matchId/uno/call');
 
-  Future<void> unoCatch(String matchId, {String? targetId}) => _request(
-    'POST',
-    '/game/matches/$matchId/uno/catch',
-    {if (targetId != null) 'targetId': targetId},
-  );
+  Future<void> unoCatch(String matchId, {String? targetId}) {
+    final body = <String, dynamic>{};
+    if (targetId != null) body['targetId'] = targetId;
+    return _request('POST', '/game/matches/$matchId/uno/catch', body);
+  }
 
   Future<Json> roll(String matchId) =>
       _request('POST', '/game/matches/$matchId/roll');

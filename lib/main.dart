@@ -635,12 +635,13 @@ class _HomePageState extends State<HomePage> {
       );
       if (response.statusCode != 200) return;
       final data = (jsonDecode(response.body) as Map).cast<String, dynamic>();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _version = persianDigits(package.version);
           _hasUpdate =
               jsonInt(data['versionCode']) > int.tryParse(package.buildNumber)!;
         });
+      }
     } catch (_) {}
   }
 
@@ -1640,9 +1641,10 @@ class _MatchesPageState extends State<MatchesPage> {
       child: FutureBuilder<List<MatchInfo>>(
         future: _matches,
         builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done)
+          if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError)
+          }
+          if (snapshot.hasError) {
             return Center(
               child: TextButton.icon(
                 onPressed: _refresh,
@@ -1650,6 +1652,7 @@ class _MatchesPageState extends State<MatchesPage> {
                 label: const Text('دریافت مسابقات ناموفق بود'),
               ),
             );
+          }
           final matches = snapshot.data!
               .where(
                 (item) =>
@@ -1664,13 +1667,14 @@ class _MatchesPageState extends State<MatchesPage> {
               itemCount: matches.isEmpty ? 1 : matches.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                if (matches.isEmpty)
+                if (matches.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.only(top: 80),
                     child: Center(
                       child: Text('مسابقه عمومی در انتظار شروع نیست.'),
                     ),
                   );
+                }
                 final item = matches[index];
                 return Card(
                   child: ListTile(
@@ -1812,7 +1816,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 )
               else
                 DropdownButtonFormField<String>(
-                  value: _section,
+                  initialValue: _section,
                   decoration: const InputDecoration(labelText: 'بخش مسابقه'),
                   items:
                       const [
@@ -1841,7 +1845,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               if (_section == 'کودتا' || _section == 'اونو') ...[
                 const SizedBox(height: 14),
                 DropdownButtonFormField<int>(
-                  value: _maxPlayers,
+                  key: ValueKey('max-players-$_section'),
+                  initialValue: _maxPlayers,
                   decoration: InputDecoration(
                     labelText: _section == 'اونو'
                         ? 'ظرفیت اتاق اونو'
@@ -1866,7 +1871,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               if (_section == 'اونو') ...[
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
-                  value: _unoScoringMode,
+                  initialValue: _unoScoringMode,
                   decoration: const InputDecoration(
                     labelText: 'حالت امتیازدهی',
                   ),
@@ -2167,8 +2172,9 @@ class _LeaguePageState extends State<LeaguePage> {
       child: FutureBuilder<List<Json>>(
         future: _league,
         builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done)
+          if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
+          }
           if (snapshot.hasError) {
             return Center(
               child: FilledButton.icon(
@@ -2179,10 +2185,11 @@ class _LeaguePageState extends State<LeaguePage> {
             );
           }
           final items = snapshot.data!;
-          if (items.isEmpty)
+          if (items.isEmpty) {
             return const Center(
               child: Text('هنوز نتیجه‌ای در لیگ ثبت نشده است.'),
             );
+          }
           return RefreshIndicator(
             onRefresh: _refresh,
             child: ListView.separated(
