@@ -233,6 +233,22 @@ class GameApi {
     return ArcadeMatchReward.fromJson(data);
   }
 
+  Future<ArcadeMatchSession> startAnimalMemoryMatch() async {
+    final data = await _request('POST', '/game/arcade/animal-memory/start');
+    return ArcadeMatchSession.fromJson(data);
+  }
+
+  Future<ArcadeMatchReward> completeAnimalMemoryMatch(
+    String sessionId,
+    int score,
+  ) async {
+    final data = await _request('POST', '/game/arcade/animal-memory/complete', {
+      'sessionId': sessionId,
+      'score': score,
+    });
+    return ArcadeMatchReward.fromJson(data);
+  }
+
   Future<ZooStatus> zoo() async {
     final data = await _request('GET', '/game/zoo');
     return ZooStatus.fromJson((data['zoo'] as Map).cast<String, dynamic>());

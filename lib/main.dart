@@ -13,6 +13,7 @@ import 'duz_page.dart';
 import 'guard_shop_page.dart';
 import 'game_page.dart';
 import 'lucky_wheel_page.dart';
+import 'animal_memory_page.dart';
 import 'models.dart';
 import 'ping_pong_page.dart';
 import 'touch_car_page.dart';
@@ -850,6 +851,16 @@ class _HomePageState extends State<HomePage> {
         title: 'مسابقه ماشین لمسی',
         subtitle: '۲۰ کوین برای هر مسابقه کامل',
         onSelected: _openTouchCar,
+      ),
+      _CategoryAction(
+        icon: Icons.psychology_outlined,
+        title: 'مسابقه حافظه حیوانات',
+        subtitle: 'هر امتیاز برابر یک کوین',
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (_) => AnimalMemoryPage(api: widget.api),
+          ),
+        ),
       ),
       _CategoryAction(
         icon: Icons.public_outlined,
