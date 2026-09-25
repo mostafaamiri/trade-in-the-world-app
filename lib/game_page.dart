@@ -186,6 +186,9 @@ class _GamePageState extends State<GamePage> {
   Future<void> _coupBlock() =>
       _invoke(() => widget.api.blockCoup(widget.matchId));
 
+  Future<void> _coupLoseInfluence(int roleIndex) =>
+      _invoke(() => widget.api.loseCoupInfluence(widget.matchId, roleIndex));
+
   Future<void> _unoPlay(
     String cardId, {
     String? chosenColor,
@@ -604,6 +607,7 @@ class _GamePageState extends State<GamePage> {
                           onChallenge: _coupChallenge,
                           onBlock: _coupBlock,
                           onResolve: _coupResolve,
+                          onLoseInfluence: _coupLoseInfluence,
                         )
                       : snapshot.match.section == 'اونو'
                       ? _UnoGame(
@@ -626,6 +630,7 @@ class _GamePageState extends State<GamePage> {
                           onChallenge: _coupChallenge,
                           onBlock: _coupBlock,
                           onResolve: _coupResolve,
+                          onLoseInfluence: _coupLoseInfluence,
                         )
                       : snapshot.match.section == 'اونو'
                       ? _UnoGame(
@@ -1109,6 +1114,7 @@ class _CoupGame extends StatelessWidget {
     required this.onChallenge,
     required this.onBlock,
     required this.onResolve,
+    required this.onLoseInfluence,
   });
 
   final GameSnapshot snapshot;
@@ -1118,6 +1124,7 @@ class _CoupGame extends StatelessWidget {
   final Future<void> Function() onChallenge;
   final Future<void> Function() onBlock;
   final Future<void> Function() onResolve;
+  final Future<void> Function(int roleIndex) onLoseInfluence;
 
   Future<void> _targetAction(BuildContext context, String action) async {
     var targets = snapshot.players
@@ -1182,6 +1189,7 @@ class _CoupGame extends StatelessWidget {
     final pending = snapshot.match.coupPendingAction;
     final isMyTurn = snapshot.match.currentTurnPlayerId == me?.uid;
     final isPendingActor = pending?['actorId']?.toString() == me?.uid;
+    final isInfluenceChoice = pending?['kind']?.toString() == 'influenceLoss';
     final isDefenceClaim = pending?['kind']?.toString() == 'block';
     final isAssassinationTarget =
         pending?['action'] == 'assassinate' &&
@@ -1307,14 +1315,32 @@ class _CoupGame extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      isDefenceClaim
+                      isInfluenceChoice
+                          ? 'یک کارت نقش را برای حذف انتخاب کن؛ سپس اقدام بازی ادامه پیدا می‌کند.'
+                          : isDefenceClaim
                           ? '${_coupRoleLabel(pending['claimedRole']?.toString() ?? '')} برای دفاع ادعا شده است؛ این ادعا هم قابل چالش است.'
                           : pending['action'] == 'foreignAid'
                           ? 'کمک خارجی در انتظار است؛ بازیکنان می‌توانند با ادعای دوک آن را بلاک کنند.'
                           : 'ادعای «${_coupRoleLabel(pending['claimedRole']?.toString() ?? '')}» برای ${_coupActionLabel(pending['action']?.toString() ?? '')} در انتظار است.',
                     ),
                     const SizedBox(height: 10),
-                    if (isPendingActor)
+                    if (isInfluenceChoice && isPendingActor && me != null)
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: me!.coupRoles.asMap().entries.map((entry) {
+                          final roleIndex = entry.key;
+                          final role = entry.value;
+                          return OutlinedButton.icon(
+                            onPressed: busy
+                                ? null
+                                : () => onLoseInfluence(roleIndex),
+                            icon: const Icon(Icons.remove_circle_outline),
+                            label: Text(_coupRoleLabel(role)),
+                          );
+                        }).toList(),
+                      )
+                    else if (isPendingActor)
                       FilledButton.icon(
                         onPressed: busy ? null : onResolve,
                         icon: const Icon(Icons.check),
@@ -1322,7 +1348,9 @@ class _CoupGame extends StatelessWidget {
                           isDefenceClaim ? 'تأیید دفاع' : 'تأیید و اجرای اقدام',
                         ),
                       )
-                    else if (me != null && !me!.isEliminated)
+                    else if (!isInfluenceChoice &&
+                        me != null &&
+                        !me!.isEliminated)
                       OutlinedButton.icon(
                         onPressed: busy
                             ? null

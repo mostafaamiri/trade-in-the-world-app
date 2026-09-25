@@ -418,6 +418,12 @@ class GameApi {
   Future<void> blockCoup(String matchId) =>
       _request('POST', '/game/matches/$matchId/coup/block');
 
+  Future<void> loseCoupInfluence(String matchId, int roleIndex) => _request(
+    'POST',
+    '/game/matches/$matchId/coup/lose-influence',
+    {'roleIndex': roleIndex},
+  );
+
   Future<void> unoPlay(
     String matchId,
     String cardId, {

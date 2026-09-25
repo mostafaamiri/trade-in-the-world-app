@@ -938,7 +938,8 @@ class _HomePageState extends State<HomePage> {
       ),
       _CategoryAction(
         icon: Icons.picture_as_pdf_outlined,
-        title: 'راهنما و قوانین بازی',
+        title: 'راهنمای بازی (PDF)',
+        subtitle: 'قوانین بازی را به‌صورت فایل PDF باز کن',
         onSelected: _openGamePdfs,
       ),
       _CategoryAction(
@@ -1812,7 +1813,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             children: [
               Text(
                 _section == 'کودتا'
-                    ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۴ نفر را مشخص کن. بعد از شروع، هر بازیکن دو نفوذ مخفی می‌گیرد.'
+                    ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۴ نفر را مشخص کن. بعد از شروع، هر بازیکن ۶ نفوذ مخفی می‌گیرد.'
                     : _section == 'اونو'
                     ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۱۰ نفر را مشخص کن. کارت‌ها و قوانین رسمی اونو بعد از شروع اجرا می‌شوند.'
                     : 'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
@@ -2085,7 +2086,7 @@ class _GamePdfLibraryPageState extends State<GamePdfLibraryPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('PDFهای بازی'),
+      title: const Text('راهنمای بازی (PDF)'),
       actions: [
         IconButton(
           tooltip: 'بروزرسانی فهرست',
