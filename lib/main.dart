@@ -708,7 +708,7 @@ class _HomePageState extends State<HomePage> {
       _CategoryAction(
         icon: Icons.add_business_rounded,
         title: 'ساخت اتاق',
-        subtitle: 'اونو، کودتا یا تجارت در جهان',
+        subtitle: 'اونو یا تجارت در جهان',
         onSelected: _showRoomCreationMenu,
       ),
       _CategoryAction(
@@ -798,12 +798,6 @@ class _HomePageState extends State<HomePage> {
         onSelected: () => _createRoom('اونو'),
       ),
       _CategoryAction(
-        icon: Icons.shield_moon_outlined,
-        title: 'ساخت اتاق کودتا',
-        subtitle: 'بازی ۲ تا ۴ نفره',
-        onSelected: () => _createRoom('کودتا'),
-      ),
-      _CategoryAction(
         icon: Icons.public_outlined,
         title: 'ساخت اتاق تجارت در جهان',
         onSelected: () => _createRoom('تجارت جهانی'),
@@ -885,14 +879,6 @@ class _HomePageState extends State<HomePage> {
           allowedSections: const {'اونو'},
         ),
       ),
-      _CategoryAction(
-        icon: Icons.shield_moon_outlined,
-        title: 'بازی‌های کودتا',
-        onSelected: () => _openPublicMatches(
-          title: 'بازی‌های کودتا',
-          allowedSections: const {'کودتا'},
-        ),
-      ),
     ],
   );
 
@@ -970,11 +956,6 @@ class _HomePageState extends State<HomePage> {
         icon: Icons.public_outlined,
         title: 'تجارت در جهان',
         onSelected: () => _joinRoomByCode('تجارت در جهان'),
-      ),
-      _CategoryAction(
-        icon: Icons.shield_moon_outlined,
-        title: 'کودتا',
-        onSelected: () => _joinRoomByCode('کودتا'),
       ),
       _CategoryAction(
         icon: Icons.style_outlined,
@@ -1758,17 +1739,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   void initState() {
     super.initState();
     _section = widget.initialSection ?? 'تجارت جهانی';
-    _maxPlayers = _section == 'کودتا'
-        ? 4
-        : _section == 'اونو'
-        ? 10
-        : 6;
+    _maxPlayers = _section == 'اونو' ? 10 : 6;
     _name = TextEditingController(
-      text: _section == 'کودتا'
-          ? 'اتاق کودتا'
-          : _section == 'اونو'
-          ? 'اتاق اونو'
-          : 'مسابقه تجارت جهانی',
+      text: _section == 'اونو' ? 'اتاق اونو' : 'مسابقه تجارت جهانی',
     );
   }
 
@@ -1786,9 +1759,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         name: _name.text.trim(),
         section: _section,
         isPrivate: _private,
-        maxPlayers: _section == 'کودتا' || _section == 'اونو'
-            ? _maxPlayers
-            : null,
+        maxPlayers: _section == 'اونو' ? _maxPlayers : null,
         unoScoringMode: _section == 'اونو' ? _unoScoringMode : null,
         appVersion: info.version,
         appBuild: info.buildNumber,
@@ -1812,9 +1783,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _section == 'کودتا'
-                    ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۴ نفر را مشخص کن. بعد از شروع، هر بازیکن ۶ نفوذ مخفی می‌گیرد.'
-                    : _section == 'اونو'
+                _section == 'اونو'
                     ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۱۰ نفر را مشخص کن. کارت‌ها و قوانین رسمی اونو بعد از شروع اجرا می‌شوند.'
                     : 'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
                 style: const TextStyle(height: 1.8),
@@ -1842,7 +1811,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                             'تجارت جهانی',
                             'بازار آزاد',
                             'چالش حرفه‌ای',
-                            'کودتا',
                             'اونو',
                           ]
                           .map(
@@ -1854,37 +1822,27 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                           .toList(),
                   onChanged: (value) => setState(() {
                     _section = value!;
-                    _maxPlayers = _section == 'اونو'
-                        ? 10
-                        : _section == 'کودتا'
-                        ? 4
-                        : 6;
+                    _maxPlayers = _section == 'اونو' ? 10 : 6;
                   }),
                 ),
-              if (_section == 'کودتا' || _section == 'اونو') ...[
+              if (_section == 'اونو') ...[
                 const SizedBox(height: 14),
                 DropdownButtonFormField<int>(
                   key: ValueKey('max-players-$_section'),
                   initialValue: _maxPlayers,
-                  decoration: InputDecoration(
-                    labelText: _section == 'اونو'
-                        ? 'ظرفیت اتاق اونو'
-                        : 'ظرفیت اتاق کودتا',
+                  decoration: const InputDecoration(
+                    labelText: 'ظرفیت اتاق اونو',
                   ),
-                  items:
-                      (_section == 'اونو'
-                              ? [2, 3, 4, 5, 6, 7, 8, 9, 10]
-                              : [2, 3, 4])
-                          .map(
-                            (item) => DropdownMenuItem(
-                              value: item,
-                              child: Text('$item نفر'),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (value) => setState(
-                    () => _maxPlayers = value ?? (_section == 'اونو' ? 10 : 4),
-                  ),
+                  items: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item,
+                          child: Text('$item نفر'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => _maxPlayers = value ?? 10),
                 ),
               ],
               if (_section == 'اونو') ...[
@@ -1926,11 +1884,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 label: Text(
                   _busy
                       ? 'در حال ساخت...'
-                      : (_section == 'کودتا'
-                            ? 'ساخت اتاق کودتا'
-                            : _section == 'اونو'
-                            ? 'ساخت اتاق اونو'
-                            : 'ساخت اتاق'),
+                      : (_section == 'اونو' ? 'ساخت اتاق اونو' : 'ساخت اتاق'),
                 ),
               ),
             ],
