@@ -403,27 +403,6 @@ class GameApi {
   Future<void> start(String matchId) =>
       _request('POST', '/game/matches/$matchId/start');
 
-  Future<void> coupAction(String matchId, String action, {String? targetId}) {
-    final body = <String, dynamic>{'action': action};
-    if (targetId != null) body['targetId'] = targetId;
-    return _request('POST', '/game/matches/$matchId/coup/action', body);
-  }
-
-  Future<void> resolveCoup(String matchId) =>
-      _request('POST', '/game/matches/$matchId/coup/resolve');
-
-  Future<void> challengeCoup(String matchId) =>
-      _request('POST', '/game/matches/$matchId/coup/challenge');
-
-  Future<void> blockCoup(String matchId) =>
-      _request('POST', '/game/matches/$matchId/coup/block');
-
-  Future<void> loseCoupInfluence(String matchId, int roleIndex) => _request(
-    'POST',
-    '/game/matches/$matchId/coup/lose-influence',
-    {'roleIndex': roleIndex},
-  );
-
   Future<void> unoPlay(
     String matchId,
     String cardId, {

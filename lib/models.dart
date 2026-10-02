@@ -154,7 +154,6 @@ class MatchInfo {
     required this.turnNumber,
     this.endsAt,
     this.winnerId,
-    this.coupPendingAction,
     this.unoCurrentColor,
     this.unoDirection = 1,
     this.unoPendingDraw = 0,
@@ -175,7 +174,6 @@ class MatchInfo {
   final int turnNumber;
   final DateTime? endsAt;
   final String? winnerId;
-  final Json? coupPendingAction;
   final String? unoCurrentColor;
   final int unoDirection;
   final int unoPendingDraw;
@@ -196,9 +194,6 @@ class MatchInfo {
     turnNumber: jsonInt(json['turnNumber']),
     endsAt: DateTime.tryParse(jsonString(json['endsAt'])),
     winnerId: json['winnerId']?.toString(),
-    coupPendingAction: json['coupPendingAction'] is Map
-        ? (json['coupPendingAction'] as Map).cast<String, dynamic>()
-        : null,
     unoCurrentColor: json['unoCurrentColor']?.toString(),
     unoDirection: jsonInt(json['unoDirection'], 1),
     unoPendingDraw: jsonInt(json['unoPendingDraw']),
@@ -229,8 +224,6 @@ class MatchPlayer {
     required this.turnOrder,
     required this.totalWealth,
     required this.appVersion,
-    required this.coupInfluenceCount,
-    required this.coupRoles,
     required this.unoHand,
     required this.unoHandCount,
     required this.unoCalled,
@@ -254,8 +247,6 @@ class MatchPlayer {
   final int turnOrder;
   final int totalWealth;
   final String appVersion;
-  final int coupInfluenceCount;
-  final List<String> coupRoles;
   final List<Json> unoHand;
   final int unoHandCount;
   final bool unoCalled;
@@ -284,10 +275,6 @@ class MatchPlayer {
     turnOrder: jsonInt(json['turnOrder']),
     totalWealth: jsonInt(json['totalWealth']),
     appVersion: jsonString(json['appVersion'], 'نامشخص'),
-    coupInfluenceCount: jsonInt(json['coupInfluenceCount'], 0),
-    coupRoles: (json['coupRoles'] as List? ?? const [])
-        .map(jsonString)
-        .toList(),
     unoHand: jsonMaps(json['unoHand']),
     unoHandCount: jsonInt(json['unoHandCount']),
     unoCalled: jsonBool(json['unoCalled']),
