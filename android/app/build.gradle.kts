@@ -59,6 +59,17 @@ android {
         }
     }
 
+    // Keep native symbols only for the bundle build. The local Android
+    // toolchain cannot strip some Flutter/plugin libraries, while the public
+    // APK should remain small enough for direct downloads.
+    if (providers.gradleProperty("keepNativeSymbols").isPresent) {
+        packaging {
+            jniLibs {
+                keepDebugSymbols += "**/*.so"
+            }
+        }
+    }
+
     // The Flutter mirror does not publish all transitive lint-only artifacts.
     // App analysis is run separately; do not block release packaging on them.
     lint {

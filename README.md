@@ -1,4 +1,4 @@
-# Super Game
+# سوپر بازی
 
 Flutter source reconstruction for the Android game "سوپر بازی".
 
@@ -16,6 +16,13 @@ flutter analyze
 flutter build apk --release
 ```
 
+For a Play Console bundle, keep native symbols enabled for this local Android
+toolchain:
+
+```powershell
+flutter build appbundle --release --android-project-arg=keepNativeSymbols=true
+```
+
 The release APK is written to:
 
 ```text
@@ -27,7 +34,7 @@ build/app/outputs/flutter-apk/app-release.apk
 - Application ID: `com.tradearoundworld.trade_around_the_world`
 - Minimum Android version: 7.0 (API 24)
 - Target Android version: 14 (API 34)
-- Version: `0.5.32+63`
+- Version: `0.5.47+79`
 
 The app uses the existing public game API at `https://mojtabaamiri.ir/api` and
 includes Firebase Cloud Messaging configuration for notifications.
