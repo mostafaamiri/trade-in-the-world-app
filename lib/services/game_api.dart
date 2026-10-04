@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models.dart';
+import '../life_stages.dart';
 
 const apiBaseUrl = 'https://mojtabaamiri.ir/api';
 
@@ -134,6 +135,87 @@ class GameApi {
     final data = await _request('GET', '/game/matches/public');
     return jsonMaps(data['items']).map(MatchInfo.fromJson).toList();
   }
+
+  Future<List<LifeStagesRoom>> lifeStagesRooms() async {
+    final data = await _request('GET', '/life-stages/rooms');
+    return jsonMaps(data['items']).map(LifeStagesRoom.fromJson).toList();
+  }
+
+  Future<LifeStagesRoom?> myLifeStagesRoom() async {
+    final data = await _request('GET', '/life-stages/rooms/mine');
+    final room = data['room'];
+    return room is Map
+        ? LifeStagesRoom.fromJson(room.cast<String, dynamic>())
+        : null;
+  }
+
+  Future<LifeStagesRoom> lifeStagesRoom(String roomId) async {
+    final data = await _request('GET', '/life-stages/rooms/$roomId');
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> createLifeStagesRoom(String name) async {
+    final data = await _request('POST', '/life-stages/rooms', {'name': name});
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> joinLifeStagesRoom(String roomCode) async {
+    final data = await _request('POST', '/life-stages/rooms/join', {
+      'roomCode': roomCode.trim().toUpperCase(),
+    });
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> selectLifeStagesRole(
+    String roomId,
+    String roleId,
+  ) async {
+    final data = await _request('PUT', '/life-stages/rooms/$roomId/role', {
+      'roleId': roleId,
+    });
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> startLifeStagesRoom(String roomId) async {
+    final data = await _request('POST', '/life-stages/rooms/$roomId/start');
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> useLifeStagesPower(
+    String roomId,
+    String powerId,
+  ) async {
+    final data = await _request(
+      'POST',
+      '/life-stages/rooms/$roomId/powers/$powerId',
+    );
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> nextLifeStagesStage(String roomId) async {
+    final data = await _request(
+      'POST',
+      '/life-stages/rooms/$roomId/next-stage',
+    );
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<void> leaveLifeStagesRoom(String roomId) =>
+      _request('POST', '/life-stages/rooms/$roomId/leave');
 
   Future<List<Json>> league() async {
     final data = await _request('GET', '/game/league');

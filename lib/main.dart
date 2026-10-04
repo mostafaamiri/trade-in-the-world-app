@@ -13,6 +13,7 @@ import 'duz_page.dart';
 import 'guard_shop_page.dart';
 import 'game_page.dart';
 import 'lucky_wheel_page.dart';
+import 'life_stages_page.dart';
 import 'animal_memory_page.dart';
 import 'ball_target_page.dart';
 import 'models.dart';
@@ -792,6 +793,12 @@ class _HomePageState extends State<HomePage> {
     title: 'ساخت اتاق',
     actions: [
       _CategoryAction(
+        icon: Icons.diversity_3_outlined,
+        title: 'ساخت اتاق مراحل زندگی',
+        subtitle: 'گروه پنج‌نفره با نقش‌های ویژه',
+        onSelected: () => _openLifeStages(initialTab: 0),
+      ),
+      _CategoryAction(
         icon: Icons.style_outlined,
         title: 'ساخت اتاق اونو',
         subtitle: 'بازی ۲ تا ۱۰ نفره',
@@ -818,9 +825,23 @@ class _HomePageState extends State<HomePage> {
     if (id != null && mounted) await _openMatch(id);
   }
 
+  Future<void> _openLifeStages({required int initialTab}) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => LifeStagesPage(api: widget.api, initialTab: initialTab),
+      ),
+    );
+  }
+
   Future<void> _showContestsMenu() => _showCategoryGroup(
     title: 'مسابقات',
     actions: [
+      _CategoryAction(
+        icon: Icons.emoji_events_outlined,
+        title: 'مسابقات مراحل زندگی',
+        subtitle: 'پیوستن به اتاق‌های پنج‌نفره',
+        onSelected: () => _openLifeStages(initialTab: 1),
+      ),
       _CategoryAction(
         icon: Icons.extension_outlined,
         title: 'شطرنج',
