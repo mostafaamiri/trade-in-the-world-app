@@ -71,13 +71,16 @@ class _LifeStagesPageState extends State<LifeStagesPage>
   }
 
   Future<void> _createRoom() async {
-    final name = await showDialog<String>(
+    final draft = await showDialog<_ContestDraft>(
       context: context,
-      builder: (context) => const _RoomNameDialog(),
+      builder: (context) => const _ContestAndGroupNameDialog(),
     );
-    if (name == null || name.trim().isEmpty) return;
+    if (draft == null) return;
     try {
-      final room = await widget.api.createLifeStagesRoom(name.trim());
+      final room = await widget.api.createLifeStagesRoom(
+        contestName: draft.contestName,
+        groupName: draft.groupName,
+      );
       if (mounted) await _openRoom(room);
     } catch (error) {
       if (mounted) await showFailure(context, error);
@@ -98,15 +101,6 @@ class _LifeStagesPageState extends State<LifeStagesPage>
     }
   }
 
-  Future<void> _joinRoom(LifeStagesRoom room) async {
-    try {
-      final joined = await widget.api.joinLifeStagesRoom(room.roomCode);
-      if (mounted) await _openRoom(joined);
-    } catch (error) {
-      if (mounted) await showFailure(context, error);
-    }
-  }
-
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -114,7 +108,7 @@ class _LifeStagesPageState extends State<LifeStagesPage>
       bottom: TabBar(
         controller: _tabs,
         tabs: const [
-          Tab(text: 'ساخت اتاق'),
+          Tab(text: 'ساخت مسابقه'),
           Tab(text: 'مسابقات'),
         ],
       ),
@@ -140,7 +134,6 @@ class _LifeStagesPageState extends State<LifeStagesPage>
                 _ContestRoomsTab(
                   rooms: _rooms,
                   onOpen: _openRoom,
-                  onJoin: _joinRoom,
                   onJoinByCode: _joinByCode,
                   onRefresh: _reload,
                 ),
@@ -169,7 +162,7 @@ class _CreateRoomTab extends StatelessWidget {
       const SizedBox(height: 14),
       if (myRoom != null) ...[
         const Text(
-          'اتاق فعال شما',
+          'مسابقهٔ فعال شما',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 8),
@@ -179,11 +172,11 @@ class _CreateRoomTab extends StatelessWidget {
       FilledButton.icon(
         onPressed: myRoom == null ? onCreate : null,
         icon: const Icon(Icons.add_home_work_outlined),
-        label: const Text('ساخت اتاق مراحل زندگی'),
+        label: const Text('ساخت مسابقه و گروه من'),
       ),
       const SizedBox(height: 12),
       const Text(
-        'اتاق با کد شش‌نویسه ساخته می‌شود. بازی فقط وقتی شروع می‌شود که پنج بازیکن، پنج نقش متفاوت را انتخاب کرده باشند.',
+        'هر مسابقه با ۲ تا ۴ گروه برگزار می‌شود. هر گروه دقیقاً ۳ عضو دارد و اعضای همان گروه می‌توانند پیش از شروع، نام گروهشان را انتخاب یا تغییر دهند.',
         style: TextStyle(color: Color(0xff425466), height: 1.5),
       ),
     ],
@@ -194,14 +187,12 @@ class _ContestRoomsTab extends StatelessWidget {
   const _ContestRoomsTab({
     required this.rooms,
     required this.onOpen,
-    required this.onJoin,
     required this.onJoinByCode,
     required this.onRefresh,
   });
 
   final List<LifeStagesRoom> rooms;
   final ValueChanged<LifeStagesRoom> onOpen;
-  final ValueChanged<LifeStagesRoom> onJoin;
   final VoidCallback onJoinByCode;
   final Future<void> Function() onRefresh;
 
@@ -224,20 +215,19 @@ class _ContestRoomsTab extends StatelessWidget {
         if (rooms.isEmpty) {
           return const Padding(
             padding: EdgeInsets.only(top: 36),
-            child: Center(child: Text('فعلاً اتاق بازی در دسترس نیست.')),
+            child: Center(child: Text('فعلاً مسابقه‌ای در دسترس نیست.')),
           );
         }
         final room = rooms[index - 1];
-        final isMember = room.players.any((player) => player.isMe);
         return _RoomTile(
           room: room,
-          onTap: isMember ? () => onOpen(room) : null,
-          trailing: isMember
+          onTap: () => onOpen(room),
+          trailing: room.myGroup != null
               ? const Icon(Icons.arrow_back_ios_new_rounded, size: 18)
               : room.status == 'lobby'
-              ? FilledButton(
-                  onPressed: () => onJoin(room),
-                  child: const Text('پیوستن'),
+              ? const Text(
+                  'گروه‌ها',
+                  style: TextStyle(fontWeight: FontWeight.w800),
                 )
               : const Text('در حال بازی'),
         );
@@ -257,29 +247,28 @@ class _LifeStagesIntro extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       border: Border.all(color: const Color(0xffd6e2ec)),
     ),
-    child: Row(
+    child: const Row(
       children: [
-        Container(
+        SizedBox(
           width: 48,
           height: 48,
-          decoration: const BoxDecoration(
-            color: appGreen,
-            shape: BoxShape.circle,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: appGreen, shape: BoxShape.circle),
+            child: Icon(Icons.diversity_3_rounded, color: Colors.white),
           ),
-          child: const Icon(Icons.diversity_3_rounded, color: Colors.white),
         ),
-        const SizedBox(width: 14),
-        const Expanded(
+        SizedBox(width: 14),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'یک شهر، پنج نقش، یک آینده',
+                'رقابت گروه‌ها برای آینده',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
               ),
               SizedBox(height: 4),
               Text(
-                'در هر مرحله از قدرت نقش خود برای ساختن زندگی گروه استفاده کن.',
+                'با گروه سه‌نفرهٔ خود، از نقش‌ها و قدرت‌ها برای کسب امتیاز استفاده کن.',
                 style: TextStyle(height: 1.45),
               ),
             ],
@@ -316,7 +305,7 @@ class _RoomTile extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w900),
       ),
       subtitle: Text(
-        '${lifeStagesStatusTitle(room.status)} | ${persianDigits(room.playerCount)} از ${persianDigits(room.maxPlayers)} نفر | کد ${room.roomCode}',
+        '${lifeStagesStatusTitle(room.status)} | ${persianDigits(room.groupCount)} از ${persianDigits(room.maxGroups)} گروه | کد ${room.roomCode}',
       ),
       trailing: trailing,
     ),
@@ -388,14 +377,62 @@ class _LifeStagesRoomPageState extends State<LifeStagesRoomPage> {
     }
   }
 
-  Future<void> _chooseRole() async {
+  Future<String?> _askForGroupName({
+    String initialValue = '',
+    String title = 'نام گروه',
+  }) => showDialog<String>(
+    context: context,
+    builder: (context) =>
+        _GroupNameDialog(title: title, initialValue: initialValue),
+  );
+
+  Future<void> _createGroup() async {
     final room = _room;
     if (room == null) return;
+    final name = await _askForGroupName(title: 'ساخت گروه من');
+    if (name == null || name.trim().isEmpty) return;
+    await _run(
+      () => widget.api.createLifeStagesGroup(room.roomId, name.trim()),
+    );
+  }
+
+  Future<void> _joinGroup(LifeStagesGroup group) async {
+    final room = _room;
+    if (room == null) return;
+    await _run(
+      () => widget.api.joinLifeStagesGroup(room.roomId, group.groupId),
+    );
+  }
+
+  Future<void> _renameMyGroup() async {
+    final room = _room;
+    final group = room?.myGroup;
+    if (room == null || group == null) return;
+    final name = await _askForGroupName(
+      initialValue: group.name,
+      title: 'تغییر نام گروه',
+    );
+    if (name == null || name.trim().isEmpty || name.trim() == group.name) {
+      return;
+    }
+    await _run(
+      () => widget.api.renameLifeStagesGroup(
+        room.roomId,
+        group.groupId,
+        name.trim(),
+      ),
+    );
+  }
+
+  Future<void> _chooseRole() async {
+    final room = _room;
+    final group = room?.myGroup;
+    if (room == null || group == null) return;
     final selected = await showModalBottomSheet<LifeStagesRole>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) => _RolePicker(room: room),
+      builder: (context) => _RolePicker(room: room, group: group),
     );
     if (selected != null) {
       await _run(
@@ -410,8 +447,8 @@ class _LifeStagesRoomPageState extends State<LifeStagesRoomPage> {
     final leave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('خروج از اتاق'),
-        content: const Text('پیش از شروع بازی، از اتاق خارج می‌شوی.'),
+        title: const Text('خروج از گروه'),
+        content: const Text('پیش از شروع مسابقه، از گروه خارج می‌شوی.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -438,17 +475,17 @@ class _LifeStagesRoomPageState extends State<LifeStagesRoomPage> {
     final room = _room;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('اتاق مراحل زندگی'),
+        title: const Text('مسابقهٔ مراحل زندگی'),
         actions: [
           IconButton(
             onPressed: _refresh,
             tooltip: 'بروزرسانی',
             icon: const Icon(Icons.refresh_rounded),
           ),
-          if (room?.status == 'lobby')
+          if (room?.status == 'lobby' && room?.myGroup != null)
             IconButton(
               onPressed: _leave,
-              tooltip: 'خروج از اتاق',
+              tooltip: 'خروج از گروه',
               icon: const Icon(Icons.exit_to_app_rounded),
             ),
         ],
@@ -464,16 +501,24 @@ class _LifeStagesRoomPageState extends State<LifeStagesRoomPage> {
                   children: [
                     _RoomHeader(room: room),
                     const SizedBox(height: 14),
-                    if (room.status == 'lobby') ...[
+                    if (room.status == 'lobby' && room.myGroup == null)
+                      _GroupSelectionPanel(
+                        room: room,
+                        working: _working,
+                        onCreateGroup: _createGroup,
+                        onJoinGroup: _joinGroup,
+                      )
+                    else if (room.status == 'lobby')
                       _LobbyPanel(
                         room: room,
                         working: _working,
                         onChooseRole: _chooseRole,
+                        onRenameGroup: _renameMyGroup,
                         onStart: () => _run(
                           () => widget.api.startLifeStagesRoom(room.roomId),
                         ),
-                      ),
-                    ] else ...[
+                      )
+                    else
                       _ActiveStagePanel(
                         room: room,
                         working: _working,
@@ -487,9 +532,8 @@ class _LifeStagesRoomPageState extends State<LifeStagesRoomPage> {
                           () => widget.api.nextLifeStagesStage(room.roomId),
                         ),
                       ),
-                    ],
                     const SizedBox(height: 14),
-                    _PlayersPanel(room: room),
+                    _GroupsPanel(room: room),
                     const SizedBox(height: 14),
                     _EventsPanel(events: room.events),
                   ],
@@ -518,7 +562,7 @@ class _RoomHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.account_tree_outlined, color: appGreen),
+            const Icon(Icons.emoji_events_outlined, color: appGreen),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -539,13 +583,13 @@ class _RoomHeader extends StatelessWidget {
           children: [
             _InfoChip(icon: Icons.key_rounded, label: 'کد ${room.roomCode}'),
             _InfoChip(
-              icon: Icons.people_alt_outlined,
+              icon: Icons.groups_rounded,
               label:
-                  '${persianDigits(room.playerCount)} / ${persianDigits(room.maxPlayers)} نفر',
+                  '${persianDigits(room.groupCount)} / ${persianDigits(room.maxGroups)} گروه',
             ),
             _InfoChip(
-              icon: Icons.stars_outlined,
-              label: '${persianDigits(room.teamPoints)} امتیاز',
+              icon: Icons.people_alt_outlined,
+              label: '${persianDigits(room.playerCount)} نفر',
             ),
           ],
         ),
@@ -599,54 +643,165 @@ class _InfoChip extends StatelessWidget {
   );
 }
 
+class _GroupSelectionPanel extends StatelessWidget {
+  const _GroupSelectionPanel({
+    required this.room,
+    required this.working,
+    required this.onCreateGroup,
+    required this.onJoinGroup,
+  });
+
+  final LifeStagesRoom room;
+  final bool working;
+  final VoidCallback onCreateGroup;
+  final ValueChanged<LifeStagesGroup> onJoinGroup;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'انتخاب گروه',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'به یکی از گروه‌های دارای جای خالی بپیوند یا گروه سه‌نفرهٔ خودت را بساز.',
+          ),
+          const SizedBox(height: 12),
+          for (final group in room.groups) ...[
+            _JoinableGroupRow(
+              group: group,
+              disabled: working,
+              onJoin: () => onJoinGroup(group),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (room.groupCount < room.maxGroups)
+            OutlinedButton.icon(
+              onPressed: working ? null : onCreateGroup,
+              icon: const Icon(Icons.group_add_outlined),
+              label: const Text('ساخت گروه من'),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _JoinableGroupRow extends StatelessWidget {
+  const _JoinableGroupRow({
+    required this.group,
+    required this.disabled,
+    required this.onJoin,
+  });
+
+  final LifeStagesGroup group;
+  final bool disabled;
+  final VoidCallback onJoin;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: const Color(0xfff3f6f7),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.groups_2_outlined, color: appGreen),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                group.name,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              Text(
+                '${persianDigits(group.playerCount)} از ${persianDigits(group.maxPlayers)} عضو',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        FilledButton(
+          onPressed: disabled || group.isComplete ? null : onJoin,
+          child: Text(group.isComplete ? 'تکمیل' : 'پیوستن'),
+        ),
+      ],
+    ),
+  );
+}
+
 class _LobbyPanel extends StatelessWidget {
   const _LobbyPanel({
     required this.room,
     required this.working,
     required this.onChooseRole,
+    required this.onRenameGroup,
     required this.onStart,
   });
 
   final LifeStagesRoom room;
   final bool working;
   final VoidCallback onChooseRole;
+  final VoidCallback onRenameGroup;
   final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
-    final me = room.me;
+    final group = room.myGroup!;
+    final me = group.me;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'آماده‌سازی گروه',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            Text(
+              'گروه من: ${group.name}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 7),
-            const Text('نقش‌ها تکراری نیستند و هر نقش سه قدرت دارد.'),
+            const Text(
+              'هر گروه سه عضو دارد. نقش‌ها در هر گروه تکراری نیستند و هر نقش سه قدرت دارد.',
+            ),
             const SizedBox(height: 14),
-            OutlinedButton.icon(
-              onPressed: working ? null : onChooseRole,
-              icon: const Icon(Icons.badge_outlined),
-              label: Text(
-                me?.role == null
-                    ? 'انتخاب نقش من'
-                    : 'نقش من: ${me!.role!.title}',
-              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: working ? null : onRenameGroup,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('نام گروه'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: working ? null : onChooseRole,
+                  icon: const Icon(Icons.badge_outlined),
+                  label: Text(
+                    me?.role == null
+                        ? 'انتخاب نقش من'
+                        : 'نقش من: ${me!.role!.title}',
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             if (room.isOwner)
               FilledButton.icon(
                 onPressed: room.canStart && !working ? onStart : null,
                 icon: const Icon(Icons.play_circle_outline_rounded),
-                label: const Text('شروع بازی برای پنج نفر'),
+                label: const Text('شروع مسابقه'),
               )
             else
               const Text(
-                'پس از کامل‌شدن گروه، سازندهٔ اتاق بازی را شروع می‌کند.',
+                'مسابقه پس از آماده‌شدن دست‌کم دو گروه کامل، توسط سازنده شروع می‌شود.',
                 style: TextStyle(color: Color(0xff425466)),
               ),
           ],
@@ -671,8 +826,11 @@ class _ActiveStagePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final me = room.me;
+    final group = room.myGroup;
+    final me = group?.me;
     final finished = room.status == 'completed';
+    final sortedGroups = [...room.groups]
+      ..sort((a, b) => b.points.compareTo(a.points));
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -681,28 +839,32 @@ class _ActiveStagePanel extends StatelessWidget {
           children: [
             Text(
               finished
-                  ? 'نتیجهٔ مراحل زندگی'
+                  ? 'نتیجهٔ مسابقه'
                   : 'مرحلهٔ ${persianDigits(room.currentStageIndex + 1)}: ${room.currentStage.title}',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 6),
             Text(
-              finished
-                  ? 'گروه این مسابقه را با ${persianDigits(room.teamPoints)} امتیاز به پایان رساند.'
-                  : room.currentStage.description,
+              finished ? 'جدول امتیاز گروه‌ها' : room.currentStage.description,
             ),
+            const SizedBox(height: 12),
+            for (final entry in sortedGroups)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _ScoreRow(group: entry),
+              ),
             if (!finished) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: (room.currentStageIndex + 1) / room.stages.length,
                 color: appGreen,
                 backgroundColor: const Color(0xffd9e7ec),
                 borderRadius: BorderRadius.circular(4),
               ),
-              const SizedBox(height: 16),
               if (me?.role != null) ...[
+                const SizedBox(height: 16),
                 Text(
-                  'قدرت‌های ${me!.role!.title}',
+                  'قدرت‌های ${me!.role!.title} برای گروه ${group!.name}',
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 8),
@@ -761,8 +923,42 @@ class _ActiveStagePanel extends StatelessWidget {
   }
 }
 
-class _PlayersPanel extends StatelessWidget {
-  const _PlayersPanel({required this.room});
+class _ScoreRow extends StatelessWidget {
+  const _ScoreRow({required this.group});
+
+  final LifeStagesGroup group;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    decoration: BoxDecoration(
+      color: group.isMember ? const Color(0xffe3f5ed) : const Color(0xfff3f6f7),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          group.isMember ? Icons.star_rounded : Icons.groups_2_outlined,
+          color: group.isMember ? appGold : appNavy,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            group.name,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+        Text(
+          '${persianDigits(group.points)} امتیاز',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+      ],
+    ),
+  );
+}
+
+class _GroupsPanel extends StatelessWidget {
+  const _GroupsPanel({required this.room});
 
   final LifeStagesRoom room;
 
@@ -773,20 +969,61 @@ class _PlayersPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'گروه پنج‌نفره',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+          Text(
+            'گروه‌ها (${persianDigits(room.groupCount)} از ${persianDigits(room.maxGroups)})',
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 8),
-          for (var index = 0; index < room.maxPlayers; index++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 7),
-              child: index < room.players.length
-                  ? _PlayerRow(player: room.players[index])
-                  : const _EmptySeat(),
-            ),
+          const SizedBox(height: 10),
+          for (final group in room.groups) ...[
+            _GroupCard(group: group),
+            const SizedBox(height: 10),
+          ],
         ],
       ),
+    ),
+  );
+}
+
+class _GroupCard extends StatelessWidget {
+  const _GroupCard({required this.group});
+
+  final LifeStagesGroup group;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      border: Border.all(
+        color: group.isMember ? appGreen : const Color(0xffc5d2d8),
+      ),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                group.name,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+            Text(
+              '${persianDigits(group.points)} امتیاز',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (var index = 0; index < group.maxPlayers; index++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: index < group.players.length
+                ? _PlayerRow(player: group.players[index])
+                : const _EmptySeat(),
+          ),
+      ],
     ),
   );
 }
@@ -838,10 +1075,7 @@ class _EmptySeat extends StatelessWidget {
     height: 48,
     alignment: Alignment.center,
     decoration: BoxDecoration(
-      border: Border.all(
-        color: const Color(0xffc5d2d8),
-        style: BorderStyle.solid,
-      ),
+      border: Border.all(color: const Color(0xffc5d2d8)),
       borderRadius: BorderRadius.circular(8),
     ),
     child: const Text('جای خالی برای بازیکن'),
@@ -861,7 +1095,7 @@ class _EventsPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'رویدادهای گروه',
+            'رویدادهای مسابقه',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
@@ -905,13 +1139,14 @@ class _EventsPanel extends StatelessWidget {
 }
 
 class _RolePicker extends StatelessWidget {
-  const _RolePicker({required this.room});
+  const _RolePicker({required this.room, required this.group});
 
   final LifeStagesRoom room;
+  final LifeStagesGroup group;
 
   @override
   Widget build(BuildContext context) {
-    final usedRoleIds = room.players
+    final usedRoleIds = group.players
         .where((player) => !player.isMe && player.roleId != null)
         .map((player) => player.roleId!)
         .toSet();
@@ -926,8 +1161,8 @@ class _RolePicker extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'هر نقش فقط یک‌بار قابل انتخاب است و سه قدرت ویژه دارد.',
+            Text(
+              'در گروه ${group.name} هر نقش فقط یک‌بار انتخاب می‌شود و سه قدرت ویژه دارد.',
             ),
             const SizedBox(height: 12),
             for (final role in room.roles)
@@ -960,15 +1195,89 @@ class _RolePicker extends StatelessWidget {
   }
 }
 
-class _RoomNameDialog extends StatefulWidget {
-  const _RoomNameDialog();
+class _ContestDraft {
+  const _ContestDraft({required this.contestName, required this.groupName});
 
-  @override
-  State<_RoomNameDialog> createState() => _RoomNameDialogState();
+  final String contestName;
+  final String groupName;
 }
 
-class _RoomNameDialogState extends State<_RoomNameDialog> {
-  final _name = TextEditingController();
+class _ContestAndGroupNameDialog extends StatefulWidget {
+  const _ContestAndGroupNameDialog();
+
+  @override
+  State<_ContestAndGroupNameDialog> createState() =>
+      _ContestAndGroupNameDialogState();
+}
+
+class _ContestAndGroupNameDialogState
+    extends State<_ContestAndGroupNameDialog> {
+  final _contestName = TextEditingController();
+  final _groupName = TextEditingController();
+
+  @override
+  void dispose() {
+    _contestName.dispose();
+    _groupName.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final contestName = _contestName.text.trim();
+    final groupName = _groupName.text.trim();
+    if (contestName.isEmpty || groupName.isEmpty) return;
+    Navigator.pop(
+      context,
+      _ContestDraft(contestName: contestName, groupName: groupName),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('ساخت مسابقه'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _contestName,
+          autofocus: true,
+          maxLength: 60,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(labelText: 'نام مسابقه'),
+        ),
+        TextField(
+          controller: _groupName,
+          maxLength: 60,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _submit(),
+          decoration: const InputDecoration(labelText: 'نام گروه من'),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('انصراف'),
+      ),
+      FilledButton(onPressed: _submit, child: const Text('ساخت')),
+    ],
+  );
+}
+
+class _GroupNameDialog extends StatefulWidget {
+  const _GroupNameDialog({required this.title, this.initialValue = ''});
+
+  final String title;
+  final String initialValue;
+
+  @override
+  State<_GroupNameDialog> createState() => _GroupNameDialogState();
+}
+
+class _GroupNameDialogState extends State<_GroupNameDialog> {
+  late final TextEditingController _name = TextEditingController(
+    text: widget.initialValue,
+  );
 
   @override
   void dispose() {
@@ -978,14 +1287,14 @@ class _RoomNameDialogState extends State<_RoomNameDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('ساخت اتاق مراحل زندگی'),
+    title: Text(widget.title),
     content: TextField(
       controller: _name,
       autofocus: true,
       maxLength: 60,
       textInputAction: TextInputAction.done,
       onSubmitted: (_) => Navigator.pop(context, _name.text.trim()),
-      decoration: const InputDecoration(labelText: 'نام گروه یا اتاق'),
+      decoration: const InputDecoration(labelText: 'نام گروه'),
     ),
     actions: [
       TextButton(
@@ -994,7 +1303,7 @@ class _RoomNameDialogState extends State<_RoomNameDialog> {
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, _name.text.trim()),
-        child: const Text('ساخت اتاق'),
+        child: const Text('تأیید'),
       ),
     ],
   );
@@ -1035,7 +1344,7 @@ class _RoomCodeDialogState extends State<_RoomCodeDialog> {
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, _code.text.trim()),
-        child: const Text('پیوستن'),
+        child: const Text('نمایش گروه‌ها'),
       ),
     ],
   );

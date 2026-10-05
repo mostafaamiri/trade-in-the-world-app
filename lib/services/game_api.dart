@@ -156,8 +156,14 @@ class GameApi {
     );
   }
 
-  Future<LifeStagesRoom> createLifeStagesRoom(String name) async {
-    final data = await _request('POST', '/life-stages/rooms', {'name': name});
+  Future<LifeStagesRoom> createLifeStagesRoom({
+    required String contestName,
+    required String groupName,
+  }) async {
+    final data = await _request('POST', '/life-stages/rooms', {
+      'contestName': contestName,
+      'groupName': groupName,
+    });
     return LifeStagesRoom.fromJson(
       (data['room'] as Map).cast<String, dynamic>(),
     );
@@ -167,6 +173,46 @@ class GameApi {
     final data = await _request('POST', '/life-stages/rooms/join', {
       'roomCode': roomCode.trim().toUpperCase(),
     });
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> createLifeStagesGroup(
+    String roomId,
+    String name,
+  ) async {
+    final data = await _request('POST', '/life-stages/rooms/$roomId/groups', {
+      'name': name,
+    });
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> joinLifeStagesGroup(
+    String roomId,
+    String groupId,
+  ) async {
+    final data = await _request(
+      'POST',
+      '/life-stages/rooms/$roomId/groups/$groupId/join',
+    );
+    return LifeStagesRoom.fromJson(
+      (data['room'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<LifeStagesRoom> renameLifeStagesGroup(
+    String roomId,
+    String groupId,
+    String name,
+  ) async {
+    final data = await _request(
+      'PUT',
+      '/life-stages/rooms/$roomId/groups/$groupId',
+      {'name': name},
+    );
     return LifeStagesRoom.fromJson(
       (data['room'] as Map).cast<String, dynamic>(),
     );

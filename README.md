@@ -34,7 +34,7 @@ build/app/outputs/flutter-apk/app-release.apk
 - Application ID: `com.tradearoundworld.trade_around_the_world`
 - Minimum Android version: 7.0 (API 24)
 - Target Android version: 14 (API 34)
-- Version: `0.5.47+79`
+- Version: `0.5.49+81`
 
 The app uses the existing public game API at `https://mojtabaamiri.ir/api` and
 includes Firebase Cloud Messaging configuration for notifications.
