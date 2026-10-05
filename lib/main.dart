@@ -16,6 +16,7 @@ import 'lucky_wheel_page.dart';
 import 'life_stages_page.dart';
 import 'animal_memory_page.dart';
 import 'ball_target_page.dart';
+import 'aparat_videos_page.dart';
 import 'models.dart';
 import 'ping_pong_page.dart';
 import 'touch_car_page.dart';
@@ -1029,6 +1030,14 @@ class _HomePageState extends State<HomePage> {
         icon: Icons.pets_rounded,
         title: 'باغ وحش',
         onSelected: _openZoo,
+      ),
+      _CategoryAction(
+        icon: Icons.ondemand_video_outlined,
+        title: 'ویدیوهای ما در آپارات',
+        subtitle: 'تماشای ویدیوهای کانال آپارات',
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(builder: (_) => AparatVideosPage(api: widget.api)),
+        ),
       ),
       _CategoryAction(
         icon: Icons.casino_outlined,

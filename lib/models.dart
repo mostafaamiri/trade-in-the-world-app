@@ -59,6 +59,27 @@ class GamePdfDocument {
   );
 }
 
+class AparatVideo {
+  const AparatVideo({
+    required this.id,
+    required this.title,
+    required this.url,
+    required this.note,
+  });
+
+  final String id;
+  final String title;
+  final String url;
+  final String note;
+
+  factory AparatVideo.fromJson(Json json) => AparatVideo(
+    id: jsonString(json['id']),
+    title: jsonString(json['title'], 'ویدیوی آپارات'),
+    url: jsonString(json['url']),
+    note: jsonString(json['note']),
+  );
+}
+
 class PlayerProfile {
   const PlayerProfile({
     required this.id,

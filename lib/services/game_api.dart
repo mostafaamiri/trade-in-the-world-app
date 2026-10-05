@@ -395,6 +395,14 @@ class GameApi {
     throw const GameApiException('فایل PDF بازی هنوز در دسترس نیست.');
   }
 
+  Future<List<AparatVideo>> aparatVideos() async {
+    final data = await _request('GET', '/public/aparat-videos');
+    return jsonMaps(data['items'])
+        .map(AparatVideo.fromJson)
+        .where((item) => item.url.isNotEmpty)
+        .toList();
+  }
+
   Future<BusinessActionResult> _businessAction(
     String path, [
     Json? body,
