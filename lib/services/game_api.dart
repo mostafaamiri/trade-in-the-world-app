@@ -562,6 +562,33 @@ class GameApi {
     return _request('POST', '/game/matches/$matchId/uno/catch', body);
   }
 
+  Future<Json> chingDraw(String matchId) =>
+      _request('POST', '/game/matches/$matchId/ching/draw');
+
+  Future<Json> chingSwap(String matchId, {int? slot}) => _request(
+    'POST',
+    '/game/matches/$matchId/ching/swap',
+    slot == null ? <String, dynamic>{} : {'slot': slot},
+  );
+
+  Future<Json> chingPower(
+    String matchId, {
+    String? targetId,
+    String? recipientId,
+    int? slot,
+    int? targetSlot,
+  }) {
+    final body = <String, dynamic>{};
+    if (targetId != null) body['targetId'] = targetId;
+    if (recipientId != null) body['recipientId'] = recipientId;
+    if (slot != null) body['slot'] = slot;
+    if (targetSlot != null) body['targetSlot'] = targetSlot;
+    return _request('POST', '/game/matches/$matchId/ching/power', body);
+  }
+
+  Future<Json> chingDetective(String matchId) =>
+      _request('POST', '/game/matches/$matchId/ching/detective');
+
   Future<Json> roll(String matchId) =>
       _request('POST', '/game/matches/$matchId/roll');
 

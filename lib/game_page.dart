@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'models.dart';
 import 'business_progress_page.dart';
+import 'ching_game_page.dart';
 import 'services/game_api.dart';
 import 'services/game_music_service.dart';
 import 'ui.dart';
@@ -29,6 +30,10 @@ class _GamePageState extends State<GamePage> {
   bool _working = false;
   String? _error;
   int _refreshRequest = 0;
+  Json? _chingDrawnCard;
+  int? _chingPendingPower;
+  Timer? _chingPeekTimer;
+  bool _chingHidePeekEdges = false;
 
   @override
   void initState() {
@@ -45,6 +50,7 @@ class _GamePageState extends State<GamePage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _chingPeekTimer?.cancel();
     unawaited(GameMusicService.release());
     super.dispose();
   }
@@ -72,6 +78,45 @@ class _GamePageState extends State<GamePage> {
           _snapshot = snapshot;
           _loading = false;
           _error = null;
+          if (snapshot.match.section == 'کاراگاه چینگ' &&
+              snapshot.match.status == 'active' &&
+              snapshot.match.startedAt != null &&
+              _chingPeekTimer == null &&
+              !_chingHidePeekEdges) {
+            final remaining = snapshot.match.startedAt!
+                .add(const Duration(seconds: 3))
+                .difference(DateTime.now());
+            if (remaining <= Duration.zero) {
+              _chingHidePeekEdges = true;
+            } else {
+              _chingPeekTimer = Timer(remaining, () {
+                if (mounted) setState(() => _chingHidePeekEdges = true);
+              });
+            }
+          }
+          if (snapshot.match.section == 'کاراگاه چینگ' &&
+              snapshot.match.status == 'active' &&
+              snapshot.match.chingDrawnPlayerId == widget.api.userId &&
+              snapshot.match.chingDrawnCardId != null) {
+            final pending = snapshot.cards
+                .where((card) => card.cardId == snapshot.match.chingDrawnCardId)
+                .firstOrNull;
+            _chingDrawnCard = pending == null
+                ? _chingDrawnCard
+                : <String, dynamic>{
+                    'cardId': pending.cardId,
+                    'currentValue': pending.currentValue,
+                    'imageAsset': pending.imageAsset,
+                  };
+            _chingPendingPower = snapshot.match.chingPendingPower;
+          } else if (snapshot.match.section != 'کاراگاه چینگ' ||
+              snapshot.match.status == 'finished') {
+            _chingDrawnCard = null;
+            _chingPendingPower = null;
+            _chingPeekTimer?.cancel();
+            _chingPeekTimer = null;
+            _chingHidePeekEdges = false;
+          }
         });
         _maybePlayResultSound(snapshot);
       }
@@ -114,6 +159,108 @@ class _GamePageState extends State<GamePage> {
     } finally {
       if (mounted) setState(() => _working = false);
     }
+  }
+
+  Future<void> _chingDraw() async {
+    if (_working) return;
+    setState(() => _working = true);
+    try {
+      final result = await widget.api.chingDraw(widget.matchId);
+      if (mounted) {
+        setState(
+          () => _chingDrawnCard = (result['card'] as Map?)
+              ?.cast<String, dynamic>(),
+        );
+      }
+      await _refresh(silent: true);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _chingSwap(int? slot) async {
+    if (_working) return;
+    setState(() => _working = true);
+    try {
+      final result = await widget.api.chingSwap(widget.matchId, slot: slot);
+      if (mounted) {
+        setState(() {
+          _chingDrawnCard = null;
+          _chingPendingPower = jsonBool(result['needsAction'])
+              ? jsonInt(result['power'])
+              : null;
+        });
+      }
+      await _refresh(silent: true);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _chingPower(ChingActionArgs args) async {
+    if (_working) return;
+    setState(() => _working = true);
+    try {
+      final result = await widget.api.chingPower(
+        widget.matchId,
+        targetId: args.targetId,
+        recipientId: args.recipientId,
+        slot: args.slot,
+        targetSlot: args.targetSlot,
+      );
+      final card = (result['card'] as Map?)?.cast<String, dynamic>();
+      if (card != null && mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(
+              'کارت شماره ${persianDigits(jsonInt(card['currentValue']))}',
+            ),
+            content: Image.asset(
+              jsonString(
+                card['imageAsset'],
+                'assets/images/ching/ching-0.webp',
+              ),
+              height: 220,
+              fit: BoxFit.cover,
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('بستن'),
+              ),
+            ],
+          ),
+        );
+      }
+      if (mounted) setState(() => _chingPendingPower = null);
+      await _refresh(silent: true);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _chingDetective() async {
+    await _invoke(() async {
+      final result = await widget.api.chingDetective(widget.matchId);
+      if (mounted) {
+        final winnerId = jsonString(result['winnerId']);
+        final winner = _snapshot?.players
+            .where((player) => player.uid == winnerId)
+            .firstOrNull;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('برنده: ${winner?.displayName ?? 'کمترین مجموع'}'),
+          ),
+        );
+      }
+    });
   }
 
   Future<bool> _buyCard(Future<CardPurchase> Function() action) async {
@@ -581,7 +728,20 @@ class _GamePageState extends State<GamePage> {
                   },
                 ),
                 'finished' =>
-                  snapshot.match.section == 'اونو'
+                  snapshot.match.section == 'کاراگاه چینگ'
+                      ? ChingGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          busy: _working,
+                          drawnCard: _chingDrawnCard,
+                          pendingPower: _chingPendingPower,
+                          hidePeekEdges: _chingHidePeekEdges,
+                          onDraw: _chingDraw,
+                          onSwap: _chingSwap,
+                          onPower: _chingPower,
+                          onDetective: _chingDetective,
+                        )
+                      : snapshot.match.section == 'اونو'
                       ? _UnoGame(
                           snapshot: snapshot,
                           me: _me,
@@ -593,7 +753,20 @@ class _GamePageState extends State<GamePage> {
                         )
                       : _FinishedGame(snapshot: snapshot),
                 _ =>
-                  snapshot.match.section == 'اونو'
+                  snapshot.match.section == 'کاراگاه چینگ'
+                      ? ChingGame(
+                          snapshot: snapshot,
+                          me: _me,
+                          busy: _working,
+                          drawnCard: _chingDrawnCard,
+                          pendingPower: _chingPendingPower,
+                          hidePeekEdges: _chingHidePeekEdges,
+                          onDraw: _chingDraw,
+                          onSwap: _chingSwap,
+                          onPower: _chingPower,
+                          onDetective: _chingDetective,
+                        )
+                      : snapshot.match.section == 'اونو'
                       ? _UnoGame(
                           snapshot: snapshot,
                           me: _me,
@@ -738,6 +911,8 @@ class _WaitingRoom extends StatelessWidget {
               label: Text(
                 snapshot.match.section == 'اونو'
                     ? 'شروع اونو (۲ تا ۱۰ نفر)'
+                    : snapshot.match.section == 'کاراگاه چینگ'
+                    ? 'شروع کاراگاه چینگ (۳ تا ۶ نفر)'
                     : 'شروع بازی (۲ تا ۶ نفر)',
               ),
             ),

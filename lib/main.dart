@@ -806,6 +806,12 @@ class _HomePageState extends State<HomePage> {
         onSelected: () => _createRoom('اونو'),
       ),
       _CategoryAction(
+        icon: Icons.search_rounded,
+        title: 'ساخت اتاق کاراگاه چینگ',
+        subtitle: 'بازی ۳ تا ۶ نفره با کارت‌های مخفی',
+        onSelected: () => _createRoom('کاراگاه چینگ'),
+      ),
+      _CategoryAction(
         icon: Icons.public_outlined,
         title: 'ساخت اتاق تجارت در جهان',
         onSelected: () => _createRoom('تجارت جهانی'),
@@ -901,6 +907,15 @@ class _HomePageState extends State<HomePage> {
           allowedSections: const {'اونو'},
         ),
       ),
+      _CategoryAction(
+        icon: Icons.search_rounded,
+        title: 'مسابقات کاراگاه چینگ',
+        subtitle: 'کمترین مجموع کارت‌ها برنده است',
+        onSelected: () => _openPublicMatches(
+          title: 'مسابقات کاراگاه چینگ',
+          allowedSections: const {'کاراگاه چینگ'},
+        ),
+      ),
     ],
   );
 
@@ -983,6 +998,11 @@ class _HomePageState extends State<HomePage> {
         icon: Icons.style_outlined,
         title: 'اونو',
         onSelected: () => _joinRoomByCode('اونو'),
+      ),
+      _CategoryAction(
+        icon: Icons.search_rounded,
+        title: 'کاراگاه چینگ',
+        onSelected: () => _joinRoomByCode('کاراگاه چینگ'),
       ),
     ],
   );
@@ -1771,7 +1791,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     _section = widget.initialSection ?? 'تجارت جهانی';
     _maxPlayers = _section == 'اونو' ? 10 : 6;
     _name = TextEditingController(
-      text: _section == 'اونو' ? 'اتاق اونو' : 'مسابقه تجارت جهانی',
+      text: _section == 'اونو'
+          ? 'اتاق اونو'
+          : (_section == 'کاراگاه چینگ'
+                ? 'اتاق کاراگاه چینگ'
+                : 'مسابقه تجارت جهانی'),
     );
   }
 
@@ -1815,6 +1839,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               Text(
                 _section == 'اونو'
                     ? 'نام اتاق، عمومی یا خصوصی بودن و ظرفیت ۲ تا ۱۰ نفر را مشخص کن. کارت‌ها و قوانین رسمی اونو بعد از شروع اجرا می‌شوند.'
+                    : _section == 'کاراگاه چینگ'
+                    ? 'اتاق ۳ تا ۶ نفره؛ هر بازیکن چهار کارت می‌گیرد و با کمترین مجموع برنده می‌شود.'
                     : 'نام مسابقه و بخش آن را مشخص کن. کد اتاق هشت رقمی به‌صورت خودکار ساخته می‌شود.',
                 style: const TextStyle(height: 1.8),
               ),
@@ -1842,6 +1868,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                             'بازار آزاد',
                             'چالش حرفه‌ای',
                             'اونو',
+                            'کاراگاه چینگ',
                           ]
                           .map(
                             (item) => DropdownMenuItem(
@@ -1914,7 +1941,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 label: Text(
                   _busy
                       ? 'در حال ساخت...'
-                      : (_section == 'اونو' ? 'ساخت اتاق اونو' : 'ساخت اتاق'),
+                      : (_section == 'اونو'
+                            ? 'ساخت اتاق اونو'
+                            : (_section == 'کاراگاه چینگ'
+                                  ? 'ساخت اتاق کاراگاه چینگ'
+                                  : 'ساخت اتاق')),
                 ),
               ),
             ],

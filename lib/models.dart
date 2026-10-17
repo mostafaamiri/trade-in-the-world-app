@@ -173,6 +173,7 @@ class MatchInfo {
     required this.minPlayers,
     required this.currentTurnPlayerId,
     required this.turnNumber,
+    this.startedAt,
     this.endsAt,
     this.winnerId,
     this.unoCurrentColor,
@@ -181,6 +182,9 @@ class MatchInfo {
     this.unoDiscardTop,
     this.unoScores = const {},
     this.unoScoringMode = 'simple',
+    this.chingDrawnCardId,
+    this.chingDrawnPlayerId,
+    this.chingPendingPower,
   });
 
   final String matchId;
@@ -193,6 +197,7 @@ class MatchInfo {
   final int minPlayers;
   final String currentTurnPlayerId;
   final int turnNumber;
+  final DateTime? startedAt;
   final DateTime? endsAt;
   final String? winnerId;
   final String? unoCurrentColor;
@@ -201,6 +206,9 @@ class MatchInfo {
   final Json? unoDiscardTop;
   final Json unoScores;
   final String unoScoringMode;
+  final String? chingDrawnCardId;
+  final String? chingDrawnPlayerId;
+  final int? chingPendingPower;
 
   factory MatchInfo.fromJson(Json json) => MatchInfo(
     matchId: jsonString(json['matchId']),
@@ -213,6 +221,7 @@ class MatchInfo {
     minPlayers: jsonInt(json['minPlayers'], 2),
     currentTurnPlayerId: jsonString(json['currentTurnPlayerId']),
     turnNumber: jsonInt(json['turnNumber']),
+    startedAt: DateTime.tryParse(jsonString(json['startedAt'])),
     endsAt: DateTime.tryParse(jsonString(json['endsAt'])),
     winnerId: json['winnerId']?.toString(),
     unoCurrentColor: json['unoCurrentColor']?.toString(),
@@ -223,6 +232,11 @@ class MatchInfo {
         : null,
     unoScores: jsonIntMap(json['unoScores']),
     unoScoringMode: jsonString(json['unoScoringMode'], 'simple'),
+    chingDrawnCardId: json['chingDrawnCardId']?.toString(),
+    chingDrawnPlayerId: json['chingDrawnPlayerId']?.toString(),
+    chingPendingPower: json['chingPendingPower'] == null
+        ? null
+        : jsonInt(json['chingPendingPower']),
   );
 }
 
@@ -249,6 +263,10 @@ class MatchPlayer {
     required this.unoHandCount,
     required this.unoCalled,
     required this.unoAtRisk,
+    required this.chingHand,
+    required this.chingHandCount,
+    required this.chingPeekBlocked,
+    this.chingScore,
   });
 
   final String uid;
@@ -272,6 +290,10 @@ class MatchPlayer {
   final int unoHandCount;
   final bool unoCalled;
   final bool unoAtRisk;
+  final List<Json> chingHand;
+  final int chingHandCount;
+  final bool chingPeekBlocked;
+  final int? chingScore;
 
   factory MatchPlayer.fromJson(Json json) => MatchPlayer(
     uid: jsonString(json['uid']),
@@ -300,6 +322,10 @@ class MatchPlayer {
     unoHandCount: jsonInt(json['unoHandCount']),
     unoCalled: jsonBool(json['unoCalled']),
     unoAtRisk: jsonBool(json['unoAtRisk']),
+    chingHand: jsonMaps(json['chingHand']),
+    chingHandCount: jsonInt(json['chingHandCount']),
+    chingPeekBlocked: jsonBool(json['chingPeekBlocked']),
+    chingScore: json['chingScore'] == null ? null : jsonInt(json['chingScore']),
   );
 }
 
