@@ -970,19 +970,6 @@ class _HomePageState extends State<HomePage> {
         title: 'نسخه: $_version',
         onSelected: _showVersion,
       ),
-      _CategoryAction(
-        icon: Icons.system_update_alt_rounded,
-        title: 'بروزرسانی',
-        trailing: _hasUpdate
-            ? const Badge(child: Icon(Icons.fiber_new_rounded))
-            : null,
-        onSelected: () => Navigator.of(context).push<void>(
-          MaterialPageRoute(
-            builder: (_) =>
-                UpdatePage(hasUpdate: _hasUpdate, onChecked: _checkUpdate),
-          ),
-        ),
-      ),
     ],
   );
 
