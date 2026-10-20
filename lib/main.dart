@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,7 +23,6 @@ import 'services/game_api.dart';
 import 'services/game_music_service.dart';
 import 'services/jalali_date.dart';
 import 'services/notification_service.dart';
-import 'services/app_update_service.dart';
 import 'ui.dart';
 
 Future<void> main() async {
@@ -520,7 +517,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _hasUpdate = false;
   String _version = '۰.۴.۰';
   BusinessProgress? _business;
 
@@ -528,7 +524,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     unawaited(GameMusicService.acquire());
-    _checkUpdate();
+    _loadVersion();
     _loadBusiness();
   }
 
@@ -631,20 +627,11 @@ class _HomePageState extends State<HomePage> {
     MaterialPageRoute(builder: (_) => GamePdfLibraryPage(api: widget.api)),
   );
 
-  Future<void> _checkUpdate() async {
+  Future<void> _loadVersion() async {
     try {
       final package = await PackageInfo.fromPlatform();
-      final response = await http.get(
-        Uri.parse('$apiBaseUrl/public/downloads/trade-in-the-world/metadata'),
-      );
-      if (response.statusCode != 200) return;
-      final data = (jsonDecode(response.body) as Map).cast<String, dynamic>();
       if (mounted) {
-        setState(() {
-          _version = persianDigits(package.version);
-          _hasUpdate =
-              jsonInt(data['versionCode']) > int.tryParse(package.buildNumber)!;
-        });
+        setState(() => _version = persianDigits(package.version));
       }
     } catch (_) {}
   }
@@ -656,7 +643,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (mounted) {
-      _checkUpdate();
       _loadBusiness();
     }
   }
@@ -778,7 +764,6 @@ class _HomePageState extends State<HomePage> {
                 subtitle: action.subtitle == null
                     ? null
                     : Text(action.subtitle!),
-                trailing: action.trailing,
                 onTap: () {
                   Navigator.pop(sheetContext);
                   action.onSelected();
@@ -1634,7 +1619,6 @@ class _CategoryAction {
     required this.onSelected,
     this.subtitle,
     this.color,
-    this.trailing,
   });
 
   final IconData icon;
@@ -1642,7 +1626,6 @@ class _CategoryAction {
   final FutureOr<void> Function() onSelected;
   final String? subtitle;
   final Color? color;
-  final Widget? trailing;
 }
 
 class MatchesPage extends StatefulWidget {
@@ -2246,141 +2229,6 @@ class _LeaguePageState extends State<LeaguePage> {
             ),
           );
         },
-      ),
-    ),
-  );
-}
-
-class UpdatePage extends StatefulWidget {
-  const UpdatePage({
-    super.key,
-    required this.hasUpdate,
-    required this.onChecked,
-  });
-  final bool hasUpdate;
-  final Future<void> Function() onChecked;
-  @override
-  State<UpdatePage> createState() => _UpdatePageState();
-}
-
-class _UpdatePageState extends State<UpdatePage> {
-  bool _checking = false;
-  bool _downloading = false;
-  int _receivedBytes = 0;
-  int? _totalBytes;
-
-  Future<void> _download() async {
-    if (_downloading) return;
-    setState(() {
-      _downloading = true;
-      _receivedBytes = 0;
-      _totalBytes = null;
-    });
-    try {
-      final service = AppUpdateService();
-      try {
-        await service.downloadAndInstall(
-          metadataUrl: Uri.parse(
-            '$apiBaseUrl/public/downloads/trade-in-the-world/metadata',
-          ),
-          onProgress: (receivedBytes, totalBytes) {
-            if (!mounted) return;
-            setState(() {
-              _receivedBytes = receivedBytes;
-              _totalBytes = totalBytes;
-            });
-          },
-        );
-      } finally {
-        service.dispose();
-      }
-    } catch (error) {
-      if (mounted) await showFailure(context, error);
-    } finally {
-      if (mounted) setState(() => _downloading = false);
-    }
-  }
-
-  String get _downloadLabel {
-    final totalBytes = _totalBytes;
-    if (!_downloading) return 'دانلود و نصب نسخه جدید';
-    if (totalBytes == null || totalBytes <= 0) return 'در حال دانلود...';
-    final percent = ((_receivedBytes / totalBytes) * 100).clamp(0, 100).round();
-    return 'در حال دانلود ${persianDigits(percent)}%';
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('بروزرسانی')),
-    body: ScreenBackground(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      widget.hasUpdate
-                          ? Icons.system_update_alt_rounded
-                          : Icons.verified_outlined,
-                      size: 58,
-                      color: widget.hasUpdate ? appGold : appGreen,
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      widget.hasUpdate
-                          ? 'نسخه جدید آماده نصب است.'
-                          : 'نسخه نصب‌شده به‌روز است.',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 19,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 18),
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(backgroundColor: appNavy),
-                      onPressed: _downloading ? null : _download,
-                      icon: Icon(
-                        _downloading
-                            ? Icons.downloading_rounded
-                            : Icons.download_rounded,
-                      ),
-                      label: Text(_downloadLabel),
-                    ),
-                    if (_downloading) ...[
-                      const SizedBox(height: 12),
-                      LinearProgressIndicator(
-                        value: _totalBytes == null || _totalBytes! <= 0
-                            ? null
-                            : (_receivedBytes / _totalBytes!).clamp(0, 1),
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: _checking || _downloading
-                          ? null
-                          : () async {
-                              setState(() => _checking = true);
-                              await widget.onChecked();
-                              if (mounted) setState(() => _checking = false);
-                            },
-                      icon: const Icon(Icons.refresh),
-                      label: Text(
-                        _checking ? 'در حال بررسی...' : 'بررسی دوباره',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     ),
   );
