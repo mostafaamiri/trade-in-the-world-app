@@ -43,15 +43,73 @@ class TradeInTheWorldApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: appGreen),
-      scaffoldBackgroundColor: const Color(0xfff3f6f5),
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: appGreen,
+            brightness: Brightness.light,
+          ).copyWith(
+            primary: appGreen,
+            onPrimary: Colors.white,
+            primaryContainer: appMint,
+            secondary: appGold,
+            secondaryContainer: appOrange,
+            tertiary: const Color(0xff2774bd),
+            tertiaryContainer: appSky,
+            surface: appPaper,
+            onSurface: appInk,
+            error: appRed,
+          ),
+      scaffoldBackgroundColor: appPaper,
       appBarTheme: const AppBarTheme(
         backgroundColor: appNavy,
         foregroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        surfaceTintColor: Colors.transparent,
       ),
-      cardTheme: const CardThemeData(elevation: 2, margin: EdgeInsets.zero),
+      cardTheme: const CardThemeData(
+        color: Color(0xfCFFFFFF),
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+          side: BorderSide(color: Color(0x140F2D4D)),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dividerTheme: const DividerThemeData(color: Color(0x140F2D4D), space: 1),
       inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Color(0xfCFFFFFF),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: Color(0x33102A43)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: appGreen, width: 2),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: appNavy,
+        contentTextStyle: TextStyle(color: Colors.white),
       ),
     ),
     locale: const Locale('fa'),
@@ -691,36 +749,43 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showCategories() => _showCategoryGroup(
-    title: 'دسته‌بندی',
+    title: 'خانه',
+    headerIcon: Icons.home_rounded,
+    accentColor: appGreen,
     actions: [
       _CategoryAction(
-        icon: Icons.add_business_rounded,
+        icon: Icons.add_home_work_rounded,
         title: 'ساخت اتاق',
         subtitle: 'اونو یا تجارت در جهان',
+        color: appBurgundy,
         onSelected: _showRoomCreationMenu,
       ),
       _CategoryAction(
-        icon: Icons.emoji_events_outlined,
+        icon: Icons.sports_esports_rounded,
         title: 'مسابقات',
         subtitle: 'شطرنج، دوز و اتاق‌های عمومی',
+        color: const Color(0xff2774bd),
         onSelected: _showContestsMenu,
       ),
       _CategoryAction(
-        icon: Icons.settings_outlined,
+        icon: Icons.tune_rounded,
         title: 'تنظیمات',
         subtitle: 'حساب کاربری، کد اتاق و بروزرسانی',
+        color: appNavy,
         onSelected: _showSettingsMenu,
       ),
       _CategoryAction(
-        icon: Icons.celebration_outlined,
+        icon: Icons.auto_awesome_rounded,
         title: 'تفریحی',
         subtitle: 'اعضا، لیگ، تقویم و پاداش‌ها',
+        color: const Color(0xffbf6d1e),
         onSelected: _showEntertainmentMenu,
       ),
       _CategoryAction(
-        icon: Icons.bolt_outlined,
+        icon: Icons.rocket_launch_outlined,
         title: 'تقویت',
         subtitle: 'جاسوس، محافظ و سطح',
+        color: appGreen,
         onSelected: _showBoostMenu,
       ),
     ],
@@ -729,47 +794,87 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showCategoryGroup({
     required String title,
     required List<_CategoryAction> actions,
+    IconData headerIcon = Icons.home_rounded,
+    Color accentColor = appGreen,
   }) => showModalBottomSheet<void>(
     context: context,
-    showDragHandle: true,
     isScrollControlled: true,
-    builder: (sheetContext) => SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(sheetContext).height * .82,
+    backgroundColor: Colors.transparent,
+    barrierColor: const Color(0x880E233C),
+    builder: (sheetContext) => DraggableScrollableSheet(
+      expand: false,
+      minChildSize: .38,
+      initialChildSize: actions.length > 5 ? .78 : .58,
+      maxChildSize: .92,
+      builder: (context, scrollController) => DecoratedBox(
+        decoration: const BoxDecoration(
+          color: appPaper,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-          children: [
-            ListTile(
-              title: Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 19,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xffb6c4cf),
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
-            ),
-            for (final action in actions)
-              ListTile(
-                leading: Icon(action.icon, color: action.color),
-                title: Text(
-                  action.title,
-                  style: TextStyle(
-                    color: action.color,
-                    fontWeight: FontWeight.w700,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 12, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: .14),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(headerIcon, color: accentColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: appInk,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'بستن',
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(indent: 20, endIndent: 20),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                  itemCount: actions.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) => _CategoryDrawerTile(
+                    action: actions[index],
+                    accentColor: accentColor,
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      actions[index].onSelected();
+                    },
                   ),
                 ),
-                subtitle: action.subtitle == null
-                    ? null
-                    : Text(action.subtitle!),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  action.onSelected();
-                },
               ),
-          ],
+            ],
+          ),
         ),
       ),
     ),
@@ -777,6 +882,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showRoomCreationMenu() => _showCategoryGroup(
     title: 'ساخت اتاق',
+    headerIcon: Icons.add_home_work_rounded,
+    accentColor: appBurgundy,
     actions: [
       _CategoryAction(
         icon: Icons.diversity_3_outlined,
@@ -827,6 +934,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showContestsMenu() => _showCategoryGroup(
     title: 'مسابقات',
+    headerIcon: Icons.sports_esports_rounded,
+    accentColor: const Color(0xff2774bd),
     actions: [
       _CategoryAction(
         icon: Icons.emoji_events_outlined,
@@ -927,6 +1036,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showSettingsMenu() => _showCategoryGroup(
     title: 'تنظیمات',
+    headerIcon: Icons.tune_rounded,
+    accentColor: appNavy,
     actions: [
       _CategoryAction(
         icon: Icons.manage_accounts_outlined,
@@ -960,6 +1071,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showJoinCodeMenu() => _showCategoryGroup(
     title: 'وارد کردن کد',
+    headerIcon: Icons.pin_rounded,
+    accentColor: const Color(0xff2774bd),
     actions: [
       _CategoryAction(
         icon: Icons.public_outlined,
@@ -991,6 +1104,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showEntertainmentMenu() => _showCategoryGroup(
     title: 'تفریحی',
+    headerIcon: Icons.auto_awesome_rounded,
+    accentColor: const Color(0xffbf6d1e),
     actions: [
       _CategoryAction(
         icon: Icons.people_outline_rounded,
@@ -1041,6 +1156,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showBoostMenu() => _showCategoryGroup(
     title: 'تقویت',
+    headerIcon: Icons.rocket_launch_outlined,
+    accentColor: appGreen,
     actions: [
       _CategoryAction(
         icon: Icons.person_search_outlined,
@@ -1100,67 +1217,68 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    bottomNavigationBar: _HomeBottomBar(
+      onCategories: _showCategories,
+      onContests: _showContestsMenu,
+      onSettings: _showSettingsMenu,
+    ),
     body: ScreenBackground(
       child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 650),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _HomeProfileHeader(
+                    profile: widget.profile,
+                    business: _business,
+                    onSettings: _showSettingsMenu,
+                  ),
+                  const SizedBox(height: 26),
+                  const Text(
+                    'سوپر بازی',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: appNavy,
+                      fontSize: 31,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: AspectRatio(
+                      aspectRatio: 1.58,
+                      child: Image.asset(
+                        'assets/images/splash_merchants.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
-                      AvatarCircle(avatarId: widget.profile.avatarId, size: 52),
+                      Expanded(
+                        child: _HomeShortcut(
+                          icon: Icons.add_home_work_rounded,
+                          label: 'ساخت اتاق',
+                          color: appBurgundy,
+                          onTap: _showRoomCreationMenu,
+                        ),
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          widget.profile.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                          ),
+                        child: _HomeShortcut(
+                          icon: Icons.sports_esports_rounded,
+                          label: 'مسابقات',
+                          color: const Color(0xff2774bd),
+                          onTap: _showContestsMenu,
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _CurrencyBalance(
-                        icon: Icons.monetization_on_outlined,
-                        label: _business == null
-                            ? 'کوین: ...'
-                            : 'کوین: ${persianDigits(_business!.coins)}',
-                        color: appGold,
-                      ),
-                      _CurrencyBalance(
-                        icon: Icons.toll_outlined,
-                        label: _business == null
-                            ? 'سکه: ...'
-                            : 'سکه: ${persianDigits(_business!.tokens)}',
-                        color: const Color(0xffa9d9ce),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 22),
-                  const Text(
-                    'سوپر بازی',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 31,
-                      color: appNavy,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  _HomeAction(
-                    color: appNavy,
-                    icon: Icons.category_outlined,
-                    label: 'دسته‌بندی',
-                    onTap: _showCategories,
                   ),
                 ],
               ),
@@ -1555,36 +1673,90 @@ class _CalendarDetail extends StatelessWidget {
   );
 }
 
-class _HomeAction extends StatelessWidget {
-  const _HomeAction({
-    required this.color,
-    required this.icon,
-    required this.label,
-    required this.onTap,
+class _HomeProfileHeader extends StatelessWidget {
+  const _HomeProfileHeader({
+    required this.profile,
+    required this.business,
+    required this.onSettings,
   });
 
-  final Color color;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+  final PlayerProfile profile;
+  final BusinessProgress? business;
+  final VoidCallback onSettings;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 62,
-    child: FilledButton.icon(
-      style: FilledButton.styleFrom(
-        backgroundColor: color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      onPressed: onTap,
-      icon: Icon(icon),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: const Color(0xeFFFFFFF),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: const Color(0x180F2D4D)),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x120F2D4D),
+          blurRadius: 16,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        AvatarCircle(
+          avatarId: profile.avatarId,
+          size: 52,
+          borderColor: appGreen,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                profile.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: appInk,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _BalanceChip(
+                    icon: Icons.monetization_on_rounded,
+                    label: business == null
+                        ? 'کوین ...'
+                        : '${persianDigits(business!.coins)} کوین',
+                    color: appGold,
+                  ),
+                  _BalanceChip(
+                    icon: Icons.workspace_premium_rounded,
+                    label: business == null
+                        ? 'سکه ...'
+                        : '${persianDigits(business!.tokens)} سکه',
+                    color: appGreen,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: 'تنظیمات',
+          onPressed: onSettings,
+          icon: const Icon(Icons.tune_rounded, color: appNavy),
+        ),
+      ],
     ),
   );
 }
 
-class _CurrencyBalance extends StatelessWidget {
-  const _CurrencyBalance({
+class _BalanceChip extends StatelessWidget {
+  const _BalanceChip({
     required this.icon,
     required this.label,
     required this.color,
@@ -1596,18 +1768,178 @@ class _CurrencyBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
     decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(8),
+      color: color.withValues(alpha: .18),
+      borderRadius: BorderRadius.circular(6),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon),
-        const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+        Icon(icon, size: 16, color: color == appGold ? appInk : color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: appInk,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ],
+    ),
+  );
+}
+
+class _HomeShortcut extends StatelessWidget {
+  const _HomeShortcut({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(8),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: .13),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: appInk,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _HomeBottomBar extends StatelessWidget {
+  const _HomeBottomBar({
+    required this.onCategories,
+    required this.onContests,
+    required this.onSettings,
+  });
+
+  final VoidCallback onCategories;
+  final VoidCallback onContests;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: Container(
+      height: 68,
+      decoration: const BoxDecoration(
+        color: Color(0xfffbfdfc),
+        border: Border(top: BorderSide(color: Color(0x18102A43))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _BottomNavItem(
+            icon: Icons.sports_esports_outlined,
+            label: 'مسابقات',
+            onTap: onContests,
+          ),
+          Transform.translate(
+            offset: const Offset(0, -16),
+            child: _HomeNavButton(onTap: onCategories),
+          ),
+          _BottomNavItem(
+            icon: Icons.tune_rounded,
+            label: 'تنظیمات',
+            onTap: onSettings,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _BottomNavItem extends StatelessWidget {
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkResponse(
+    onTap: onTap,
+    radius: 30,
+    child: SizedBox(
+      width: 82,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: appNavy),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: const TextStyle(
+              color: appNavy,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _HomeNavButton extends StatelessWidget {
+  const _HomeNavButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: appGreen,
+    elevation: 5,
+    shadowColor: const Color(0x550D583F),
+    shape: const CircleBorder(),
+    child: InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: const SizedBox(
+        width: 58,
+        height: 58,
+        child: Icon(Icons.home_rounded, color: Colors.white, size: 30),
+      ),
     ),
   );
 }
@@ -1626,6 +1958,77 @@ class _CategoryAction {
   final FutureOr<void> Function() onSelected;
   final String? subtitle;
   final Color? color;
+}
+
+class _CategoryDrawerTile extends StatelessWidget {
+  const _CategoryDrawerTile({
+    required this.action,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  final _CategoryAction action;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = action.color ?? accentColor;
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .13),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(action.icon, color: color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      action.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: action.color == appRed ? appRed : appInk,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    if (action.subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        action.subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xff63788d),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_left_rounded, color: color),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MatchesPage extends StatefulWidget {

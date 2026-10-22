@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
-const appGold = Color(0xfff4b500);
-const appNavy = Color(0xff172b4d);
-const appGreen = Color(0xff16815d);
-const appRed = Color(0xffc84242);
-const appBurgundy = Color(0xff851d3a);
+const appGold = Color(0xffe3a900);
+const appNavy = Color(0xff17345d);
+const appGreen = Color(0xff14795b);
+const appRed = Color(0xffbe3d45);
+const appBurgundy = Color(0xff8c3150);
+const appInk = Color(0xff102a43);
+const appPaper = Color(0xfff7faf8);
+const appMint = Color(0xffd9f1e8);
+const appSky = Color(0xffd9eafa);
+const appOrange = Color(0xffffe2b8);
 
 const avatars = <String, String>{
   'merchant_purple': 'assets/avatars/avatar_merchant_purple.png',
@@ -81,7 +86,7 @@ class ScreenBackground extends StatelessWidget {
     fit: StackFit.expand,
     children: [
       Image.asset(image, fit: BoxFit.cover),
-      const ColoredBox(color: Color(0x33FFFFFF)),
+      const ColoredBox(color: Color(0x55F7FAF8)),
       child,
     ],
   );
