@@ -20,14 +20,51 @@
       box-shadow: 0 16px 34px rgba(15, 45, 77, .22);
     }
     .preview-app { display: block; width: 100%; height: 100%; border: 0; }
+    .orientation-toggle {
+      position: fixed;
+      z-index: 1;
+      top: 16px;
+      right: 16px;
+      min-height: 42px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #102a43;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(15, 45, 77, .2);
+      font: 700 14px system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .orientation-toggle:hover { background: #184b68; }
+    html.landscape .preview-shell {
+      width: min(860px, calc(100vw - 32px), calc((100vh - 32px) * 19.5 / 9));
+      height: min(397px, calc(100vh - 32px), calc((100vw - 32px) * 9 / 19.5));
+    }
     html.embedded body { display: block; }
     html.embedded .preview-shell { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+    html.embedded .orientation-toggle { display: none; }
   </style>
 </head>
 <body>
   <main class="preview-shell" aria-label="پیش‌نمایش اپلیکیشن سوپر بازی">
     <iframe class="preview-app" src="app.html" title="اپلیکیشن سوپر بازی" allow="clipboard-read; clipboard-write"></iframe>
   </main>
-  <script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
+  <button class="orientation-toggle" type="button" aria-pressed="false">نمای افقی</button>
+  <script>
+    const pageRoot = document.documentElement;
+    const orientationToggle = document.querySelector('.orientation-toggle');
+    if (window.self !== window.top) pageRoot.classList.add('embedded');
+
+    orientationToggle.addEventListener('click', () => {
+      const landscape = pageRoot.classList.toggle('landscape');
+      orientationToggle.textContent = landscape ? 'نمای عمودی' : 'نمای افقی';
+      orientationToggle.setAttribute('aria-pressed', String(landscape));
+      if (landscape && typeof screen.orientation?.lock === 'function') {
+        screen.orientation.lock('landscape').catch(() => {});
+      } else if (!landscape && typeof screen.orientation?.unlock === 'function') {
+        screen.orientation.unlock();
+      }
+    });
+  </script>
 </body>
 </html>
