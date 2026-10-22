@@ -88,11 +88,28 @@ class GameApi {
     String name,
     String phone,
     String avatarId,
+    String password,
   ) async {
     final data = await _request('POST', '/auth/guest', {
       'name': name,
       'phone': phone,
       'avatarId': avatarId,
+      'password': password,
+    });
+    final token = jsonString(data['token']);
+    final user = (data['user'] as Map? ?? const {}).cast<String, dynamic>();
+    final profile = PlayerProfile.fromJson(user);
+    if (token.isEmpty || profile.id.isEmpty) {
+      throw const GameApiException('پاسخ ورود سرور کامل نیست.');
+    }
+    await _saveSession(token, profile.id);
+    return profile;
+  }
+
+  Future<PlayerProfile> loginWithPhone(String phone, String password) async {
+    final data = await _request('POST', '/auth/game-login', {
+      'phone': phone,
+      'password': password,
     });
     final token = jsonString(data['token']);
     final user = (data['user'] as Map? ?? const {}).cast<String, dynamic>();
@@ -115,11 +132,13 @@ class GameApi {
     String name,
     String phone,
     String avatarId,
+    String? password,
   ) async {
     final data = await _request('PUT', '/game/profile', {
       'name': name,
       'phone': phone,
       'avatarId': avatarId,
+      if (password != null && password.trim().isNotEmpty) 'password': password,
     });
     return PlayerProfile.fromJson(
       (data['user'] as Map).cast<String, dynamic>(),

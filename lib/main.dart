@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -408,14 +409,17 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late final TextEditingController _name;
   late final TextEditingController _phone;
+  late final TextEditingController _password;
   String _avatar = 'merchant_purple';
   bool _submitting = false;
+  bool _showLogin = false;
 
   @override
   void initState() {
     super.initState();
     _name = TextEditingController(text: widget.initial?.name ?? '');
     _phone = TextEditingController(text: widget.initial?.phone ?? '');
+    _password = TextEditingController();
     _avatar = widget.initial?.avatarId ?? _avatar;
   }
 
@@ -423,6 +427,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void dispose() {
     _name.dispose();
     _phone.dispose();
+    _password.dispose();
     super.dispose();
   }
 
@@ -437,11 +442,30 @@ class _ProfilePageState extends State<ProfilePage> {
       await showFailure(context, 'شماره موبایل معتبر وارد کن.');
       return;
     }
+    if ((widget.initial == null || _password.text.isNotEmpty) &&
+        (_password.text.length < 6 ||
+            utf8.encode(_password.text).length > 72)) {
+      await showFailure(
+        context,
+        'رمز عبور باید حداقل ۶ کاراکتر و حداکثر ۷۲ بایت باشد.',
+      );
+      return;
+    }
     setState(() => _submitting = true);
     try {
       final profile = widget.initial == null
-          ? await widget.api.createGuest(_name.text.trim(), phone, _avatar)
-          : await widget.api.updateProfile(_name.text.trim(), phone, _avatar);
+          ? await widget.api.createGuest(
+              _name.text.trim(),
+              phone,
+              _avatar,
+              _password.text,
+            )
+          : await widget.api.updateProfile(
+              _name.text.trim(),
+              phone,
+              _avatar,
+              _password.text,
+            );
       widget.onSaved(profile);
       if (mounted && widget.closeOnSave) Navigator.pop(context);
     } catch (error) {
@@ -451,11 +475,35 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _login() async {
+    final phone = _phone.text.trim();
+    if (phone.isEmpty || _password.text.length < 6) {
+      await showFailure(context, 'شماره موبایل و رمز عبور را کامل وارد کن.');
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final profile = await widget.api.loginWithPhone(phone, _password.text);
+      widget.onSaved(profile);
+    } catch (error) {
+      if (mounted) await showFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: widget.initial == null
+    appBar: widget.initial == null && !_showLogin
         ? null
-        : AppBar(title: const Text('ویرایش حساب کاربری')),
+        : AppBar(
+            leading: _showLogin
+                ? BackButton(
+                    onPressed: () => setState(() => _showLogin = false),
+                  )
+                : null,
+            title: Text(_showLogin ? 'ورود به پروفایل' : 'ویرایش پروفایل'),
+          ),
     body: ScreenBackground(
       child: SafeArea(
         child: Center(
@@ -469,8 +517,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'حساب بازرگان',
+                      Text(
+                        _showLogin ? 'ورود به پروفایل' : 'پروفایل',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 24,
@@ -478,21 +526,22 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'نام، شماره موبایل و تصویر بازرگان خود را انتخاب کن.',
+                      Text(
+                        _showLogin ? 'شماره موبایل و رمز عبورت را وارد کن.' : 'نام، شماره موبایل، رمز عبور و تصویر پروفایل خود را ثبت کن.',
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
-                      TextField(
-                        controller: _name,
-                        maxLength: 80,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'نام و نام خانوادگی',
-                          prefixIcon: Icon(Icons.badge_outlined),
+                      if (!_showLogin)
+                        TextField(
+                          controller: _name,
+                          maxLength: 80,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'نام و نام خانوادگی',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                      if (!_showLogin) const SizedBox(height: 12),
                       TextField(
                         controller: _phone,
                         maxLength: 20,
@@ -507,43 +556,78 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
-                        'تصویر بازرگان',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      TextField(
+                        controller: _password,
+                        obscureText: true,
+                        maxLength: 72,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          labelText: 'رمز عبور',
+                          hintText: widget.initial == null
+                              ? 'حداقل ۶ کاراکتر'
+                              : 'برای تغییر رمز، رمز جدید را وارد کن',
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: avatars.keys
-                            .map(
-                              (id) => InkWell(
-                                borderRadius: BorderRadius.circular(40),
-                                onTap: () => setState(() => _avatar = id),
-                                child: AvatarCircle(
-                                  avatarId: id,
-                                  size: 64,
-                                  borderColor: _avatar == id
-                                      ? appRed
-                                      : Colors.transparent,
+                      if (!_showLogin) const SizedBox(height: 12),
+                      if (!_showLogin)
+                        const Text(
+                          'تصویر بازرگان',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      if (!_showLogin) const SizedBox(height: 10),
+                      if (!_showLogin)
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: avatars.keys
+                              .map(
+                                (id) => InkWell(
+                                  borderRadius: BorderRadius.circular(40),
+                                  onTap: () => setState(() => _avatar = id),
+                                  child: AvatarCircle(
+                                    avatarId: id,
+                                    size: 64,
+                                    borderColor: _avatar == id
+                                        ? appRed
+                                        : Colors.transparent,
+                                  ),
                                 ),
-                              ),
-                            )
-                            .toList(),
-                      ),
+                              )
+                              .toList(),
+                        ),
                       const SizedBox(height: 24),
                       FilledButton.icon(
-                        onPressed: _submitting ? null : _save,
-                        icon: const Icon(Icons.check_circle_outline),
+                        onPressed: _submitting
+                            ? null
+                            : (_showLogin ? _login : _save),
+                        icon: Icon(
+                          _showLogin ? Icons.login : Icons.check_circle_outline,
+                        ),
                         label: Text(
                           _submitting
-                              ? 'در حال ذخیره...'
+                              ? 'در حال بررسی...'
+                              : _showLogin
+                              ? 'ورود'
                               : widget.initial == null
-                              ? 'ورود به بازی'
+                              ? 'ثبت پروفایل و ورود'
                               : 'ذخیره تغییرات',
                         ),
                       ),
+                      if (widget.initial == null) ...[
+                        const SizedBox(height: 10),
+                        TextButton(
+                          onPressed: _submitting
+                              ? null
+                              : () => setState(() => _showLogin = !_showLogin),
+                          child: Text(
+                            _showLogin
+                                ? 'ساخت پروفایل جدید'
+                                : 'قبلاً پروفایل ساخته‌ام؛ ورود',
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -746,6 +830,18 @@ class _HomePageState extends State<HomePage> {
     } catch (error) {
       if (mounted) await showFailure(context, error);
     }
+  }
+
+  Future<void> _logout() async {
+    if (!widget.profile.hasGamePassword) {
+      await showFailure(
+        context,
+        'ابتدا در ویرایش پروفایل رمز عبور تعیین کن تا دوباره بتوانی وارد شوی.',
+      );
+      return;
+    }
+    await widget.api.clearSession();
+    if (mounted) widget.onAccountDeleted();
   }
 
   Future<void> _showCategories() => _showCategoryGroup(
@@ -1041,8 +1137,13 @@ class _HomePageState extends State<HomePage> {
     actions: [
       _CategoryAction(
         icon: Icons.manage_accounts_outlined,
-        title: 'ویرایش حساب کاربری',
+        title: 'ویرایش پروفایل',
         onSelected: _editProfile,
+      ),
+      _CategoryAction(
+        icon: Icons.logout_rounded,
+        title: 'خروج از حساب',
+        onSelected: _logout,
       ),
       _CategoryAction(
         icon: Icons.delete_outline,

@@ -88,6 +88,7 @@ class PlayerProfile {
     this.email = '',
     this.phone = '',
     this.profileComplete = true,
+    this.hasGamePassword = false,
   });
 
   final String id;
@@ -96,6 +97,7 @@ class PlayerProfile {
   final String email;
   final String phone;
   final bool profileComplete;
+  final bool hasGamePassword;
 
   factory PlayerProfile.fromJson(Json json) => PlayerProfile(
     id: jsonString(json['id']),
@@ -104,6 +106,7 @@ class PlayerProfile {
     email: jsonString(json['email']),
     phone: jsonString(json['phone']),
     profileComplete: jsonBool(json['profileComplete'], true),
+    hasGamePassword: jsonBool(json['hasGamePassword']),
   );
 }
 
