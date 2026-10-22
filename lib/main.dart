@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -122,64 +120,11 @@ class TradeInTheWorldApp extends StatelessWidget {
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,
     ],
-    builder: (context, child) => _WebPreviewViewport(child: child!),
     home: Directionality(
       textDirection: TextDirection.rtl,
       child: AppRoot(api: api),
     ),
   );
-}
-
-class _WebPreviewViewport extends StatelessWidget {
-  const _WebPreviewViewport({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final screen = MediaQuery.sizeOf(context);
-
-    // Keep the published web preview at a real phone size on wide screens.
-    // Mobile browsers and the admin-panel iframe retain their available space.
-    if (!kIsWeb || screen.width < 720 || screen.height < 640) return child;
-
-    const phoneAspectRatio = 9 / 19.5;
-    const maxPhoneHeight = 860.0;
-    final phoneHeight = math.min(maxPhoneHeight, screen.height - 32);
-    final phoneWidth = phoneHeight * phoneAspectRatio;
-    final phoneSize = Size(phoneWidth, phoneHeight);
-
-    return ColoredBox(
-      color: const Color(0xffe7edf0),
-      child: Center(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: appPaper,
-            border: Border.all(color: const Color(0x220f2d4d), width: 6),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x330f2d4d),
-                blurRadius: 34,
-                offset: Offset(0, 16),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: SizedBox(
-              width: phoneWidth,
-              height: phoneHeight,
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(size: phoneSize),
-                child: child,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class AppRoot extends StatefulWidget {
