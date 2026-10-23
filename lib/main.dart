@@ -26,21 +26,63 @@ import 'services/jalali_date.dart';
 import 'services/notification_service.dart';
 import 'ui.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final api = await GameApi.create();
-  runApp(TradeInTheWorldApp(api: api));
-  // Notifications are optional. Do not keep the game on the native launch
-  // screen while Firebase or Google Play services are becoming available.
-  unawaited(
-    NotificationService.initialize().then((_) => NotificationService.sync(api)),
-  );
+  runApp(const TradeInTheWorldApp());
 }
 
-class TradeInTheWorldApp extends StatelessWidget {
-  const TradeInTheWorldApp({super.key, required this.api});
+class TradeInTheWorldApp extends StatefulWidget {
+  const TradeInTheWorldApp({super.key, this.apiLoader});
 
-  final GameApi api;
+  final Future<GameApi> Function()? apiLoader;
+
+  @override
+  State<TradeInTheWorldApp> createState() => _TradeInTheWorldAppState();
+}
+
+class _TradeInTheWorldAppState extends State<TradeInTheWorldApp> {
+  static const _startupTimeout = Duration(seconds: 10);
+
+  GameApi? _api;
+  var _starting = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  Future<void> _start() async {
+    setState(() {
+      _starting = true;
+    });
+    try {
+      final api = await (widget.apiLoader ?? GameApi.create)().timeout(
+        _startupTimeout,
+      );
+      if (!mounted) return;
+      setState(() {
+        _api = api;
+        _starting = false;
+      });
+      unawaited(_initializeNotifications(api));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _api = null;
+        _starting = false;
+      });
+    }
+  }
+
+  Future<void> _initializeNotifications(GameApi api) async {
+    try {
+      await NotificationService.initialize();
+      await NotificationService.sync(api);
+    } catch (_) {
+      // Notifications must never affect access to the game.
+    }
+  }
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -126,7 +168,76 @@ class TradeInTheWorldApp extends StatelessWidget {
     ],
     home: Directionality(
       textDirection: TextDirection.rtl,
-      child: AppRoot(api: api),
+      child: _api == null
+          ? StartupPage(loading: _starting, onRetry: _start)
+          : AppRoot(api: _api!),
+    ),
+  );
+}
+
+class StartupPage extends StatelessWidget {
+  const StartupPage({super.key, required this.loading, required this.onRetry});
+
+  final bool loading;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: appPaper,
+    body: SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 88,
+                height: 88,
+                decoration: const BoxDecoration(
+                  color: appNavy,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.sports_esports_rounded,
+                  color: appGold,
+                  size: 46,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'سوپر بازی',
+                style: TextStyle(
+                  color: appInk,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                loading
+                    ? 'در حال آماده‌سازی بازی…'
+                    : 'شروع بازی انجام نشد. دوباره تلاش کنید.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: appNavy, fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              if (loading)
+                const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('تلاش دوباره'),
+                ),
+            ],
+          ),
+        ),
+      ),
     ),
   );
 }

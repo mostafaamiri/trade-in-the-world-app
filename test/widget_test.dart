@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:trade_around_the_world/main.dart';
 import 'package:trade_around_the_world/models.dart';
+import 'package:trade_around_the_world/services/game_api.dart';
 import 'package:trade_around_the_world/services/jalali_date.dart';
 import 'package:trade_around_the_world/ui.dart';
 
@@ -49,5 +53,24 @@ void main() {
     expect(cities, hasLength(160));
     expect(cityIds, hasLength(160));
     expect(routeOrders, List<int>.generate(160, (index) => index));
+  });
+
+  testWidgets('shows a visible startup state before local storage is ready', (
+    tester,
+  ) async {
+    final pendingApi = Completer<GameApi>();
+
+    await tester.pumpWidget(
+      TradeInTheWorldApp(apiLoader: () => pendingApi.future),
+    );
+
+    expect(find.text('در حال آماده‌سازی بازی…'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    pendingApi.completeError(StateError('storage unavailable'));
+    await tester.pump();
+
+    expect(find.text('شروع بازی انجام نشد. دوباره تلاش کنید.'), findsOneWidget);
+    expect(find.text('تلاش دوباره'), findsOneWidget);
   });
 }
