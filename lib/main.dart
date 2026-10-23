@@ -11,6 +11,7 @@ import 'chess_page.dart';
 import 'duz_page.dart';
 import 'guard_shop_page.dart';
 import 'game_page.dart';
+import 'image_messages_page.dart';
 import 'lucky_wheel_page.dart';
 import 'life_stages_page.dart';
 import 'animal_memory_page.dart';
@@ -1361,6 +1362,14 @@ class _HomePageState extends State<HomePage> {
         subtitle: 'تماشای ویدیوهای کانال آپارات',
         onSelected: () => Navigator.of(context).push<void>(
           MaterialPageRoute(builder: (_) => AparatVideosPage(api: widget.api)),
+        ),
+      ),
+      _CategoryAction(
+        icon: Icons.photo_library_outlined,
+        title: 'پیغام‌های تصویری',
+        subtitle: 'تصاویر تازه از مدیریت',
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(builder: (_) => ImageMessagesPage(api: widget.api)),
         ),
       ),
       _CategoryAction(

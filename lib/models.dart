@@ -80,6 +80,27 @@ class AparatVideo {
   );
 }
 
+class ImageMessage {
+  const ImageMessage({
+    required this.id,
+    required this.title,
+    required this.url,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String title;
+  final String url;
+  final DateTime? createdAt;
+
+  factory ImageMessage.fromJson(Json json) => ImageMessage(
+    id: jsonString(json['id']),
+    title: jsonString(json['title']),
+    url: jsonString(json['url']),
+    createdAt: DateTime.tryParse(jsonString(json['createdAt'])),
+  );
+}
+
 class PlayerProfile {
   const PlayerProfile({
     required this.id,

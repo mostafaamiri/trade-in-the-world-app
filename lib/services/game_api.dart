@@ -528,6 +528,21 @@ class GameApi {
         .toList();
   }
 
+  Future<List<ImageMessage>> imageMessages() async {
+    final data = await _request('GET', '/public/image-messages');
+    return jsonMaps(data['items'])
+        .map(
+          (item) => ImageMessage.fromJson({
+            ...item,
+            'url': Uri.parse(apiBaseUrl)
+                .resolve(jsonString(item['url']))
+                .toString(),
+          }),
+        )
+        .where((item) => item.url.isNotEmpty)
+        .toList();
+  }
+
   Future<BusinessActionResult> _businessAction(
     String path, [
     Json? body,
