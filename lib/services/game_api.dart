@@ -22,9 +22,11 @@ class GameApiException implements Exception {
 }
 
 class GameApi {
-  GameApi._(this._preferences);
+  GameApi._();
 
-  final SharedPreferences _preferences;
+  static const _storageTimeout = Duration(seconds: 2);
+
+  SharedPreferences? _preferences;
   String? _token;
   String? _userId;
 
@@ -33,24 +35,62 @@ class GameApi {
   bool get hasSession => _token != null && _userId != null;
 
   static Future<GameApi> create() async {
-    final api = GameApi._(await SharedPreferences.getInstance());
-    api._token = api._preferences.getString('game_token');
-    api._userId = api._preferences.getString('game_user_id');
+    final api = GameApi._();
+    try {
+      final preferences = await SharedPreferences.getInstance().timeout(
+        _storageTimeout,
+      );
+      api._preferences = preferences;
+      api._token = preferences.getString('game_token');
+      api._userId = preferences.getString('game_user_id');
+    } catch (_) {
+      // A broken device preference store must not block the game. The player
+      // can still sign in and play with an in-memory session.
+    }
     return api;
   }
 
   Future<void> _saveSession(String token, String userId) async {
     _token = token;
     _userId = userId;
-    await _preferences.setString('game_token', token);
-    await _preferences.setString('game_user_id', userId);
+    final preferences = _preferences;
+    if (preferences != null) {
+      unawaited(_persistSession(preferences, token, userId));
+    }
   }
 
   Future<void> clearSession() async {
     _token = null;
     _userId = null;
-    await _preferences.remove('game_token');
-    await _preferences.remove('game_user_id');
+    final preferences = _preferences;
+    if (preferences != null) unawaited(_clearPersistedSession(preferences));
+  }
+
+  Future<void> _persistSession(
+    SharedPreferences preferences,
+    String token,
+    String userId,
+  ) async {
+    try {
+      await preferences.setString('game_token', token).timeout(_storageTimeout);
+      await preferences
+          .setString('game_user_id', userId)
+          .timeout(_storageTimeout);
+      if (_token != token || _userId != userId) {
+        await _clearPersistedSession(preferences);
+      }
+    } catch (_) {
+      // Session persistence is optional and must not interrupt sign-in.
+    }
+  }
+
+  Future<void> _clearPersistedSession(SharedPreferences preferences) async {
+    try {
+      await preferences.remove('game_token').timeout(_storageTimeout);
+      await preferences.remove('game_user_id').timeout(_storageTimeout);
+    } catch (_) {
+      // Removing a local session is best-effort when device storage is broken.
+    }
   }
 
   Map<String, String> get _headers => {
