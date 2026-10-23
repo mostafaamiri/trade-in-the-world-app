@@ -28,9 +28,13 @@ import 'ui.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService.initialize();
   final api = await GameApi.create();
   runApp(TradeInTheWorldApp(api: api));
+  // Notifications are optional. Do not keep the game on the native launch
+  // screen while Firebase or Google Play services are becoming available.
+  unawaited(
+    NotificationService.initialize().then((_) => NotificationService.sync(api)),
+  );
 }
 
 class TradeInTheWorldApp extends StatelessWidget {
@@ -163,7 +167,8 @@ class _AppRootState extends State<AppRoot> {
 
   Future<void> _finishSplash(DateTime startedAt) async {
     final remaining =
-        const Duration(seconds: 5) - DateTime.now().difference(startedAt);
+        const Duration(milliseconds: 1500) -
+        DateTime.now().difference(startedAt);
     if (!remaining.isNegative) await Future<void>.delayed(remaining);
     if (mounted) setState(() => _loading = false);
   }
@@ -210,7 +215,7 @@ class _SplashPageState extends State<SplashPage>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(milliseconds: 1500),
     )..forward();
   }
 

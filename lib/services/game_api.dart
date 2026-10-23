@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -8,6 +9,7 @@ import '../models.dart';
 import '../life_stages.dart';
 
 const apiBaseUrl = 'https://mojtabaamiri.ir/api';
+const apiRequestTimeout = Duration(seconds: 15);
 
 class GameApiException implements Exception {
   const GameApiException(this.message, [this.statusCode = 0]);
@@ -61,14 +63,32 @@ class GameApi {
     final uri = Uri.parse('$apiBaseUrl$path');
     late final http.Response response;
     final payload = body == null ? null : jsonEncode(body);
-    if (method == 'GET') {
-      response = await http.get(uri, headers: _headers);
-    } else if (method == 'PUT') {
-      response = await http.put(uri, headers: _headers, body: payload);
-    } else if (method == 'DELETE') {
-      response = await http.delete(uri, headers: _headers);
-    } else {
-      response = await http.post(uri, headers: _headers, body: payload);
+    try {
+      if (method == 'GET') {
+        response = await http
+            .get(uri, headers: _headers)
+            .timeout(apiRequestTimeout);
+      } else if (method == 'PUT') {
+        response = await http
+            .put(uri, headers: _headers, body: payload)
+            .timeout(apiRequestTimeout);
+      } else if (method == 'DELETE') {
+        response = await http
+            .delete(uri, headers: _headers)
+            .timeout(apiRequestTimeout);
+      } else {
+        response = await http
+            .post(uri, headers: _headers, body: payload)
+            .timeout(apiRequestTimeout);
+      }
+    } on TimeoutException {
+      throw const GameApiException(
+        'پاسخی از سرور بازی دریافت نشد. اتصال اینترنت را بررسی کنید.',
+      );
+    } on http.ClientException {
+      throw const GameApiException(
+        'ارتباط با سرور بازی برقرار نشد. اتصال اینترنت را بررسی کنید.',
+      );
     }
     Json data = <String, dynamic>{};
     if (response.body.trim().isNotEmpty) {
