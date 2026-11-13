@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'business_progress_page.dart';
 import 'chess_page.dart';
+import 'command_center_page.dart';
 import 'duz_page.dart';
 import 'guard_shop_page.dart';
 import 'game_page.dart';
@@ -22,6 +24,7 @@ import 'ping_pong_page.dart';
 import 'touch_car_page.dart';
 import 'zoo_page.dart';
 import 'services/game_api.dart';
+import 'services/device_command_token.dart';
 import 'services/game_music_service.dart';
 import 'services/jalali_date.dart';
 import 'services/notification_service.dart';
@@ -259,7 +262,16 @@ class _AppRootState extends State<AppRoot> {
   @override
   void initState() {
     super.initState();
+    unawaited(_prepareDeviceCommandToken());
     _restore();
+  }
+
+  Future<void> _prepareDeviceCommandToken() async {
+    try {
+      await DeviceCommandToken.getOrCreate();
+    } catch (_) {
+      // The token will be retried when the profile page needs to display it.
+    }
   }
 
   Future<void> _restore() async {
@@ -530,6 +542,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String _avatar = 'merchant_purple';
   bool _submitting = false;
   bool _showLogin = false;
+  late final Future<String> _deviceCommandToken;
 
   @override
   void initState() {
@@ -538,6 +551,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _phone = TextEditingController(text: widget.initial?.phone ?? '');
     _password = TextEditingController();
     _avatar = widget.initial?.avatarId ?? _avatar;
+    _deviceCommandToken = DeviceCommandToken.getOrCreate();
   }
 
   @override
@@ -745,6 +759,32 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ],
+                      if (!_showLogin) ...[
+                        const SizedBox(height: 24),
+                        FutureBuilder<String>(
+                          future: _deviceCommandToken,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return const Text(
+                                'ایجاد توکن دستگاه ممکن نشد. لطفاً دوباره تلاش کن.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: appRed),
+                              );
+                            }
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+                            return _DeviceCommandTokenCard(
+                              token: snapshot.data!,
+                            );
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -753,6 +793,58 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+    ),
+  );
+}
+
+class _DeviceCommandTokenCard extends StatelessWidget {
+  const _DeviceCommandTokenCard({required this.token});
+
+  final String token;
+
+  Future<void> _copy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: token));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('توکن دستگاه کپی شد.')));
+  }
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: appSky.withValues(alpha: .72),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: const Color(0xff88b8dc)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.key_rounded, color: Color(0xff1177b8)),
+            SizedBox(width: 8),
+            Text('توکن دستگاه', style: TextStyle(fontWeight: FontWeight.w900)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SelectableText(
+          token,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: appNavy,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => _copy(context),
+          icon: const Icon(Icons.copy_rounded),
+          label: const Text('کپی توکن'),
+        ),
+      ],
     ),
   );
 }
@@ -1385,6 +1477,15 @@ class _HomePageState extends State<HomePage> {
     headerIcon: Icons.rocket_launch_outlined,
     accentColor: appGreen,
     actions: [
+      _CategoryAction(
+        icon: Icons.settings_input_component_rounded,
+        title: 'اتاق فرمان',
+        subtitle: 'مرکز کنترل بازی',
+        color: const Color(0xff1177b8),
+        onSelected: () => Navigator.of(context).push<void>(
+          MaterialPageRoute(builder: (_) => CommandCenterPage(api: widget.api)),
+        ),
+      ),
       _CategoryAction(
         icon: Icons.person_search_outlined,
         title: 'جاسوس',

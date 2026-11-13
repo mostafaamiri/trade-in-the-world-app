@@ -101,6 +101,118 @@ class ImageMessage {
   );
 }
 
+class CommandCenterMedia {
+  const CommandCenterMedia({
+    required this.url,
+    required this.viewUrl,
+    required this.originalName,
+    required this.mimeType,
+    required this.kind,
+  });
+
+  final String url;
+  final String viewUrl;
+  final String originalName;
+  final String mimeType;
+  final String kind;
+
+  bool get isImage => kind == 'image' || mimeType.startsWith('image/');
+
+  factory CommandCenterMedia.fromJson(Json json) => CommandCenterMedia(
+    url: jsonString(json['url']),
+    viewUrl: jsonString(json['viewUrl']),
+    originalName: jsonString(json['originalName']),
+    mimeType: jsonString(json['mimeType']),
+    kind: jsonString(json['kind']),
+  );
+}
+
+class CommandCenterAnswer {
+  const CommandCenterAnswer({
+    required this.questionId,
+    required this.optionIndex,
+    required this.isCorrect,
+    required this.rewardCoins,
+    required this.rewardTokens,
+  });
+
+  final String questionId;
+  final int optionIndex;
+  final bool isCorrect;
+  final int rewardCoins;
+  final int rewardTokens;
+
+  factory CommandCenterAnswer.fromJson(Json json) => CommandCenterAnswer(
+    questionId: jsonString(json['questionId']),
+    optionIndex: jsonInt(json['optionIndex']),
+    isCorrect: jsonBool(json['isCorrect']),
+    rewardCoins: jsonInt(json['rewardCoins']),
+    rewardTokens: jsonInt(json['rewardTokens']),
+  );
+}
+
+class CommandCenterQuestion {
+  const CommandCenterQuestion({
+    required this.id,
+    required this.prompt,
+    required this.media,
+    required this.options,
+    required this.coinReward,
+    required this.tokenReward,
+    required this.answer,
+  });
+
+  final String id;
+  final String prompt;
+  final CommandCenterMedia? media;
+  final List<String> options;
+  final int coinReward;
+  final int tokenReward;
+  final CommandCenterAnswer? answer;
+
+  factory CommandCenterQuestion.fromJson(
+    Json json, {
+    CommandCenterAnswer? answer,
+  }) => CommandCenterQuestion(
+    id: jsonString(json['id']),
+    prompt: jsonString(json['prompt']),
+    media: json['media'] is Map
+        ? CommandCenterMedia.fromJson(
+            (json['media'] as Map).cast<String, dynamic>(),
+          )
+        : null,
+    options: jsonMaps(json['options'])
+        .map((option) => jsonString(option['text']))
+        .where((option) => option.isNotEmpty)
+        .toList(),
+    coinReward: jsonInt(json['coinReward']),
+    tokenReward: jsonInt(json['tokenReward']),
+    answer: answer,
+  );
+}
+
+class CommandCenterAnswerResult {
+  const CommandCenterAnswerResult({
+    required this.isCorrect,
+    required this.alreadyAnswered,
+    required this.coinsAwarded,
+    required this.tokensAwarded,
+  });
+
+  final bool isCorrect;
+  final bool alreadyAnswered;
+  final int coinsAwarded;
+  final int tokensAwarded;
+
+  factory CommandCenterAnswerResult.fromJson(Json json) =>
+      CommandCenterAnswerResult(
+        isCorrect: jsonBool(json['isCorrect']),
+        alreadyAnswered: jsonBool(json['alreadyAnswered']),
+        coinsAwarded: jsonInt(json['coinsAwarded']),
+        tokensAwarded: jsonInt(json['tokensAwarded']),
+      );
+}
+
 class PlayerProfile {
   const PlayerProfile({
     required this.id,

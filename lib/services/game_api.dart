@@ -543,6 +543,49 @@ class GameApi {
         .toList();
   }
 
+  Future<List<CommandCenterQuestion>> commandCenterQuestions() async {
+    final responses = await Future.wait<Json>([
+      _request('GET', '/public/my-desk-questions'),
+      _request('GET', '/public/my-desk-answers/mine'),
+    ]);
+    final answers = {
+      for (final item in jsonMaps(responses[1]['items']))
+        jsonString(item['questionId']): CommandCenterAnswer.fromJson(item),
+    };
+    return jsonMaps(responses[0]['items']).map((item) {
+      final question = <String, dynamic>{...item};
+      final media = item['media'];
+      if (media is Map) {
+        final mediaData = media.cast<String, dynamic>();
+        question['media'] = {
+          ...mediaData,
+          'url': Uri.parse(apiBaseUrl)
+              .resolve(jsonString(mediaData['url']))
+              .toString(),
+          'viewUrl': Uri.parse(apiBaseUrl)
+              .resolve(jsonString(mediaData['viewUrl']))
+              .toString(),
+        };
+      }
+      return CommandCenterQuestion.fromJson(
+        question,
+        answer: answers[jsonString(item['id'])],
+      );
+    }).toList();
+  }
+
+  Future<CommandCenterAnswerResult> answerCommandCenterQuestion(
+    String questionId,
+    int optionIndex,
+  ) async {
+    final data = await _request(
+      'POST',
+      '/public/my-desk-questions/$questionId/answer',
+      {'optionIndex': optionIndex},
+    );
+    return CommandCenterAnswerResult.fromJson(data);
+  }
+
   Future<BusinessActionResult> _businessAction(
     String path, [
     Json? body,
