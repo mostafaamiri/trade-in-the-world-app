@@ -20,9 +20,19 @@ class NotificationService {
   NotificationService._();
 
   static bool _ready = false;
+  static Future<void>? _initializing;
   static GameApi? _api;
 
   static Future<void> initialize() async {
+    if (_ready) return;
+    final pending = _initializing;
+    if (pending != null) {
+      await pending;
+      return;
+    }
+
+    final completer = Completer<void>();
+    _initializing = completer.future;
     try {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
@@ -54,12 +64,19 @@ class NotificationService {
     } catch (_) {
       // The game remains usable on devices without Firebase or Google Play services.
       _ready = false;
+    } finally {
+      completer.complete();
+      _initializing = null;
     }
   }
 
   static Future<void> sync(GameApi api) async {
-    if (!_ready || !api.hasSession) return;
     _api = api;
+    // Initialization can race with profile restoration or sign-in. Retry it
+    // here so a failed/early startup does not permanently disable registration
+    // for the rest of the session.
+    if (!_ready) await initialize();
+    if (!_ready || !api.hasSession) return;
     try {
       final permission = await FirebaseMessaging.instance.requestPermission(
         alert: true,
